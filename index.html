@@ -1,0 +1,2249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A faithful digital recreation of Jorge Luis Borges's Library of Babel. Walk through infinite hexagonal rooms, read any of the Library's books, and search for any text that has ever been or could ever be written.">
+    <title>The Library of Babel</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Cormorant Garamond', serif;
+            background: #0a0806;
+            color: #d4c5a0;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #scene {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        #vignette {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.7) 100%);
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        #vignette::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+            opacity: 0.04;
+            pointer-events: none;
+            animation: grain 0.3s steps(8) infinite;
+        }
+
+        @keyframes grain {
+            0%, 100% { transform: translate(0, 0); }
+            10% { transform: translate(-5%, -10%); }
+            20% { transform: translate(3%, 5%); }
+            30% { transform: translate(-8%, 3%); }
+            40% { transform: translate(5%, -8%); }
+            50% { transform: translate(-3%, 7%); }
+            60% { transform: translate(7%, -5%); }
+            70% { transform: translate(-6%, -3%); }
+            80% { transform: translate(4%, 8%); }
+            90% { transform: translate(-7%, 2%); }
+        }
+
+        #transition-fade {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0a0806;
+            z-index: 50;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        #transition-fade.active {
+            opacity: 1;
+        }
+
+        #title-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 12px 20px;
+            font-size: 13px;
+            letter-spacing: 4px;
+            color: rgba(139, 115, 85, 0.5);
+            z-index: 3;
+            background: linear-gradient(to bottom, rgba(10,8,6,0.5) 0%, transparent 100%);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #title-bar > * {
+            pointer-events: auto;
+        }
+
+        #audio-toggle {
+            pointer-events: auto;
+            background: none;
+            border: none;
+            color: rgba(139, 115, 85, 0.5);
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px 8px;
+            transition: color 0.2s;
+        }
+
+        #audio-toggle:hover {
+            color: rgba(196, 148, 58, 0.8);
+        }
+
+        #audio-toggle.active {
+            color: rgba(196, 148, 58, 0.9);
+        }
+
+        #brightness-slider {
+            width: 80px;
+            height: 3px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: #4a3520;
+            outline: none;
+            opacity: 0.7;
+            vertical-align: middle;
+            cursor: pointer;
+            border-radius: 2px;
+        }
+
+        #brightness-slider:hover {
+            opacity: 1;
+        }
+
+        #brightness-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #c4943a;
+            cursor: pointer;
+        }
+
+        #brightness-slider::-moz-range-thumb {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #c4943a;
+            cursor: pointer;
+            border: none;
+        }
+
+        #intro {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000 url('images/hero.png') center center / cover no-repeat;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 1;
+            transition: opacity 1.5s ease-out;
+            cursor: pointer;
+        }
+
+        #intro::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.55);
+        }
+
+        #intro.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #intro-text {
+            max-width: 700px;
+            padding: 40px;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .intro-quote {
+            font-size: 26px;
+            font-style: italic;
+            line-height: 1.8;
+            color: #d4c5a0;
+            opacity: 0;
+            animation: fadeInText 2.5s ease-in forwards;
+            letter-spacing: 0.3px;
+        }
+
+        .intro-attribution {
+            margin-top: 24px;
+            font-size: 16px;
+            color: #8b7355;
+            opacity: 0;
+            animation: fadeInText 1.5s ease-in 1.5s forwards;
+        }
+
+        .intro-prompt {
+            margin-top: 48px;
+            font-size: 14px;
+            color: #5a4a32;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            opacity: 0;
+            animation: fadeInText 1s ease-in 3s forwards, pulse 2s ease-in-out 4s infinite;
+        }
+
+        @keyframes fadeInText {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        #crosshair {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 6px;
+            height: 6px;
+            z-index: 10;
+            display: none;
+            pointer-events: none;
+            transform: translate(-50%, -50%) rotate(45deg);
+            border: 1px solid rgba(212, 197, 160, 0.5);
+        }
+
+        #crosshair.visible {
+            display: block;
+        }
+
+        #instructions {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(26, 18, 8, 0.85);
+            padding: 12px 24px;
+            border-radius: 6px;
+            border: 1px solid #4a3520;
+            color: #d4c5a0;
+            font-size: 15px;
+            z-index: 5;
+            transition: opacity 0.3s;
+        }
+
+        #instructions.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #hud {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(10, 8, 6, 0.85);
+            padding: 8px 16px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            color: #5a4a32;
+            z-index: 5;
+            border-top: 1px solid rgba(74, 53, 32, 0.4);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        #hud-info {
+            font-size: 11px;
+            color: #3a2e1f;
+        }
+
+        #toolbar {
+            position: fixed;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            z-index: 5;
+        }
+
+        .toolbar-btn {
+            background: rgba(74, 37, 16, 0.85);
+            border: 1px solid #8b7355;
+            color: #d4c5a0;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 16px;
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-radius: 4px;
+        }
+
+        .toolbar-btn:hover {
+            background: rgba(94, 47, 20, 0.95);
+            border-color: #c4943a;
+            color: #fff;
+        }
+
+        #reader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        #reader.visible {
+            display: flex;
+        }
+
+        .reader-page {
+            max-width: 780px;
+            width: 92%;
+            max-height: 92vh;
+            background: linear-gradient(170deg, #2a2015 0%, #1f1810 40%, #1a150e 100%);
+            border: 1px solid #4a3520;
+            border-radius: 3px;
+            padding: 36px 40px;
+            overflow-y: auto;
+            box-shadow: 0 0 60px rgba(0,0,0,0.8), inset 0 1px 0 rgba(196,148,58,0.06);
+        }
+
+        .reader-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #4a3520;
+        }
+
+        .reader-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #c4943a;
+        }
+
+        .reader-coords {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            color: #5a4a32;
+            margin-top: 4px;
+        }
+
+        .reader-close {
+            background: none;
+            border: none;
+            color: #8b7355;
+            font-size: 28px;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+        }
+
+        .reader-close:hover {
+            color: #d4c5a0;
+        }
+
+        .reader-content {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12.5px;
+            line-height: 1.45;
+            color: #c4b590;
+            white-space: pre;
+            margin-bottom: 24px;
+            overflow-x: auto;
+            overflow-y: auto;
+            max-height: 60vh;
+            padding: 16px;
+            background: rgba(10, 8, 6, 0.4);
+            border-radius: 2px;
+        }
+
+        .reader-content .highlight {
+            background: rgba(196, 148, 58, 0.3);
+            color: #c4943a;
+        }
+
+        .reader-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 12px;
+            border-top: 1px solid #4a3520;
+        }
+
+        .reader-page-num {
+            color: #8b7355;
+            font-size: 15px;
+        }
+
+        .reader-nav {
+            display: flex;
+            gap: 12px;
+        }
+
+        .reader-nav button {
+            background: rgba(74, 37, 16, 0.7);
+            border: 1px solid #8b7355;
+            color: #d4c5a0;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 15px;
+            padding: 8px 16px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .reader-nav button:hover:not(:disabled) {
+            background: rgba(94, 47, 20, 0.9);
+            border-color: #c4943a;
+        }
+
+        .reader-nav button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .panel {
+            position: fixed;
+            right: 0;
+            top: 0;
+            width: 380px;
+            height: 100vh;
+            background: #12100a;
+            border-left: 1px solid #4a3520;
+            z-index: 90;
+            transform: translateX(100%);
+            transition: transform 0.3s ease-out;
+            overflow-y: auto;
+            padding: 32px;
+        }
+
+        .panel.visible {
+            transform: translateX(0);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .panel-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #c4943a;
+        }
+
+        .panel-close {
+            background: none;
+            border: none;
+            color: #8b7355;
+            font-size: 28px;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .panel-close:hover {
+            color: #d4c5a0;
+        }
+
+        .panel label {
+            display: block;
+            margin-bottom: 8px;
+            color: #8b7355;
+            font-size: 14px;
+        }
+
+        .panel textarea {
+            width: 100%;
+            min-height: 120px;
+            background: #1a1208;
+            border: 1px solid #4a3520;
+            color: #d4c5a0;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            padding: 12px;
+            border-radius: 4px;
+            resize: vertical;
+            margin-bottom: 16px;
+        }
+
+        .panel input {
+            width: 100%;
+            background: #1a1208;
+            border: 1px solid #4a3520;
+            color: #d4c5a0;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 12px;
+        }
+
+        .panel button {
+            width: 100%;
+            background: rgba(74, 37, 16, 0.85);
+            border: 1px solid #8b7355;
+            color: #d4c5a0;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 16px;
+            padding: 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+            margin-bottom: 12px;
+        }
+
+        .panel button:hover {
+            background: rgba(94, 47, 20, 0.95);
+            border-color: #c4943a;
+        }
+
+        .search-philosophy {
+            font-style: italic;
+            font-size: 15px;
+            line-height: 1.6;
+            color: #8b7355;
+            margin-bottom: 20px;
+        }
+
+        #char-counter {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            color: #5a4a32;
+            margin-top: -12px;
+            margin-bottom: 12px;
+        }
+
+        #search-result {
+            margin-top: 24px;
+            padding: 16px;
+            background: rgba(26, 18, 8, 0.6);
+            border: 1px solid #4a3520;
+            border-radius: 4px;
+        }
+
+        .result-found p {
+            margin-bottom: 12px;
+            color: #c4943a;
+        }
+
+        .result-coords {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            color: #8b7355;
+            margin-bottom: 16px;
+        }
+
+        .result-coords div {
+            margin-bottom: 6px;
+        }
+
+        .nav-field {
+            margin-bottom: 20px;
+        }
+
+        #about-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: 700px;
+            width: 90%;
+            max-height: 90vh;
+            background: #12100a;
+            border: 1px solid #4a3520;
+            border-radius: 4px;
+            padding: 40px;
+            z-index: 110;
+            display: none;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.9);
+        }
+
+        #about-modal.visible {
+            display: block;
+        }
+
+        #about-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 105;
+            display: none;
+        }
+
+        #about-overlay.visible {
+            display: block;
+        }
+
+        .about-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .about-title {
+            font-size: 32px;
+            font-weight: 600;
+            color: #c4943a;
+            margin-bottom: 16px;
+            letter-spacing: 2px;
+        }
+
+        .about-quote {
+            font-style: italic;
+            font-size: 18px;
+            line-height: 1.6;
+            color: #d4c5a0;
+            margin-bottom: 8px;
+        }
+
+        .about-author {
+            color: #8b7355;
+            font-size: 14px;
+        }
+
+        .about-content {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #d4c5a0;
+            margin-bottom: 24px;
+        }
+
+        .about-content p {
+            margin-bottom: 16px;
+        }
+
+        .about-section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #c4943a;
+            margin-top: 32px;
+            margin-bottom: 12px;
+        }
+
+        .about-close {
+            width: 100%;
+            background: rgba(74, 37, 16, 0.85);
+            border: 1px solid #8b7355;
+            color: #d4c5a0;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 16px;
+            padding: 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+            margin-top: 24px;
+        }
+
+        .about-close:hover {
+            background: rgba(94, 47, 20, 0.95);
+            border-color: #c4943a;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="scene"></canvas>
+    <div id="transition-fade"></div>
+    <div id="vignette"></div>
+    <div id="title-bar">
+        <span>THE LIBRARY OF BABEL</span>
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <button id="audio-toggle" onclick="toggleAudio()" title="Toggle ambient audio">🔇</button>
+            <input type="range" id="brightness-slider" min="30" max="150" value="80" title="Brightness">
+        </div>
+    </div>
+
+    <div id="intro">
+        <div id="intro-text">
+            <div class="intro-quote">"The universe (which others call the Library) is composed of an indefinite, perhaps infinite, number of hexagonal galleries..."</div>
+            <div class="intro-attribution">— Jorge Luis Borges, 1941</div>
+            <div class="intro-prompt">Click anywhere to enter the Library</div>
+        </div>
+    </div>
+
+    <div id="crosshair"></div>
+
+    <div id="instructions">
+        Click to look around. WASD to walk. Click any book to read it. Q/E near stairs to change floor.
+    </div>
+
+    <div id="hud">
+        <span id="hud-coords">Hexagon: 0</span>
+        <span id="hud-info">640 books per room · 410 pages per book · 29^3200 possible pages</span>
+    </div>
+
+    <div id="toolbar">
+        <button class="toolbar-btn" onclick="openSearch()">Search</button>
+        <button class="toolbar-btn" onclick="openNav()">Navigate</button>
+        <button class="toolbar-btn" onclick="randomRoom()">Random</button>
+        <button class="toolbar-btn" onclick="openAbout()">About</button>
+    </div>
+
+    <div id="reader">
+        <div class="reader-page">
+            <div class="reader-header">
+                <div>
+                    <div class="reader-title" id="reader-title">Volume 1 of 32</div>
+                    <div class="reader-coords" id="reader-coords"></div>
+                </div>
+                <button class="reader-close" onclick="closeBook()">&times;</button>
+            </div>
+            <div class="reader-content" id="reader-content"></div>
+            <div class="reader-footer">
+                <div class="reader-page-num" id="reader-page-num">Page 1 of 410</div>
+                <div class="reader-nav">
+                    <button onclick="prevPage()" id="prev-page-btn">&larr; Previous</button>
+                    <button onclick="nextPage()" id="next-page-btn">Next &rarr;</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="search-panel" class="panel">
+        <div class="panel-header">
+            <div class="panel-title">Search the Library</div>
+            <button class="panel-close" onclick="closeSearch()">&times;</button>
+        </div>
+        <p class="search-philosophy">Every text you can imagine already exists in this Library, at a computable address. Enter any text and we will find exactly where it resides.</p>
+        <label>Text to locate (up to 80 characters):</label>
+        <textarea id="search-input" placeholder="Try your name, a sentence, anything..."></textarea>
+        <div id="char-counter">(0/80 characters)</div>
+        <button onclick="performSearch()">Find in Library</button>
+        <div id="search-result"></div>
+    </div>
+
+    <div id="nav-panel" class="panel">
+        <div class="panel-header">
+            <div class="panel-title">Navigate</div>
+            <button class="panel-close" onclick="closeNav()">&times;</button>
+        </div>
+        <div class="nav-field">
+            <label>Hexagon ID (base-36):</label>
+            <input type="text" id="nav-hex" placeholder="0">
+        </div>
+        <div class="nav-field">
+            <label>Wall (1-4):</label>
+            <input type="number" id="nav-wall" min="1" max="4" value="1">
+        </div>
+        <div class="nav-field">
+            <label>Shelf (1-5):</label>
+            <input type="number" id="nav-shelf" min="1" max="5" value="1">
+        </div>
+        <div class="nav-field">
+            <label>Volume (1-32):</label>
+            <input type="number" id="nav-vol" min="1" max="32" value="1">
+        </div>
+        <div class="nav-field">
+            <label>Page (1-410):</label>
+            <input type="number" id="nav-page" min="1" max="410" value="1">
+        </div>
+        <button onclick="navigateToCoords()">Go There</button>
+    </div>
+
+    <div id="about-overlay" onclick="closeAbout()"></div>
+    <div id="about-modal">
+        <div class="about-header">
+            <div class="about-title">THE LIBRARY OF BABEL</div>
+            <div class="about-quote">
+                "The universe (which others call the Library) is composed of an indefinite and perhaps infinite number of hexagonal galleries..."
+            </div>
+            <div class="about-author">— Jorge Luis Borges, 1941</div>
+        </div>
+        <div class="about-content">
+            <p>
+                This library contains every possible book of 410 pages, where each page has 40 lines of 80 characters drawn from 29 symbols. Each hexagonal room holds 640 books across 4 walls of 5 shelves.
+            </p>
+            <p>
+                The total number of distinct pages is 29<sup>3200</sup> — a number with over 4,600 digits. For comparison, the number of atoms in the observable universe is a mere 10<sup>80</sup>.
+            </p>
+            <p>
+                Somewhere in these infinite hexagons exists every poem ever written, every scientific discovery yet to be made, every love letter that could be composed, the precise account of your death, and the refutation of that account. The vast majority of books are gibberish — an ocean of noise in which the occasional coherent phrase is a miracle that the Librarians call a Vindication.
+            </p>
+            <p style="font-style:italic; color:#8b7355;">
+                The Library has existed ab aeterno.
+            </p>
+        </div>
+        <div class="about-section-title">THE SEARCH</div>
+        <div class="about-content">
+            <p>
+                Use the Search feature to prove the Library's completeness. Enter any text — your name, a quote, a secret — and the algorithm will compute the exact hexagonal room, wall, shelf, volume, and page where that text resides. Then navigate there and read it.
+            </p>
+        </div>
+        <div class="about-section-title">ACKNOWLEDGMENTS</div>
+        <div class="about-content">
+            <p>
+                Inspired by Jonathan Basile's <a href="https://libraryofbabel.info" target="_blank" style="color:#c4943a;">libraryofbabel.info</a>, the landmark digital Library of Babel. Basile's implementation uses a Linear Congruential Generator with modular inverses; this one uses an 8-round Feistel cipher operating at line level (29<sup>80</sup> possible lines).
+            </p>
+            <p>
+                Both approaches solve the same core problem: a reversible bijective mapping that makes the Library complete and navigable — given any text, we can compute its unique address without searching.
+            </p>
+        </div>
+        <button class="about-close" onclick="closeAbout()">Close</button>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+
+        // ============================================
+        // LIBRARY ALGORITHM - FEISTEL CIPHER
+        // ============================================
+
+        const SYMBOLS = ' ,.abcdefghijklmnopqrstuvwxyz';
+        const BASE = 29n;
+        const LINE_LEN = 80;
+        const HALF_LEN = 40;
+        const HALF = BASE ** BigInt(HALF_LEN);
+        const TOTAL = HALF * HALF;
+
+        // Library structure constants
+        const LINES_PER_PAGE = 40;
+        const PAGES_PER_VOL = 410;
+        const VOLS_PER_SHELF = 32;
+        const SHELVES_PER_WALL = 5;
+        const WALLS_PER_HEX = 4;
+        const LINES_PER_VOL = PAGES_PER_VOL * LINES_PER_PAGE;
+        const LINES_PER_SHELF = VOLS_PER_SHELF * LINES_PER_VOL;
+        const LINES_PER_WALL = SHELVES_PER_WALL * LINES_PER_SHELF;
+        const LINES_PER_HEX = WALLS_PER_HEX * LINES_PER_WALL;
+
+        // Round keys derived from mathematical constants
+        const MASTER_SEEDS = [
+            314159265358979323846264338327950288419n,
+            271828182845904523536028747135266249775n,
+            161803398874989484820458683436563811772n,
+            141421356237309504880168872420969807856n,
+            173205080756887729352744634150587236694n,
+            223606797749978969640917366873127623544n,
+            244948974278317809819728407470589139196n,
+            264575131106459059050161575363926042571n,
+        ];
+
+        const ROUND_KEYS = MASTER_SEEDS.map(seed => ({
+            a: (seed * 2654435761n) % HALF,
+            b: (seed * 2246822519n) % HALF,
+            c: (seed * 3266489917n) % HALF,
+        }));
+
+        // Proper modular arithmetic for BigInt (JS % can return negative)
+        function bigMod(a, m) {
+            return ((a % m) + m) % m;
+        }
+
+        function roundFunction(value, key) {
+            return bigMod(key.a * value * value + key.b * value + key.c, HALF);
+        }
+
+        function feistelEncrypt(input) {
+            input = bigMod(input, TOTAL);
+            let left = input / HALF;
+            let right = input % HALF;
+            for (let i = 0; i < 8; i++) {
+                const f = roundFunction(right, ROUND_KEYS[i]);
+                const newLeft = right;
+                const newRight = bigMod(left + f, HALF);
+                left = newLeft;
+                right = newRight;
+            }
+            return left * HALF + right;
+        }
+
+        function feistelDecrypt(input) {
+            input = bigMod(input, TOTAL);
+            let left = input / HALF;
+            let right = input % HALF;
+            for (let i = 7; i >= 0; i--) {
+                const f = roundFunction(left, ROUND_KEYS[i]);
+                const newLeft = bigMod(right - f, HALF);
+                const newRight = left;
+                left = newLeft;
+                right = newRight;
+            }
+            return left * HALF + right;
+        }
+
+        function bigintToChars(num, len) {
+            const chars = new Array(len);
+            for (let i = len - 1; i >= 0; i--) {
+                chars[i] = SYMBOLS[Number(num % BASE)];
+                num = num / BASE;
+            }
+            return chars.join('');
+        }
+
+        function charsToBigint(str) {
+            let num = 0n;
+            for (let i = 0; i < str.length; i++) {
+                const idx = SYMBOLS.indexOf(str[i]);
+                if (idx === -1) continue;
+                num = num * BASE + BigInt(idx);
+            }
+            return num;
+        }
+
+        function coordsToLineAddress(hexId, wall, shelf, vol, page, line) {
+            const addr = hexId * BigInt(LINES_PER_HEX)
+                 + BigInt(wall * LINES_PER_WALL + shelf * LINES_PER_SHELF
+                 + vol * LINES_PER_VOL + page * LINES_PER_PAGE + line);
+            return bigMod(addr, TOTAL);
+        }
+
+        function lineAddressToCoords(addr) {
+            const localBig = addr % BigInt(LINES_PER_HEX);
+            const hexId = addr / BigInt(LINES_PER_HEX);
+            let local = Number(localBig);
+            const line = local % LINES_PER_PAGE;
+            local = Math.floor(local / LINES_PER_PAGE);
+            const page = local % PAGES_PER_VOL;
+            local = Math.floor(local / PAGES_PER_VOL);
+            const vol = local % VOLS_PER_SHELF;
+            local = Math.floor(local / VOLS_PER_SHELF);
+            const shelf = local % SHELVES_PER_WALL;
+            local = Math.floor(local / SHELVES_PER_WALL);
+            const wall = local % WALLS_PER_HEX;
+            return { hexId, wall, shelf, vol, page, line };
+        }
+
+        function generatePage(hexId, wall, shelf, vol, page) {
+            const lines = [];
+            for (let l = 0; l < LINES_PER_PAGE; l++) {
+                const addr = coordsToLineAddress(hexId, wall, shelf, vol, page, l);
+                const contentNum = feistelEncrypt(addr);
+                lines.push(bigintToChars(contentNum, LINE_LEN));
+            }
+            return lines;
+        }
+
+        function searchText(text) {
+            text = text.toLowerCase().replace(/[^a-z ,.]/g, '');
+            text = text.padEnd(LINE_LEN, ' ').substring(0, LINE_LEN);
+            const contentNum = charsToBigint(text);
+            const addr = feistelDecrypt(contentNum);
+            return lineAddressToCoords(addr);
+        }
+
+        // ============================================
+        // THREE.JS SCENE SETUP
+        // ============================================
+
+        const canvas = document.getElementById('scene');
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 0.8;
+
+        const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 50);
+        camera.position.set(0, 1.6, 0);
+
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0a0806);
+        scene.fog = new THREE.FogExp2(0x0a0806, 0.08);
+
+        const ambientLight = new THREE.AmbientLight(0x201510, 0.4);
+        scene.add(ambientLight);
+
+        // Materials
+        const wallMaterial = new THREE.MeshStandardMaterial({ color: 0x2a1f15, roughness: 0.9, metalness: 0.0 });
+        const floorMaterial = new THREE.MeshStandardMaterial({ color: 0x1a1208, roughness: 0.95 });
+        const ceilingMaterial = new THREE.MeshStandardMaterial({ color: 0x1f1a12, roughness: 0.9 });
+        const shelfMaterial = new THREE.MeshStandardMaterial({ color: 0x4a2510, roughness: 0.7 });
+
+        const BOOK_COLORS = [
+            0x8B1A1A, 0x1A3C5A, 0x2B5329, 0x4A3728, 0x3A2E4D,
+            0x5C4033, 0x2D4A2D, 0x4A1A2A, 0x1A4A4A, 0x5A4A32,
+            0x3D2B1F, 0x2B3D5A, 0x6B3A2A, 0x2A4A3D, 0x4D3A5A,
+            0x5A3A28, 0x283A5A, 0x3A5A28, 0x5A2838, 0x38285A,
+        ];
+
+        const columnMaterial = new THREE.MeshStandardMaterial({ color: 0x2a1f15, roughness: 0.85 });
+
+        // Track shared materials so we don't dispose them when removing rooms
+        const sharedMaterials = new Set([wallMaterial, floorMaterial, ceilingMaterial, shelfMaterial, columnMaterial]);
+
+        // ============================================
+        // HEXAGONAL ROOM GEOMETRY
+        // ============================================
+
+        const R = 3;
+        const ROOM_HEIGHT = 3.2;
+        const CORRIDOR_LENGTH = 2.5;
+        const ROOM_DEPTH = R * Math.sqrt(3) + CORRIDOR_LENGTH;
+
+        const HEX_VERTICES = [];
+        for (let i = 0; i < 6; i++) {
+            const angle = (Math.PI / 3) * i;
+            HEX_VERTICES.push(new THREE.Vector3(R * Math.cos(angle), 0, R * Math.sin(angle)));
+        }
+
+        const BOOKSHELF_WALLS = [0, 2, 3, 5];
+        const PASSAGE_WALLS = [1, 4];
+
+        function seededRandom(seed) {
+            const x = Math.sin(seed) * 10000;
+            return x - Math.floor(x);
+        }
+
+        function createFullRoom(hexId, offsetZ) {
+            const group = new THREE.Group();
+            group.position.z = offsetZ;
+            const staircases = [];
+
+            // Floor
+            const floorShape = new THREE.Shape();
+            for (let i = 0; i <= 6; i++) {
+                const angle = (Math.PI / 3) * (i % 6);
+                const x = R * Math.cos(angle);
+                const z = R * Math.sin(angle);
+                if (i === 0) floorShape.moveTo(x, z);
+                else floorShape.lineTo(x, z);
+            }
+            const floorGeom = new THREE.ShapeGeometry(floorShape);
+            floorGeom.rotateX(-Math.PI / 2);
+            const floorMesh = new THREE.Mesh(floorGeom, floorMaterial);
+            group.add(floorMesh);
+
+            // Ceiling
+            const ceilGeom = floorGeom.clone();
+            const ceilMesh = new THREE.Mesh(ceilGeom, ceilingMaterial);
+            ceilMesh.position.y = ROOM_HEIGHT;
+            ceilMesh.rotation.x = Math.PI;
+            group.add(ceilMesh);
+
+            // Bookshelf walls
+            for (const wallIdx of BOOKSHELF_WALLS) {
+                const va = HEX_VERTICES[wallIdx];
+                const vb = HEX_VERTICES[(wallIdx + 1) % 6];
+                const wallLen = va.distanceTo(vb);
+                const wallGeom = new THREE.PlaneGeometry(wallLen, ROOM_HEIGHT);
+                const wallMesh = new THREE.Mesh(wallGeom, wallMaterial);
+
+                const midpoint = new THREE.Vector3((va.x + vb.x) / 2, ROOM_HEIGHT / 2, (va.z + vb.z) / 2);
+                wallMesh.position.copy(midpoint);
+
+                const center = new THREE.Vector3((va.x + vb.x) / 2, 0, (va.z + vb.z) / 2);
+                const inwardAngle = Math.atan2(-center.x, -center.z);
+                wallMesh.rotation.y = inwardAngle;
+
+                group.add(wallMesh);
+            }
+
+            // Passage archways (top beams + side columns)
+            for (const passIdx of PASSAGE_WALLS) {
+                const va = HEX_VERTICES[passIdx];
+                const vb = HEX_VERTICES[(passIdx + 1) % 6];
+                const center = new THREE.Vector3((va.x + vb.x) / 2, 0, (va.z + vb.z) / 2);
+                const passAngle = Math.atan2(-center.x, -center.z);
+
+                // Top beam
+                const beamGeom = new THREE.BoxGeometry(R, 0.15, 0.2);
+                const beamMesh = new THREE.Mesh(beamGeom, shelfMaterial);
+                beamMesh.position.set(center.x, ROOM_HEIGHT - 0.075, center.z);
+                beamMesh.rotation.y = passAngle;
+                group.add(beamMesh);
+
+                // Side columns
+                const colGeom = new THREE.BoxGeometry(0.15, ROOM_HEIGHT, 0.2);
+                const col1 = new THREE.Mesh(colGeom, columnMaterial);
+                col1.position.set(va.x, ROOM_HEIGHT / 2, va.z);
+                col1.rotation.y = passAngle;
+                group.add(col1);
+                const col2 = new THREE.Mesh(colGeom, columnMaterial);
+                col2.position.set(vb.x, ROOM_HEIGHT / 2, vb.z);
+                col2.rotation.y = passAngle;
+                group.add(col2);
+
+                // Vestibule corridor (Borges's "narrow sort of vestibule")
+                // Corridor sits in the gap between hex rooms
+                const corridorWidth = 1.8;
+                const corridorDepth = CORRIDOR_LENGTH / 2;
+                const outwardDir = new THREE.Vector3(center.x, 0, center.z).normalize();
+                const rightDir = new THREE.Vector3(-outwardDir.z, 0, outwardDir.x);
+
+                // Corridor starts at the passage edge (R*sqrt(3)/2 from room center)
+                const passageEdgeZ = R * Math.sqrt(3) / 2;
+                const corridorCenter = center.clone().normalize().multiplyScalar(passageEdgeZ + corridorDepth / 2);
+
+                // Corridor floor
+                const corridorFloorGeom = new THREE.PlaneGeometry(corridorWidth, corridorDepth);
+                const corridorFloor = new THREE.Mesh(corridorFloorGeom, floorMaterial);
+                corridorFloor.rotation.x = -Math.PI / 2;
+                corridorFloor.position.copy(corridorCenter);
+                corridorFloor.position.y = 0;
+                group.add(corridorFloor);
+
+                // Corridor ceiling
+                const corridorCeiling = new THREE.Mesh(corridorFloorGeom, ceilingMaterial);
+                corridorCeiling.rotation.x = Math.PI / 2;
+                corridorCeiling.position.copy(corridorCenter);
+                corridorCeiling.position.y = ROOM_HEIGHT;
+                group.add(corridorCeiling);
+
+                // Corridor side walls
+                const corridorWallGeom = new THREE.PlaneGeometry(corridorDepth, ROOM_HEIGHT);
+
+                const leftWallPos = corridorCenter.clone().add(rightDir.clone().multiplyScalar(-corridorWidth / 2));
+                const leftWall = new THREE.Mesh(corridorWallGeom, wallMaterial);
+                leftWall.position.copy(leftWallPos);
+                leftWall.position.y = ROOM_HEIGHT / 2;
+                leftWall.rotation.y = passAngle + Math.PI / 2;
+                group.add(leftWall);
+
+                const rightWallPos = corridorCenter.clone().add(rightDir.clone().multiplyScalar(corridorWidth / 2));
+                const rightWall = new THREE.Mesh(corridorWallGeom, wallMaterial);
+                rightWall.position.copy(rightWallPos);
+                rightWall.position.y = ROOM_HEIGHT / 2;
+                rightWall.rotation.y = passAngle - Math.PI / 2;
+                group.add(rightWall);
+
+                // Infill walls: close gap between hex opening (R wide) and corridor (1.8m wide)
+                const gapPerSide = (R - corridorWidth) / 2; // ~0.6m each side
+                if (gapPerSide > 0.01) {
+                    const infillGeom = new THREE.PlaneGeometry(gapPerSide, ROOM_HEIGHT);
+
+                    // Left infill: from hex vertex toward left corridor wall
+                    const leftInfill = new THREE.Mesh(infillGeom, wallMaterial);
+                    const leftInfillPos = center.clone()
+                        .add(rightDir.clone().multiplyScalar(-(corridorWidth / 2 + gapPerSide / 2)));
+                    leftInfill.position.copy(leftInfillPos);
+                    leftInfill.position.y = ROOM_HEIGHT / 2;
+                    leftInfill.rotation.y = passAngle;
+                    group.add(leftInfill);
+
+                    // Right infill: from hex vertex toward right corridor wall
+                    const rightInfill = new THREE.Mesh(infillGeom, wallMaterial);
+                    const rightInfillPos = center.clone()
+                        .add(rightDir.clone().multiplyScalar(corridorWidth / 2 + gapPerSide / 2));
+                    rightInfill.position.copy(rightInfillPos);
+                    rightInfill.position.y = ROOM_HEIGHT / 2;
+                    rightInfill.rotation.y = passAngle;
+                    group.add(rightInfill);
+                }
+
+                // Spiral staircase only on +Z passage (passIdx 1) to avoid doubling
+                if (passIdx === 1) {
+                    const stairOffset = rightDir.clone().multiplyScalar(0.55);
+                    const stairCenter = corridorCenter.clone().add(stairOffset);
+
+                    staircases.push({ x: stairCenter.x, z: stairCenter.z });
+
+                    const poleMat = new THREE.MeshStandardMaterial({ color: 0x1a1208, roughness: 0.8 });
+                    const poleGeom = new THREE.CylinderGeometry(0.06, 0.06, ROOM_HEIGHT * 3, 12);
+                    const pole = new THREE.Mesh(poleGeom, poleMat);
+                    pole.position.copy(stairCenter);
+                    pole.position.y = ROOM_HEIGHT / 2;
+                    group.add(pole);
+
+                    const stepGeom = new THREE.BoxGeometry(0.35, 0.03, 0.15);
+                    const numSteps = 16;
+                    const heightPerStep = ROOM_HEIGHT * 3 / numSteps;
+                    const anglePerStep = (Math.PI * 2.5) / numSteps;
+
+                    for (let i = 0; i < numSteps; i++) {
+                        const step = new THREE.Mesh(stepGeom, shelfMaterial);
+                        const stepAngle = anglePerStep * i;
+                        const stepRadius = 0.2;
+                        step.position.set(
+                            stairCenter.x + Math.cos(stepAngle) * stepRadius,
+                            -ROOM_HEIGHT * 0.8 + heightPerStep * i,
+                            stairCenter.z + Math.sin(stepAngle) * stepRadius
+                        );
+                        step.rotation.y = stepAngle + Math.PI / 2;
+                        group.add(step);
+                    }
+                }
+
+                // Mirror (Borges's "mirror which faithfully duplicates appearances")
+                const mirrorWidth = 0.6;
+                const mirrorHeight = 1.0;
+                const mirrorMat = new THREE.MeshStandardMaterial({
+                    color: 0x888899,
+                    metalness: 0.95,
+                    roughness: 0.05
+                });
+
+                const mirrorPos = leftWallPos.clone().add(rightDir.clone().multiplyScalar(0.02));
+                const mirrorPlane = new THREE.PlaneGeometry(mirrorWidth, mirrorHeight);
+                const mirror = new THREE.Mesh(mirrorPlane, mirrorMat);
+                mirror.position.copy(mirrorPos);
+                mirror.position.y = 1.6;
+                mirror.rotation.y = passAngle + Math.PI / 2;
+                group.add(mirror);
+
+                // Mirror frame (mahogany)
+                const frameThickness = 0.04;
+                const frameDepth = 0.06;
+                const frameTop = new THREE.BoxGeometry(mirrorWidth + frameThickness * 2, frameThickness, frameDepth);
+                const frameSide = new THREE.BoxGeometry(frameThickness, mirrorHeight, frameDepth);
+
+                const topFrame = new THREE.Mesh(frameTop, shelfMaterial);
+                topFrame.position.copy(mirror.position);
+                topFrame.position.y += mirrorHeight / 2 + frameThickness / 2;
+                topFrame.rotation.y = mirror.rotation.y;
+                group.add(topFrame);
+
+                const bottomFrame = new THREE.Mesh(frameTop, shelfMaterial);
+                bottomFrame.position.copy(mirror.position);
+                bottomFrame.position.y -= mirrorHeight / 2 + frameThickness / 2;
+                bottomFrame.rotation.y = mirror.rotation.y;
+                group.add(bottomFrame);
+
+                const leftFrame = new THREE.Mesh(frameSide, shelfMaterial);
+                leftFrame.position.copy(mirror.position);
+                const frameLeft = new THREE.Vector3(Math.cos(passAngle + Math.PI / 2), 0, Math.sin(passAngle + Math.PI / 2));
+                leftFrame.position.add(frameLeft.multiplyScalar((mirrorWidth / 2 + frameThickness / 2)));
+                leftFrame.rotation.y = mirror.rotation.y;
+                group.add(leftFrame);
+
+                const rightFrame = new THREE.Mesh(frameSide, shelfMaterial);
+                rightFrame.position.copy(mirror.position);
+                const frameRight = new THREE.Vector3(Math.cos(passAngle - Math.PI / 2), 0, Math.sin(passAngle - Math.PI / 2));
+                rightFrame.position.add(frameRight.multiplyScalar((mirrorWidth / 2 + frameThickness / 2)));
+                rightFrame.rotation.y = mirror.rotation.y;
+                group.add(rightFrame);
+
+                // Two small alcove recesses (Borges's sleeping and sanitary closets)
+                const alcoveWidth = 0.5;
+                const alcoveHeight = 1.8;
+                const alcoveDepth = 0.3;
+                const darkMat = new THREE.MeshStandardMaterial({ color: 0x0a0806, roughness: 1.0 });
+                const alcoveGeom = new THREE.BoxGeometry(alcoveWidth, alcoveHeight, alcoveDepth);
+
+                // Left alcove
+                const leftAlcovePos = leftWallPos.clone().add(rightDir.clone().multiplyScalar(0.01));
+                const leftAlcove = new THREE.Mesh(alcoveGeom, darkMat);
+                leftAlcove.position.copy(leftAlcovePos);
+                leftAlcove.position.y = alcoveHeight / 2 + 0.2;
+                leftAlcove.rotation.y = passAngle + Math.PI / 2;
+                group.add(leftAlcove);
+
+                // Right alcove
+                const rightAlcovePos = rightWallPos.clone().add(rightDir.clone().multiplyScalar(-0.01));
+                const rightAlcove = new THREE.Mesh(alcoveGeom, darkMat);
+                rightAlcove.position.copy(rightAlcovePos);
+                rightAlcove.position.y = alcoveHeight / 2 + 0.2;
+                rightAlcove.rotation.y = passAngle - Math.PI / 2;
+                group.add(rightAlcove);
+            }
+
+            // Lamps (Borges's "spherical fruit")
+            const lampGeom = new THREE.SphereGeometry(0.12, 16, 16);
+            const lampMat = new THREE.MeshBasicMaterial({ color: 0xFFE0A0 });
+            const lamp1 = new THREE.Mesh(lampGeom, lampMat);
+            lamp1.position.set(0.8, ROOM_HEIGHT - 0.2, 0);
+            group.add(lamp1);
+            const lamp2 = new THREE.Mesh(lampGeom, lampMat);
+            lamp2.position.set(-0.8, ROOM_HEIGHT - 0.2, 0);
+            group.add(lamp2);
+
+            // Point lights (warm amber, per Borges's "insufficient, incessant light")
+            const light1 = new THREE.PointLight(0xFFD280, 2.0, 10, 1.2);
+            light1.position.copy(lamp1.position);
+            group.add(light1);
+            const light2 = new THREE.PointLight(0xFFD280, 2.0, 10, 1.2);
+            light2.position.copy(lamp2.position);
+            group.add(light2);
+
+            // Central ventilation shaft (Borges's detail)
+            const shaftRadius = 0.3;
+            const shaftMaterial = new THREE.MeshStandardMaterial({
+                color: 0x050403,
+                emissive: 0x0a0a15,
+                emissiveIntensity: 0.05,
+                roughness: 0.95
+            });
+
+            // Floor shaft opening
+            const floorShaftGeom = new THREE.CylinderGeometry(shaftRadius, shaftRadius, 0.1, 12);
+            const floorShaft = new THREE.Mesh(floorShaftGeom, shaftMaterial);
+            floorShaft.position.set(0, 0.05, 0);
+            group.add(floorShaft);
+
+            // Floor rim
+            const floorRimGeom = new THREE.TorusGeometry(shaftRadius, 0.02, 8, 12);
+            const rimMaterial = new THREE.MeshStandardMaterial({ color: 0x3a2510, roughness: 0.8 });
+            const floorRim = new THREE.Mesh(floorRimGeom, rimMaterial);
+            floorRim.rotation.x = Math.PI / 2;
+            floorRim.position.set(0, 0.1, 0);
+            group.add(floorRim);
+
+            // Ceiling shaft opening
+            const ceilShaftGeom = new THREE.CylinderGeometry(shaftRadius, shaftRadius, 0.1, 12);
+            const ceilShaft = new THREE.Mesh(ceilShaftGeom, shaftMaterial);
+            ceilShaft.position.set(0, ROOM_HEIGHT - 0.05, 0);
+            group.add(ceilShaft);
+
+            // Ceiling rim
+            const ceilRim = new THREE.Mesh(floorRimGeom, rimMaterial);
+            ceilRim.rotation.x = Math.PI / 2;
+            ceilRim.position.set(0, ROOM_HEIGHT - 0.1, 0);
+            group.add(ceilRim);
+
+            // Add bookshelves with books
+            const { bookMesh, bookMap } = addBookshelves(group, hexId);
+
+            return { group, bookMesh, bookMap, lights: [light1, light2], staircases };
+        }
+
+        function addBookshelves(group, hexId) {
+            const SHELF_HEIGHTS = [0.3, 0.85, 1.4, 1.95, 2.5];
+            const SHELF_DEPTH = 0.25;
+            const SHELF_THICKNESS = 0.02;
+            const BOOKS_PER_SHELF = 32;
+
+            // Add shelf planks
+            for (const wallIdx of BOOKSHELF_WALLS) {
+                const va = HEX_VERTICES[wallIdx];
+                const vb = HEX_VERTICES[(wallIdx + 1) % 6];
+                const wallCenter = new THREE.Vector3((va.x + vb.x) / 2, 0, (va.z + vb.z) / 2);
+                const inwardDir = new THREE.Vector3(-wallCenter.x, 0, -wallCenter.z).normalize();
+
+                for (let s = 0; s < SHELF_HEIGHTS.length; s++) {
+                    const shelfGeom = new THREE.BoxGeometry(R - 0.1, SHELF_THICKNESS, SHELF_DEPTH);
+                    const shelfMesh = new THREE.Mesh(shelfGeom, shelfMaterial);
+
+                    const shelfPos = wallCenter.clone().add(inwardDir.clone().multiplyScalar(SHELF_DEPTH / 2 + 0.02));
+                    shelfPos.y = SHELF_HEIGHTS[s];
+                    shelfMesh.position.copy(shelfPos);
+                    shelfMesh.rotation.y = Math.atan2(-wallCenter.x, -wallCenter.z);
+                    group.add(shelfMesh);
+                }
+            }
+
+            // Create books as instanced mesh
+            const totalBooks = BOOKSHELF_WALLS.length * SHELF_HEIGHTS.length * BOOKS_PER_SHELF;
+            const bookGeom = new THREE.BoxGeometry(0.07, 0.20, 0.18);
+            const bookMat = new THREE.MeshStandardMaterial({ roughness: 0.6, metalness: 0.05 });
+            const bookMesh = new THREE.InstancedMesh(bookGeom, bookMat, totalBooks);
+
+            const bookMap = [];
+            let instanceId = 0;
+            const matrix = new THREE.Matrix4();
+            const color = new THREE.Color();
+
+            for (let w = 0; w < BOOKSHELF_WALLS.length; w++) {
+                const wallIdx = BOOKSHELF_WALLS[w];
+                const va = HEX_VERTICES[wallIdx];
+                const vb = HEX_VERTICES[(wallIdx + 1) % 6];
+                const wallCenter = new THREE.Vector3((va.x + vb.x) / 2, 0, (va.z + vb.z) / 2);
+                const wallDir = new THREE.Vector3().subVectors(vb, va).normalize();
+                const inwardDir = new THREE.Vector3(-wallCenter.x, 0, -wallCenter.z).normalize();
+                const wallAngle = Math.atan2(-wallCenter.x, -wallCenter.z);
+
+                for (let s = 0; s < SHELF_HEIGHTS.length; s++) {
+                    for (let v = 0; v < BOOKS_PER_SHELF; v++) {
+                        const slot = v - BOOKS_PER_SHELF / 2;
+                        const slotWidth = (R - 0.2) / BOOKS_PER_SHELF;
+
+                        const bookPos = wallCenter.clone()
+                            .add(wallDir.clone().multiplyScalar(slot * slotWidth))
+                            .add(inwardDir.clone().multiplyScalar(0.18));
+
+                        const seed = Number(hexId % 10000n) + instanceId;
+                        const bookHeight = 0.18 + seededRandom(seed) * 0.06;
+                        bookPos.y = SHELF_HEIGHTS[s] + SHELF_THICKNESS / 2 + bookHeight / 2;
+
+                        matrix.identity();
+                        matrix.makeRotationY(wallAngle);
+                        matrix.setPosition(bookPos);
+                        matrix.scale(new THREE.Vector3(1, bookHeight / 0.20, 1));
+                        bookMesh.setMatrixAt(instanceId, matrix);
+
+                        const colorIndex = Math.floor(seededRandom(seed + 1000) * BOOK_COLORS.length);
+                        color.setHex(BOOK_COLORS[colorIndex]);
+                        bookMesh.setColorAt(instanceId, color);
+
+                        bookMap.push({ wall: wallIdx, shelf: s, vol: v });
+                        instanceId++;
+                    }
+                }
+            }
+
+            bookMesh.instanceMatrix.needsUpdate = true;
+            bookMesh.instanceColor.needsUpdate = true;
+            group.add(bookMesh);
+
+            return { bookMesh, bookMap };
+        }
+
+        // ============================================
+        // ROOM MANAGEMENT
+        // ============================================
+
+        let currentRoomIndex = 0;
+        let currentHexId = 0n;
+        let currentFloor = 0;
+        const rooms = new Map();
+        const staircasePositions = [];
+
+        function disposeRoom(room) {
+            scene.remove(room.group);
+            room.group.traverse((obj) => {
+                if (obj.geometry) obj.geometry.dispose();
+                if (obj.material && !sharedMaterials.has(obj.material)) {
+                    if (Array.isArray(obj.material)) {
+                        obj.material.forEach(mat => { if (!sharedMaterials.has(mat)) mat.dispose(); });
+                    } else {
+                        obj.material.dispose();
+                    }
+                }
+            });
+        }
+
+        function clearAllRooms() {
+            for (const [idx, room] of rooms) {
+                disposeRoom(room);
+            }
+            rooms.clear();
+        }
+
+        function teleportTo(hexId, callback) {
+            const fade = document.getElementById('transition-fade');
+            fade.classList.add('active');
+            setTimeout(() => {
+                currentHexId = hexId;
+                camera.position.set(0, 1.6, 0);
+                clearAllRooms();
+                currentRoomIndex = 0;
+                updateRooms();
+                updateHUD();
+                setTimeout(() => {
+                    fade.classList.remove('active');
+                    if (callback) callback();
+                }, 100);
+            }, 300);
+        }
+
+        function updateRooms() {
+            const needed = new Set();
+            for (let offset = -2; offset <= 2; offset++) {
+                needed.add(currentRoomIndex + offset);
+            }
+
+            // Remove unneeded rooms
+            for (const [idx, room] of rooms) {
+                if (!needed.has(idx)) {
+                    disposeRoom(room);
+                    rooms.delete(idx);
+                }
+            }
+
+            // Clear and rebuild staircase positions
+            staircasePositions.length = 0;
+
+            // Add needed rooms
+            for (const idx of needed) {
+                if (!rooms.has(idx)) {
+                    const hexId = currentHexId + BigInt(idx - currentRoomIndex);
+                    const offsetZ = (idx - currentRoomIndex) * ROOM_DEPTH;
+                    const roomData = createFullRoom(hexId, offsetZ);
+                    roomData.hexId = hexId;
+                    scene.add(roomData.group);
+                    rooms.set(idx, roomData);
+                }
+
+                // Add staircase positions for this room
+                const room = rooms.get(idx);
+                if (room && room.staircases) {
+                    for (const stair of room.staircases) {
+                        staircasePositions.push({
+                            x: stair.x,
+                            z: stair.z + room.group.position.z
+                        });
+                    }
+                }
+            }
+        }
+
+        function checkRoomTransition() {
+            const localZ = camera.position.z;
+            const halfDepth = ROOM_DEPTH / 2;
+
+            if (localZ > halfDepth) {
+                currentRoomIndex++;
+                currentHexId++;
+                camera.position.z -= ROOM_DEPTH;
+                for (const [idx, room] of rooms) {
+                    room.group.position.z -= ROOM_DEPTH;
+                }
+                updateRooms();
+                updateHUD();
+            } else if (localZ < -halfDepth) {
+                currentRoomIndex--;
+                currentHexId--;
+                camera.position.z += ROOM_DEPTH;
+                for (const [idx, room] of rooms) {
+                    room.group.position.z += ROOM_DEPTH;
+                }
+                updateRooms();
+                updateHUD();
+            }
+        }
+
+        function checkStaircaseTraversal(direction) {
+            // Check if player is near any staircase
+            const pos = camera.position;
+            let nearStaircase = null;
+
+            for (const stair of staircasePositions) {
+                const dx = pos.x - stair.x;
+                const dz = pos.z - stair.z;
+                const dist = Math.sqrt(dx * dx + dz * dz);
+
+                if (dist < 0.8) {
+                    nearStaircase = stair;
+                    break;
+                }
+            }
+
+            if (!nearStaircase) return;
+
+            // Change floor
+            currentFloor += direction;
+            const newHexId = currentHexId + BigInt(currentFloor) * 1000000007n;
+
+            teleportTo(newHexId, () => {
+                // Position camera near staircase in new floor
+                if (staircasePositions.length > 0) {
+                    const newStair = staircasePositions[0];
+                    camera.position.x = newStair.x;
+                    camera.position.z = newStair.z;
+                }
+            });
+        }
+
+        // ============================================
+        // POINTER LOCK CONTROLS
+        // ============================================
+
+        const controls = new PointerLockControls(camera, document.body);
+
+        let readerOpen = false;
+        let searchOpen = false;
+        let navOpen = false;
+        let aboutOpen = false;
+        let introHidden = false;
+
+        canvas.addEventListener('click', (e) => {
+            if (!readerOpen && !searchOpen && !navOpen && !aboutOpen && introHidden) {
+                controls.lock();
+            }
+        });
+
+        controls.addEventListener('lock', () => {
+            document.getElementById('crosshair').classList.add('visible');
+            document.getElementById('instructions').classList.add('hidden');
+        });
+
+        controls.addEventListener('unlock', () => {
+            document.getElementById('crosshair').classList.remove('visible');
+            if (introHidden && !readerOpen && !searchOpen && !navOpen && !aboutOpen) {
+                document.getElementById('instructions').classList.remove('hidden');
+            }
+        });
+
+        // ============================================
+        // MOVEMENT
+        // ============================================
+
+        const moveSpeed = 3.0;
+        const keys = { forward: false, backward: false, left: false, right: false };
+
+        window.addEventListener('keydown', (e) => {
+            switch(e.code) {
+                case 'KeyW': keys.forward = true; break;
+                case 'KeyS': keys.backward = true; break;
+                case 'KeyA': keys.left = true; break;
+                case 'KeyD': keys.right = true; break;
+                case 'KeyQ':
+                    if (controls.isLocked) {
+                        e.preventDefault();
+                        checkStaircaseTraversal(-1);
+                    }
+                    break;
+                case 'KeyE':
+                    if (controls.isLocked) {
+                        e.preventDefault();
+                        checkStaircaseTraversal(1);
+                    }
+                    break;
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            switch(e.code) {
+                case 'KeyW': keys.forward = false; break;
+                case 'KeyS': keys.backward = false; break;
+                case 'KeyA': keys.left = false; break;
+                case 'KeyD': keys.right = false; break;
+            }
+        });
+
+        // Pre-compute corridor collision segments (relative to room center)
+        const passageEdgeZ = R * Math.sqrt(3) / 2;
+        const corridorHalfW = 0.9; // corridorWidth / 2
+        const corridorEnd = passageEdgeZ + CORRIDOR_LENGTH / 2;
+
+        // Corridor wall segments for collision (each is [startX, startZ, endX, endZ])
+        const CORRIDOR_WALLS = [
+            // +Z corridor left wall (X = corridorHalfW)
+            [corridorHalfW, passageEdgeZ, corridorHalfW, corridorEnd],
+            // +Z corridor right wall (X = -corridorHalfW)
+            [-corridorHalfW, passageEdgeZ, -corridorHalfW, corridorEnd],
+            // -Z corridor left wall (X = -corridorHalfW)
+            [-corridorHalfW, -passageEdgeZ, -corridorHalfW, -corridorEnd],
+            // -Z corridor right wall (X = corridorHalfW)
+            [corridorHalfW, -passageEdgeZ, corridorHalfW, -corridorEnd],
+            // +Z infill walls (close gap between hex edge and corridor)
+            [corridorHalfW, passageEdgeZ, R / 2, passageEdgeZ],
+            [-corridorHalfW, passageEdgeZ, -R / 2, passageEdgeZ],
+            // -Z infill walls
+            [corridorHalfW, -passageEdgeZ, R / 2, -passageEdgeZ],
+            [-corridorHalfW, -passageEdgeZ, -R / 2, -passageEdgeZ],
+        ];
+
+        function checkSegmentCollision(pos, ax, az, bx, bz, minDist) {
+            const dx = bx - ax, dz = bz - az;
+            const len = Math.sqrt(dx * dx + dz * dz);
+            if (len < 0.001) return;
+            const nx = dx / len, nz = dz / len;
+            const toCamX = pos.x - ax, toCamZ = pos.z - az;
+            const proj = Math.max(0, Math.min(len, toCamX * nx + toCamZ * nz));
+            const closeX = ax + nx * proj, closeZ = az + nz * proj;
+            const dist = Math.sqrt((pos.x - closeX) ** 2 + (pos.z - closeZ) ** 2);
+            if (dist < minDist && dist > 0.001) {
+                const px = (pos.x - closeX) / dist, pz = (pos.z - closeZ) / dist;
+                pos.x = closeX + px * minDist;
+                pos.z = closeZ + pz * minDist;
+            }
+        }
+
+        function applyCollision() {
+            const pos = camera.position;
+            const minDist = 0.35;
+
+            // Check bookshelf walls
+            for (const wallIdx of BOOKSHELF_WALLS) {
+                const va = HEX_VERTICES[wallIdx];
+                const vb = HEX_VERTICES[(wallIdx + 1) % 6];
+                checkSegmentCollision(pos, va.x, va.z, vb.x, vb.z, minDist);
+            }
+
+            // Check corridor walls (relative to current room position)
+            for (const seg of CORRIDOR_WALLS) {
+                checkSegmentCollision(pos, seg[0], seg[1], seg[2], seg[3], minDist);
+            }
+        }
+
+        // ============================================
+        // RAYCASTING FOR BOOK SELECTION
+        // ============================================
+
+        const raycaster = new THREE.Raycaster();
+        raycaster.far = 3;
+
+        document.addEventListener('click', (event) => {
+            if (!controls.isLocked) return;
+
+            raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+
+            for (const [idx, room] of rooms) {
+                const intersects = raycaster.intersectObject(room.bookMesh);
+                if (intersects.length > 0) {
+                    const instanceId = intersects[0].instanceId;
+                    const bookInfo = room.bookMap[instanceId];
+
+                    // Map wall index back to 0-3 for the four bookshelf walls
+                    const wallMapping = { 0: 0, 2: 1, 3: 2, 5: 3 };
+                    const logicalWall = wallMapping[bookInfo.wall];
+
+                    openBook(room.hexId, logicalWall, bookInfo.shelf, bookInfo.vol, 0);
+                    controls.unlock();
+                    return;
+                }
+            }
+        });
+
+        // ============================================
+        // BOOK READER UI
+        // ============================================
+
+        let currentBook = null;
+
+        window.openBook = function(hexId, wall, shelf, vol, page = 0) {
+            currentBook = { hexId, wall, shelf, vol, page };
+            const lines = generatePage(hexId, wall, shelf, vol, page);
+
+            document.getElementById('reader-title').textContent = `Volume ${vol + 1} of 32`;
+            const hexStr = hexId.toString(36).toUpperCase();
+            const displayHex = hexStr.length > 16 ? hexStr.substring(0, 8) + '...' + hexStr.substring(hexStr.length - 8) : hexStr;
+            document.getElementById('reader-coords').textContent = `Hex ${displayHex} · Wall ${wall + 1} · Shelf ${shelf + 1}`;
+            document.getElementById('reader-page-num').textContent = `Page ${page + 1} of 410`;
+            document.getElementById('reader-content').textContent = lines.join('\n');
+            document.getElementById('reader').classList.add('visible');
+
+            document.getElementById('prev-page-btn').disabled = (page === 0);
+            document.getElementById('next-page-btn').disabled = (page === PAGES_PER_VOL - 1);
+
+            readerOpen = true;
+        };
+
+        window.closeBook = function() {
+            document.getElementById('reader').classList.remove('visible');
+            readerOpen = false;
+            currentBook = null;
+        };
+
+        window.nextPage = function() {
+            if (!currentBook) return;
+            if (currentBook.page < PAGES_PER_VOL - 1) {
+                currentBook.page++;
+                openBook(currentBook.hexId, currentBook.wall, currentBook.shelf, currentBook.vol, currentBook.page);
+            }
+        };
+
+        window.prevPage = function() {
+            if (!currentBook) return;
+            if (currentBook.page > 0) {
+                currentBook.page--;
+                openBook(currentBook.hexId, currentBook.wall, currentBook.shelf, currentBook.vol, currentBook.page);
+            }
+        };
+
+        // ============================================
+        // SEARCH UI
+        // ============================================
+
+        let lastSearchResult = null;
+
+        window.openSearch = function() {
+            document.getElementById('search-panel').classList.add('visible');
+            searchOpen = true;
+            controls.unlock();
+            setTimeout(() => {
+                const input = document.getElementById('search-input');
+                input.focus();
+                updateCharCounter();
+            }, 300);
+        };
+
+        function updateCharCounter() {
+            const input = document.getElementById('search-input');
+            const counter = document.getElementById('char-counter');
+            const len = input.value.length;
+            counter.textContent = `(${len}/80 characters)`;
+            if (len > 80) {
+                counter.style.color = '#c4943a';
+            } else {
+                counter.style.color = '#5a4a32';
+            }
+        }
+
+        document.getElementById('search-input').addEventListener('input', updateCharCounter);
+
+        window.closeSearch = function() {
+            document.getElementById('search-panel').classList.remove('visible');
+            searchOpen = false;
+        };
+
+        window.performSearch = function() {
+            const text = document.getElementById('search-input').value;
+            if (!text.trim()) return;
+
+            // Brief "searching" message for dramatic effect
+            document.getElementById('search-result').innerHTML = `<p style="color:#8b7355;font-style:italic;">Locating text in the Library...</p>`;
+
+            setTimeout(() => {
+                const result = searchText(text);
+                lastSearchResult = result;
+
+                const hexStr = result.hexId.toString(36).toUpperCase();
+                const displayHex = hexStr.length > 20 ? hexStr.substring(0, 10) + '...' + hexStr.substring(hexStr.length - 10) : hexStr;
+
+                document.getElementById('search-result').innerHTML = `
+                    <div class="result-found">
+                        <p>This text exists in the Library.</p>
+                        <div class="result-coords">
+                            <div>Hexagon: ${displayHex}</div>
+                            <div>Wall: ${result.wall + 1} &middot; Shelf: ${result.shelf + 1} &middot; Volume: ${result.vol + 1}</div>
+                            <div>Page: ${result.page + 1} &middot; Line: ${result.line + 1}</div>
+                        </div>
+                        <button onclick="goToSearchResult()">Go There</button>
+                        <p style="font-size:12px;color:#5a4a32;margin-top:12px;font-style:italic;">It has always been here.</p>
+                    </div>
+                `;
+            }, 400);
+        };
+
+        window.goToSearchResult = function() {
+            if (!lastSearchResult) return;
+            const r = lastSearchResult;
+            closeSearch();
+
+            teleportTo(r.hexId, () => {
+                openBook(r.hexId, r.wall, r.shelf, r.vol, r.page);
+                // Highlight the search line
+                setTimeout(() => {
+                    const content = document.getElementById('reader-content');
+                    const lines = content.textContent.split('\n');
+                    content.innerHTML = lines.map((line, i) =>
+                        i === r.line ? `<span class="highlight">${line}</span>` : escapeHtml(line)
+                    ).join('\n');
+                }, 50);
+            });
+        };
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ============================================
+        // NAVIGATION UI
+        // ============================================
+
+        window.openNav = function() {
+            document.getElementById('nav-panel').classList.add('visible');
+            navOpen = true;
+            controls.unlock();
+        };
+
+        window.closeNav = function() {
+            document.getElementById('nav-panel').classList.remove('visible');
+            navOpen = false;
+        };
+
+        function base36ToBigInt(str) {
+            str = str.toLowerCase();
+            let result = 0n;
+            for (let i = 0; i < str.length; i++) {
+                const char = str[i];
+                let digit;
+                if (char >= '0' && char <= '9') {
+                    digit = char.charCodeAt(0) - 48;
+                } else if (char >= 'a' && char <= 'z') {
+                    digit = char.charCodeAt(0) - 87;
+                } else {
+                    return null;
+                }
+                result = result * 36n + BigInt(digit);
+            }
+            return result;
+        }
+
+        window.navigateToCoords = function() {
+            const hexStr = document.getElementById('nav-hex').value.trim() || '0';
+            const wall = parseInt(document.getElementById('nav-wall').value) - 1;
+            const shelf = parseInt(document.getElementById('nav-shelf').value) - 1;
+            const vol = parseInt(document.getElementById('nav-vol').value) - 1;
+            const page = parseInt(document.getElementById('nav-page').value) - 1;
+
+            let hexId;
+            try {
+                hexId = BigInt('0x' + hexStr);
+            } catch {
+                hexId = base36ToBigInt(hexStr);
+                if (hexId === null) return;
+            }
+
+            if (wall < 0 || wall >= 4 || shelf < 0 || shelf >= 5 ||
+                vol < 0 || vol >= 32 || page < 0 || page >= 410) {
+                return;
+            }
+
+            closeNav();
+            teleportTo(hexId, () => {
+                openBook(hexId, wall, shelf, vol, page);
+            });
+        };
+
+        // ============================================
+        // RANDOM ROOM
+        // ============================================
+
+        window.randomRoom = function() {
+            const bytes = new Uint8Array(40);
+            crypto.getRandomValues(bytes);
+            let hexId = 0n;
+            for (const b of bytes) {
+                hexId = hexId * 256n + BigInt(b);
+            }
+            hexId = hexId % (TOTAL / BigInt(LINES_PER_HEX));
+            teleportTo(hexId);
+        };
+
+        // ============================================
+        // ABOUT MODAL
+        // ============================================
+
+        window.openAbout = function() {
+            document.getElementById('about-overlay').classList.add('visible');
+            document.getElementById('about-modal').classList.add('visible');
+            aboutOpen = true;
+            controls.unlock();
+        };
+
+        window.closeAbout = function() {
+            document.getElementById('about-overlay').classList.remove('visible');
+            document.getElementById('about-modal').classList.remove('visible');
+            aboutOpen = false;
+        };
+
+        // ============================================
+        // AMBIENT AUDIO
+        // ============================================
+
+        let audioContext = null;
+        let audioGain = null;
+        let audioEnabled = false;
+
+        function initAudio() {
+            if (audioContext) return;
+
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            audioGain = audioContext.createGain();
+            audioGain.gain.value = 0;
+            audioGain.connect(audioContext.destination);
+
+            // Low frequency rumble
+            const osc1 = audioContext.createOscillator();
+            osc1.type = 'sine';
+            osc1.frequency.value = 45;
+            const gain1 = audioContext.createGain();
+            gain1.gain.value = 0.12;
+            osc1.connect(gain1);
+            gain1.connect(audioGain);
+            osc1.start();
+
+            // Very low frequency undertone
+            const osc2 = audioContext.createOscillator();
+            osc2.type = 'sine';
+            osc2.frequency.value = 58;
+            const gain2 = audioContext.createGain();
+            gain2.gain.value = 0.08;
+            osc2.connect(gain2);
+            gain2.connect(audioGain);
+            osc2.start();
+
+            // Filtered noise (air through shafts)
+            const bufferSize = 2 * audioContext.sampleRate;
+            const noiseBuffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+            const output = noiseBuffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                output[i] = Math.random() * 2 - 1;
+            }
+            const noiseSource = audioContext.createBufferSource();
+            noiseSource.buffer = noiseBuffer;
+            noiseSource.loop = true;
+
+            const noiseFilter = audioContext.createBiquadFilter();
+            noiseFilter.type = 'lowpass';
+            noiseFilter.frequency.value = 200;
+            const noiseGain = audioContext.createGain();
+            noiseGain.gain.value = 0.03;
+
+            noiseSource.connect(noiseFilter);
+            noiseFilter.connect(noiseGain);
+            noiseGain.connect(audioGain);
+            noiseSource.start();
+        }
+
+        window.toggleAudio = function() {
+            if (!audioContext) {
+                initAudio();
+            }
+
+            audioEnabled = !audioEnabled;
+            const btn = document.getElementById('audio-toggle');
+
+            if (audioEnabled) {
+                btn.textContent = '🔊';
+                btn.classList.add('active');
+                audioGain.gain.linearRampToValueAtTime(0.4, audioContext.currentTime + 1.0);
+            } else {
+                btn.textContent = '🔇';
+                btn.classList.remove('active');
+                audioGain.gain.linearRampToValueAtTime(0, audioContext.currentTime + 1.0);
+            }
+        };
+
+        // ============================================
+        // HUD UPDATE
+        // ============================================
+
+        function updateHUD() {
+            const hexStr = currentHexId.toString(36).toUpperCase();
+            const displayHex = hexStr.length > 24 ? hexStr.substring(0, 12) + '...' + hexStr.substring(hexStr.length - 12) : hexStr;
+            document.getElementById('hud-coords').textContent = `Hexagon ${displayHex} · Floor ${currentFloor}`;
+        }
+
+        // ============================================
+        // BRIGHTNESS CONTROL
+        // ============================================
+
+        const brightnessSlider = document.getElementById('brightness-slider');
+        brightnessSlider.addEventListener('input', (e) => {
+            renderer.toneMappingExposure = e.target.value / 100;
+        });
+
+        // ============================================
+        // INTRO SEQUENCE
+        // ============================================
+
+        const intro = document.getElementById('intro');
+        intro.addEventListener('click', () => {
+            if (intro.classList.contains('hidden')) return;
+            intro.classList.add('hidden');
+            introHidden = true;
+            setTimeout(() => {
+                intro.style.display = 'none';
+            }, 1500);
+        });
+
+        // ============================================
+        // ANIMATION LOOP
+        // ============================================
+
+        const clock = new THREE.Clock();
+        let hoveredBook = null;
+        const tempColor = new THREE.Color();
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const delta = clock.getDelta();
+            const elapsedTime = clock.getElapsedTime();
+
+            if (controls.isLocked) {
+                const direction = new THREE.Vector3();
+                if (keys.forward) direction.z -= 1;
+                if (keys.backward) direction.z += 1;
+                if (keys.left) direction.x -= 1;
+                if (keys.right) direction.x += 1;
+
+                if (direction.length() > 0) {
+                    direction.normalize();
+
+                    const moveDir = direction.clone();
+                    moveDir.applyQuaternion(camera.quaternion);
+                    moveDir.y = 0;
+                    moveDir.normalize();
+
+                    camera.position.add(moveDir.multiplyScalar(moveSpeed * delta));
+
+                    applyCollision();
+                    checkRoomTransition();
+                }
+
+                // Book hover highlight
+                if (hoveredBook) {
+                    hoveredBook.mesh.setColorAt(hoveredBook.instanceId, hoveredBook.originalColor);
+                    hoveredBook.mesh.instanceColor.needsUpdate = true;
+                    hoveredBook = null;
+                    document.getElementById('crosshair').style.borderColor = 'rgba(212, 197, 160, 0.5)';
+                }
+
+                raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+                for (const [idx, room] of rooms) {
+                    const intersects = raycaster.intersectObject(room.bookMesh);
+                    if (intersects.length > 0) {
+                        const instanceId = intersects[0].instanceId;
+                        room.bookMesh.getColorAt(instanceId, tempColor);
+
+                        hoveredBook = {
+                            mesh: room.bookMesh,
+                            instanceId: instanceId,
+                            originalColor: tempColor.clone()
+                        };
+
+                        // Brighten the book
+                        tempColor.multiplyScalar(1.5);
+                        room.bookMesh.setColorAt(instanceId, tempColor);
+                        room.bookMesh.instanceColor.needsUpdate = true;
+                        document.getElementById('crosshair').style.borderColor = 'rgba(196, 148, 58, 0.9)';
+                        break;
+                    }
+                }
+            }
+
+            // Light flicker effect
+            for (const [idx, room] of rooms) {
+                if (room.lights) {
+                    const seed1 = Number(room.hexId % 1000n) + idx * 7;
+                    const seed2 = Number(room.hexId % 1000n) + idx * 11;
+
+                    const flicker1 = Math.sin(elapsedTime * 2.3 + seed1) * 0.08
+                                   + Math.sin(elapsedTime * 4.7 + seed1 * 2) * 0.05;
+                    const flicker2 = Math.sin(elapsedTime * 2.1 + seed2) * 0.08
+                                   + Math.sin(elapsedTime * 5.1 + seed2 * 2) * 0.05;
+
+                    room.lights[0].intensity = 2.0 + flicker1;
+                    room.lights[1].intensity = 2.0 + flicker2;
+                }
+            }
+
+            updateParticles(delta);
+            renderer.render(scene, camera);
+        }
+
+        // ============================================
+        // ATMOSPHERIC DUST PARTICLES
+        // ============================================
+
+        const PARTICLE_COUNT = 300;
+        const particlePositions = new Float32Array(PARTICLE_COUNT * 3);
+        const particleVelocities = [];
+        for (let i = 0; i < PARTICLE_COUNT; i++) {
+            particlePositions[i * 3] = (Math.random() - 0.5) * 24;
+            particlePositions[i * 3 + 1] = Math.random() * ROOM_HEIGHT;
+            particlePositions[i * 3 + 2] = (Math.random() - 0.5) * 24;
+            particleVelocities.push(
+                (Math.random() - 0.5) * 0.015,
+                (Math.random() - 0.5) * 0.008,
+                (Math.random() - 0.5) * 0.015
+            );
+        }
+        const particleGeom = new THREE.BufferGeometry();
+        particleGeom.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+        const particleMat = new THREE.PointsMaterial({
+            color: 0xFFD280,
+            size: 0.015,
+            transparent: true,
+            opacity: 0.25,
+            sizeAttenuation: true,
+        });
+        const dustParticles = new THREE.Points(particleGeom, particleMat);
+        scene.add(dustParticles);
+
+        function updateParticles(delta) {
+            const positions = dustParticles.geometry.attributes.position.array;
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                positions[i * 3] += particleVelocities[i * 3] * delta * 60;
+                positions[i * 3 + 1] += particleVelocities[i * 3 + 1] * delta * 60;
+                positions[i * 3 + 2] += particleVelocities[i * 3 + 2] * delta * 60;
+
+                // Wrap around camera position
+                const dx = positions[i * 3] - camera.position.x;
+                const dz = positions[i * 3 + 2] - camera.position.z;
+                if (Math.abs(dx) > 12) positions[i * 3] = camera.position.x + (Math.random() - 0.5) * 20;
+                if (Math.abs(dz) > 12) positions[i * 3 + 2] = camera.position.z + (Math.random() - 0.5) * 20;
+                if (positions[i * 3 + 1] > ROOM_HEIGHT) positions[i * 3 + 1] = 0;
+                if (positions[i * 3 + 1] < 0) positions[i * 3 + 1] = ROOM_HEIGHT;
+            }
+            dustParticles.geometry.attributes.position.needsUpdate = true;
+        }
+
+        // ============================================
+        // KEYBOARD SHORTCUTS
+        // ============================================
+
+        window.addEventListener('keydown', (e) => {
+            if (readerOpen) {
+                if (e.code === 'ArrowRight' || e.code === 'ArrowDown') { e.preventDefault(); nextPage(); }
+                if (e.code === 'ArrowLeft' || e.code === 'ArrowUp') { e.preventDefault(); prevPage(); }
+                if (e.code === 'Escape') { closeBook(); }
+            } else if (searchOpen) {
+                if (e.code === 'Escape') { closeSearch(); }
+                if (e.code === 'Enter' && !e.shiftKey && e.target.id === 'search-input') {
+                    e.preventDefault();
+                    performSearch();
+                }
+            } else if (navOpen) {
+                if (e.code === 'Escape') { closeNav(); }
+            } else if (aboutOpen) {
+                if (e.code === 'Escape') { closeAbout(); }
+            } else if (!controls.isLocked && introHidden) {
+                // Panel shortcuts when not locked and not in any panel
+                if (e.code === 'KeyS') { e.preventDefault(); openSearch(); }
+                if (e.code === 'KeyN') { e.preventDefault(); openNav(); }
+                if (e.code === 'KeyR') { e.preventDefault(); randomRoom(); }
+            }
+        });
+
+        // ============================================
+        // WINDOW RESIZE
+        // ============================================
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+
+        // Start in a specific room (derived from "babel" to give a non-zero starting position)
+        currentHexId = 314159265n;
+        updateRooms();
+        updateHUD();
+        animate();
+    </script>
+</body>
+</html>
