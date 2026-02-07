@@ -3020,6 +3020,7 @@ return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1,
                 needed.add(idx);
             }
 
+            // Remove rooms outside the active window
             for (const [idx, room] of rooms) {
                 if (!needed.has(idx)) {
                     disposeRoom(room);
@@ -3027,6 +3028,12 @@ return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1,
                 }
             }
 
+            // Realign remaining rooms to the new currentRoomIndex so the world stays continuous
+            for (const [idx, room] of rooms) {
+                room.group.position.z = (idx - currentRoomIndex) * ROOM_DEPTH;
+            }
+
+            // Add missing rooms
             for (const idx of needed) {
                 if (!rooms.has(idx)) {
                     const offsetZ = (idx - currentRoomIndex) * ROOM_DEPTH;
