@@ -139,9 +139,10 @@ The app uses localStorage for:
 
 ## 🙏 Credits
 
+- **Fork base**: Forked from [emollick/library-of-babel](https://github.com/emollick/library-of-babel) (MIT) — original concept + UI foundation
 - **Book data**: [Project Gutenberg](https://www.gutenberg.org) via [Gutendex API](https://gutendex.com)
 - **3D engine**: [Three.js](https://threejs.org)
-- **Visual design**: Inspired by Jorge Luis Borges's "The Library of Babel" and [Ethan Mollick's digital recreation](https://twitter.com/emollick)
+- **Visual design**: Inspired by Jorge Luis Borges's "The Library of Babel" and Ethan Mollick’s digital recreation
 - **Fonts**: Cormorant Garamond, Libre Baskerville, IBM Plex Mono (Google Fonts)
 
 ## 📄 License
