@@ -1365,7 +1365,7 @@
     <div id="vignette"></div>
     <div id="spine-label-container"></div>
     <div id="title-bar">
-        <span>THE LIBRARY OF GUTENBERG</span>
+        <span>THE LIBRARY OF GUTENBERG <span id="build-tag" style="opacity:0.35;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1px;">—</span></span>
         <div class="title-bar-controls">
             <div class="control-group">
                 <span class="control-icon" id="audio-toggle" title="Toggle ambient audio">🔇</span>
@@ -1653,6 +1653,12 @@
         // ============================================
         // LIBRARY CONFIGURATION
         // ============================================
+
+        // Version stamp (helps ensure browser isn't using a cached index.html)
+        const APP_BUILD = 'flip-fixes-3';
+        window.__APP_BUILD = APP_BUILD;
+        const buildTagEl = document.getElementById('build-tag');
+        if (buildTagEl) buildTagEl.textContent = APP_BUILD;
 
         const BOOKS_PER_SHELF = 32;
         const SHELVES_PER_WALL = 5;
@@ -3353,10 +3359,11 @@
         };
 
         window.openBook = async function(bookId, resumePage = null) {
-            currentBookId = bookId;
-            readerOpen = true;
+            try {
+                currentBookId = bookId;
+                readerOpen = true;
 
-            const location = bookIdToLocation(bookId);
+                const location = bookIdToLocation(bookId);
 
             document.getElementById('reader-title').textContent = 'Loading...';
             document.getElementById('reader-author').textContent = '';
@@ -3445,6 +3452,18 @@
                 detectedChapters = [];
                 currentPageIndex = 0;
                 renderPage();
+            }
+            } catch (err) {
+                console.error('openBook failed', err);
+                showToast('Reader error — switching to Classic.');
+                try {
+                    readerMode = 'classic';
+                    settings.readerMode = readerMode;
+                    saveToStorage(STORAGE_KEYS.SETTINGS, settings);
+                    setReaderModeUI();
+                    destroyFlipBook();
+                    renderPage();
+                } catch (e) {}
             }
         };
 
