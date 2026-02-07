@@ -1569,10 +1569,7 @@
         <button class="about-close" onclick="closeAbout()">Close</button>
     </div>
 
-    <!-- Audio elements for ambient sound -->
-    <audio id="ambient-audio" loop preload="none">
-        <source src="https://freesound.org/data/previews/463/463903_4397472-lq.mp3" type="audio/mpeg">
-    </audio>
+    <!-- Ambient audio handled via Web Audio API -->
 
     <script type="importmap">
     {
@@ -1653,32 +1650,71 @@
         }
 
         // ============================================
-        // AUDIO SYSTEM
+        // AUDIO SYSTEM (Web Audio API)
         // ============================================
 
-        const ambientAudio = document.getElementById('ambient-audio');
         let audioEnabled = settings.audioEnabled || false;
         let audioVolume = settings.volume || 30;
 
-        // Page turn sound (Web Audio API for low latency)
+        // Web Audio context and nodes
         let audioContext = null;
         let pageTurnBuffer = null;
+        let ambientGain = null;
+        let ambientNodes = [];
 
         async function initAudio() {
             try {
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                // Create a simple page turn sound using oscillator
-                const duration = 0.15;
+                
+                // Create page turn sound buffer (paper rustle)
+                const duration = 0.18;
                 const sampleRate = audioContext.sampleRate;
                 const buffer = audioContext.createBuffer(1, duration * sampleRate, sampleRate);
                 const data = buffer.getChannelData(0);
                 for (let i = 0; i < data.length; i++) {
                     const t = i / sampleRate;
-                    // White noise with envelope
-                    const envelope = Math.exp(-t * 20) * 0.3;
-                    data[i] = (Math.random() * 2 - 1) * envelope;
+                    // Filtered noise with envelope for paper sound
+                    const envelope = Math.exp(-t * 15) * Math.sin(t * 50) * 0.4;
+                    const noise = (Math.random() * 2 - 1);
+                    data[i] = noise * envelope;
                 }
                 pageTurnBuffer = buffer;
+                
+                // Create ambient background (subtle library hum)
+                ambientGain = audioContext.createGain();
+                ambientGain.gain.value = 0;
+                ambientGain.connect(audioContext.destination);
+                
+                // Very low frequency hum (like distant HVAC)
+                const osc1 = audioContext.createOscillator();
+                osc1.type = 'sine';
+                osc1.frequency.value = 60;
+                const gain1 = audioContext.createGain();
+                gain1.gain.value = 0.015;
+                osc1.connect(gain1);
+                gain1.connect(ambientGain);
+                osc1.start();
+                ambientNodes.push(osc1);
+                
+                // Subtle high frequency shimmer
+                const osc2 = audioContext.createOscillator();
+                osc2.type = 'sine';
+                osc2.frequency.value = 2400;
+                const gain2 = audioContext.createGain();
+                gain2.gain.value = 0.003;
+                // Add slight modulation
+                const lfo = audioContext.createOscillator();
+                lfo.frequency.value = 0.1;
+                const lfoGain = audioContext.createGain();
+                lfoGain.gain.value = 0.001;
+                lfo.connect(lfoGain);
+                lfoGain.connect(gain2.gain);
+                lfo.start();
+                osc2.connect(gain2);
+                gain2.connect(ambientGain);
+                osc2.start();
+                ambientNodes.push(osc2, lfo);
+                
             } catch (e) {
                 console.warn('Audio initialization failed:', e);
             }
@@ -1690,12 +1726,20 @@
                 const source = audioContext.createBufferSource();
                 const gain = audioContext.createGain();
                 source.buffer = pageTurnBuffer;
-                gain.gain.value = audioVolume / 100 * 0.5;
+                gain.gain.value = (audioVolume / 100) * 0.4;
                 source.connect(gain);
                 gain.connect(audioContext.destination);
                 source.start();
             } catch (e) {
                 // Ignore audio errors
+            }
+        }
+
+        function setAmbientVolume(vol) {
+            if (ambientGain) {
+                // Smooth transition
+                const target = (vol / 100) * 0.8;
+                ambientGain.gain.linearRampToValueAtTime(target, audioContext.currentTime + 0.5);
             }
         }
 
@@ -1708,13 +1752,15 @@
             if (audioEnabled) {
                 icon.textContent = '🔊';
                 icon.classList.add('active');
-                if (!audioContext) initAudio();
-                ambientAudio.volume = audioVolume / 100;
-                ambientAudio.play().catch(() => {});
+                if (!audioContext) {
+                    initAudio().then(() => setAmbientVolume(audioVolume));
+                } else {
+                    setAmbientVolume(audioVolume);
+                }
             } else {
                 icon.textContent = '🔇';
                 icon.classList.remove('active');
-                ambientAudio.pause();
+                setAmbientVolume(0);
             }
         }
 
@@ -1724,10 +1770,12 @@
             audioVolume = parseInt(e.target.value);
             settings.volume = audioVolume;
             saveToStorage(STORAGE_KEYS.SETTINGS, settings);
-            ambientAudio.volume = audioVolume / 100;
+            if (audioEnabled) {
+                setAmbientVolume(audioVolume);
+            }
         });
 
-        // Initialize audio state
+        // Initialize audio state (visual only - audio starts on user interaction)
         if (audioEnabled) {
             document.getElementById('audio-toggle').textContent = '🔊';
             document.getElementById('audio-toggle').classList.add('active');
@@ -2531,11 +2579,9 @@
         controls.addEventListener('lock', () => {
             document.getElementById('crosshair').classList.add('visible');
             document.getElementById('instructions').classList.add('hidden');
-            // Start ambient audio on interaction
+            // Start ambient audio on interaction (requires user gesture)
             if (audioEnabled && !audioContext) {
-                initAudio();
-                ambientAudio.volume = audioVolume / 100;
-                ambientAudio.play().catch(() => {});
+                initAudio().then(() => setAmbientVolume(audioVolume));
             }
         });
 
