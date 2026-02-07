@@ -605,9 +605,18 @@
         .book-page-content {
             font-size: 15px;
             line-height: 1.85;
-            white-space: pre-wrap;
-            text-align: justify;
+            white-space: normal;
+            text-align: left;
             hyphens: auto;
+        }
+
+        .book-page-content p {
+            margin: 0 0 0.85em 0;
+            text-indent: 1.2em;
+        }
+
+        .book-page-content p:first-child {
+            text-indent: 0;
         }
 
         .book-page-content.font-serif { font-family: 'Cormorant Garamond', serif; }
@@ -1530,6 +1539,7 @@
                         <div class="book-page-num" id="book-num-right"></div>
                     </div>
                 </div>
+                <div id="paginator-measure" aria-hidden="true" style="position:fixed;left:-99999px;top:-99999px;visibility:hidden;pointer-events:none;"></div>
                 <div class="reader-content font-serif font-size-medium hidden" id="reader-content">Loading book text...</div>
                 <div class="reader-footer">
                     <div class="reader-page-num" id="reader-page-num">Page 1</div>
@@ -2907,42 +2917,162 @@
         let readerSearchMatches = [];
         let readerSearchCurrentIndex = -1;
 
-        function paginateText(text) {
-            const lines = text.split('\n');
-            const perPage = 35; // Optimized for book spread
-            const pages = [];
-            for (let i = 0; i < lines.length; i += perPage) {
-                pages.push(lines.slice(i, i + perPage).join('\n'));
+        let pageCharStarts = [];
+
+        function normalizeBookText(text) {
+            return (text || '')
+                .replace(/\r\n/g, '\n')
+                .replace(/\t/g, '    ')
+                // collapse huge gaps but keep paragraph breaks
+                .replace(/\n{4,}/g, '\n\n\n')
+                .trim();
+        }
+
+        function escapeHtmlLite(str) {
+            return (str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        }
+
+        function pageHtmlFromText(pageText) {
+            // Convert into paragraphs for nicer book feel
+            const safe = escapeHtmlLite(pageText);
+            const paras = safe.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+            if (!paras.length) return '<p></p>';
+            return paras.map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
+        }
+
+        function setupMeasureBox() {
+            const measure = document.getElementById('paginator-measure');
+            const leftContent = document.getElementById('book-content-left');
+            if (!measure || !leftContent) return null;
+
+            // Make measure box match the visible content box size
+            const rect = leftContent.getBoundingClientRect();
+            measure.style.width = rect.width + 'px';
+            measure.style.height = rect.height + 'px';
+
+            // Mirror typography classes
+            measure.className = leftContent.className; // includes book-page-content + font/size
+            measure.style.overflow = 'hidden';
+            measure.style.whiteSpace = 'normal';
+            measure.style.lineHeight = getComputedStyle(leftContent).lineHeight;
+            measure.style.fontFamily = getComputedStyle(leftContent).fontFamily;
+            measure.style.fontSize = getComputedStyle(leftContent).fontSize;
+            measure.style.padding = '0';
+            measure.style.margin = '0';
+            return measure;
+        }
+
+        function findPageBreak(text, start, end, measure) {
+            // Find a break <= end that fits; prefer breaking at whitespace/newline
+            let lo = start + 200; // don't allow tiny pages
+            let hi = Math.min(end, text.length);
+            let best = lo;
+
+            const fits = (cut) => {
+                const slice = text.slice(start, cut);
+                measure.innerHTML = pageHtmlFromText(slice);
+                return measure.scrollHeight <= measure.clientHeight;
+            };
+
+            // Ensure lo fits; if not, force minimal cut
+            if (!fits(lo)) {
+                return lo;
             }
+
+            while (lo <= hi) {
+                const mid = Math.floor((lo + hi) / 2);
+                // adjust mid to a whitespace boundary for nicer breaks
+                let cut = mid;
+                for (let i = 0; i < 80 && cut > start; i++) {
+                    const ch = text.charAt(cut);
+                    if (ch === ' ' || ch === '\n') break;
+                    cut--;
+                }
+                if (cut <= start + 50) cut = mid;
+
+                if (fits(cut)) {
+                    best = cut;
+                    lo = mid + 1;
+                } else {
+                    hi = mid - 1;
+                }
+            }
+
+            // Trim trailing whitespace/newlines
+            while (best > start && (text.charAt(best - 1) === ' ' || text.charAt(best - 1) === '\n')) best--;
+            return Math.max(best, start + 1);
+        }
+
+        function paginateText(text) {
+            const clean = normalizeBookText(text);
+            const measure = setupMeasureBox();
+            if (!measure) {
+                // fallback (shouldn't happen)
+                pageCharStarts = [0];
+                return clean ? [clean] : [''];
+            }
+
+            const pages = [];
+            pageCharStarts = [];
+            let pos = 0;
+            const maxChunk = 12000; // safety window for binary search
+
+            while (pos < clean.length) {
+                pageCharStarts.push(pos);
+                const end = Math.min(clean.length, pos + maxChunk);
+                const cut = findPageBreak(clean, pos, end, measure);
+                pages.push(clean.slice(pos, cut));
+                pos = cut;
+                // skip leading whitespace/newlines on next page
+                while (pos < clean.length && (clean.charAt(pos) === ' ' || clean.charAt(pos) === '\n')) pos++;
+            }
+
             return pages.length ? pages : [''];
+        }
+
+        function pageIndexFromCharIndex(charIndex) {
+            // pageCharStarts is sorted
+            let lo = 0, hi = pageCharStarts.length - 1;
+            while (lo <= hi) {
+                const mid = (lo + hi) >> 1;
+                if (pageCharStarts[mid] <= charIndex) lo = mid + 1;
+                else hi = mid - 1;
+            }
+            return Math.max(0, lo - 1);
         }
 
         function detectChapters(text) {
             const chapters = [];
-            const lines = text.split('\n');
+            const clean = normalizeBookText(text);
+            const lines = clean.split('\n');
             const chapterPatterns = [
                 /^(CHAPTER|Chapter|PART|Part|BOOK|Book)\s+([IVXLC\d]+)/,
                 /^(CHAPTER|Chapter|PART|Part|BOOK|Book)\s+\d+/,
                 /^([IVXLC]+)\.\s/,
                 /^\d+\.\s+[A-Z]/,
             ];
-            
-            let lineCount = 0;
+
+            let charPos = 0;
             for (let i = 0; i < lines.length; i++) {
-                const line = lines[i].trim();
+                const rawLine = lines[i];
+                const line = rawLine.trim();
                 for (const pattern of chapterPatterns) {
                     if (pattern.test(line)) {
-                        const pageIndex = Math.floor(lineCount / 35);
+                        const pageIndex = pageIndexFromCharIndex(charPos);
                         chapters.push({
                             title: line.substring(0, 50),
                             page: pageIndex,
-                            line: lineCount
+                            char: charPos
                         });
                         break;
                     }
                 }
-                lineCount++;
+                charPos += rawLine.length + 1; // +\n
             }
+
             return chapters;
         }
 
@@ -2985,14 +3115,42 @@
         }
 
         function formatBookPageHtml(pageText) {
-            let html = pageText || '';
+            let txt = pageText || '';
             if (readerSearchQuery && readerSearchMatches.length > 0) {
-                html = highlightSearchInText(html, readerSearchQuery);
-            } else {
-                html = escapeHtml(html);
+                // highlightSearchInText expects plain text and returns HTML, but we want paragraphs.
+                // We'll apply highlights on the raw page text and then wrap into paragraphs.
+                const highlighted = highlightSearchInText(txt, readerSearchQuery);
+                // highlighted is already HTML-escaped; just paragraphize by splitting on blank lines in original text
+                const paras = escapeHtmlLite(txt).split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+                if (!paras.length) return '<p></p>';
+                // For highlighting, fall back to highlighted with <br> if paragraph mapping is complex.
+                // Keep it simple: use highlighted + <br> in search mode.
+                return highlighted.replace(/\n/g, '<br>');
             }
-            return html.replace(/\n/g, '<br>');
+            return pageHtmlFromText(txt);
         }
+
+        function repaginateCurrentBook() {
+            if (!readerOpen || !currentBookText) return;
+
+            // Preserve approximate reading position using character index
+            const currentChar = pageCharStarts[currentPageIndex] ?? 0;
+            const cleanText = normalizeBookText(currentBookText);
+            currentBookPages = paginateText(cleanText);
+            detectedChapters = detectChapters(cleanText);
+            updateChapterList();
+            currentPageIndex = pageIndexFromCharIndex(currentChar);
+            renderPage(false);
+        }
+
+        let repaginateTimer = null;
+        window.addEventListener('resize', () => {
+            if (!readerOpen || !currentBookText) return;
+            clearTimeout(repaginateTimer);
+            repaginateTimer = setTimeout(() => {
+                repaginateCurrentBook();
+            }, 180);
+        });
 
         function renderPage(animate = false) {
             const leftContent = document.getElementById('book-content-left');
@@ -3123,6 +3281,7 @@
             settings.font = font;
             saveToStorage(STORAGE_KEYS.SETTINGS, settings);
             applyBookTypography();
+            repaginateCurrentBook();
         };
 
         window.changeFontSize = function(size) {
@@ -3130,6 +3289,7 @@
             settings.fontSize = size;
             saveToStorage(STORAGE_KEYS.SETTINGS, settings);
             applyBookTypography();
+            repaginateCurrentBook();
         };
 
         // In-book search
