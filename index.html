@@ -2237,6 +2237,32 @@
             return bases;
         })();
 
+        function themeRange(themeIndex) {
+            const start = THEME_ROOM_BASE_V2[themeIndex] ?? 0;
+            const count = ROOMS_PER_THEME_V2[themeIndex] ?? 0;
+            const end = Math.max(start, start + count - 1);
+            return { start, end, count };
+        }
+
+        function themeIndexForRoom(roomIndex) {
+            for (let i = 0; i < THEMES_V2.length; i++) {
+                const { start, end } = themeRange(i);
+                if (roomIndex >= start && roomIndex <= end) return i;
+            }
+            return 0;
+        }
+
+        // "Floor" state: one theme section at a time
+        let currentThemeIndex = 0;
+
+        function setThemeFloor(themeIndex, localRoom = 0) {
+            currentThemeIndex = Math.max(0, Math.min(THEMES_V2.length - 1, themeIndex));
+            const { start, end } = themeRange(currentThemeIndex);
+            const clampedLocal = Math.max(0, Math.min(end - start, localRoom));
+            currentRoomIndex = start + clampedLocal;
+        }
+
+
         const THEME_CAPACITY_V2 = ROOMS_PER_THEME_V2.map(r => r * BOOKS_PER_ROOM);
         const THEME_CAP_PREFIX_V2 = (() => {
             const pref = [];
@@ -2744,9 +2770,10 @@
 
             // Elevator at pipe ends (visual + interaction point)
             let elevatorLocal = null;
-            if (roomIndex === 0 || roomIndex === TOTAL_ROOMS - 1) {
+            const tr = themeRange(themeIndexForRoom(roomIndex));
+            if (roomIndex === tr.start || roomIndex === tr.end) {
                 // Use one of the passage corridors as the elevator bay
-                const elevatorPassIdx = (roomIndex === 0) ? 4 : 1;
+                const elevatorPassIdx = (roomIndex === tr.start) ? 4 : 1;
                 const vaE = HEX_VERTICES[elevatorPassIdx];
                 const vbE = HEX_VERTICES[(elevatorPassIdx + 1) % 6];
                 const cE = new THREE.Vector3((vaE.x + vbE.x) / 2, 0, (vaE.z + vbE.z) / 2);
@@ -2934,6 +2961,8 @@ return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1,
         // ============================================
 
         let currentRoomIndex = 0;
+        // Initialize to first theme floor
+        setTimeout(() => { try { setThemeFloor(0, 0); updateRooms(); updateHUD(); } catch(e) {} }, 0);
         const rooms = new Map();
 
         function disposeRoom(room) {
@@ -2963,6 +2992,7 @@ return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1,
             fade.classList.add('active');
             setTimeout(() => {
                 currentRoomIndex = roomIndex;
+                currentThemeIndex = themeIndexForRoom(currentRoomIndex);
                 camera.position.set(0, 1.6, 0);
                 clearAllRooms();
                 updateRooms();
@@ -2981,15 +3011,15 @@ return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1,
         }
 
         function updateRooms() {
+            const { start, end } = themeRange(currentThemeIndex);
+
             const needed = new Set();
             for (let offset = -2; offset <= 2; offset++) {
                 const idx = currentRoomIndex + offset;
-                if (idx >= 0 && idx < TOTAL_ROOMS) {
-                    needed.add(idx);
-                }
+                if (idx < start || idx > end) continue;
+                needed.add(idx);
             }
 
-            // Remove unneeded rooms
             for (const [idx, room] of rooms) {
                 if (!needed.has(idx)) {
                     disposeRoom(room);
@@ -2997,7 +3027,6 @@ return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1,
                 }
             }
 
-            // Add needed rooms
             for (const idx of needed) {
                 if (!rooms.has(idx)) {
                     const offsetZ = (idx - currentRoomIndex) * ROOM_DEPTH;
@@ -3011,21 +3040,26 @@ return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1,
         function checkRoomTransition() {
             const localZ = camera.position.z;
             const halfDepth = ROOM_DEPTH / 2;
+            const { start, end } = themeRange(currentThemeIndex);
 
-            if (localZ > halfDepth && currentRoomIndex < TOTAL_ROOMS - 1) {
+            if (localZ > halfDepth) {
+                if (currentRoomIndex >= end) {
+                    camera.position.z = halfDepth - 0.05;
+                    showToast('End of floor — use the elevator');
+                    return;
+                }
                 currentRoomIndex++;
                 camera.position.z -= ROOM_DEPTH;
-                for (const [idx, room] of rooms) {
-                    room.group.position.z -= ROOM_DEPTH;
-                }
                 updateRooms();
                 updateHUD();
-            } else if (localZ < -halfDepth && currentRoomIndex > 0) {
+            } else if (localZ < -halfDepth) {
+                if (currentRoomIndex <= start) {
+                    camera.position.z = -halfDepth + 0.05;
+                    showToast('Start of floor — use the elevator');
+                    return;
+                }
                 currentRoomIndex--;
                 camera.position.z += ROOM_DEPTH;
-                for (const [idx, room] of rooms) {
-                    room.group.position.z += ROOM_DEPTH;
-                }
                 updateRooms();
                 updateHUD();
             }
@@ -4003,10 +4037,11 @@ return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1,
         }
 
         window.teleportToTheme = function(themeIndex) {
-            const room = themeBaseRoom(themeIndex);
+            // Switch floor (theme) and teleport to its first room
+            setThemeFloor(themeIndex, 0);
             closeElevator();
-            teleportTo(room, null, null);
-            showToast(`Teleporting to ${THEMES_V2[themeIndex]?.label || 'theme'}`);
+            teleportTo(currentRoomIndex, null, null);
+            showToast(`Teleporting to ${THEMES_V2[currentThemeIndex]?.label || 'theme'}`);
         };
 
         function ensureElevatorButtons() {
