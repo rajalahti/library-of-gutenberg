@@ -415,6 +415,12 @@
             box-shadow: 0 0 60px rgba(0,0,0,0.8), inset 0 1px 0 rgba(196,148,58,0.06);
         }
 
+        /* When in single-page mode, make the modal narrower for a better "book page" feel */
+        .reader-page.single-page {
+            width: min(980px, 72vw);
+            height: min(920px, 90vh);
+        }
+
         .reader-header {
             display: flex;
             justify-content: space-between;
@@ -1768,7 +1774,7 @@
         // ============================================
 
         // Version stamp (helps ensure browser isn't using a cached index.html)
-        const APP_BUILD = 'css-book-v9';
+        const APP_BUILD = 'css-book-v10';
         window.__APP_BUILD = APP_BUILD;
         const buildTagEl = document.getElementById('build-tag');
         if (buildTagEl) buildTagEl.textContent = APP_BUILD;
@@ -3240,6 +3246,10 @@
             }
 
             applyBookTypography();
+
+            // Toggle modal width class based on mode
+            const readerPanel = document.querySelector('#reader .reader-page');
+            if (readerPanel) readerPanel.classList.toggle('single-page', singlePageMode);
 
             if (singlePageMode) {
                 // Single page mode
