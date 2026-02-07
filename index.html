@@ -401,13 +401,13 @@
         }
 
         .reader-page {
-            max-width: 1120px;
-            width: 96%;
-            max-height: 94vh;
+            max-width: 1320px;
+            width: 97%;
+            max-height: 96vh;
             background: linear-gradient(170deg, #2a2015 0%, #1f1810 40%, #1a150e 100%);
             border: 1px solid #4a3520;
             border-radius: 3px;
-            padding: 28px 32px;
+            padding: 22px 26px;
             overflow: hidden;
             display: flex;
             flex-direction: column;
@@ -542,11 +542,11 @@
             flex: 1;
             background: linear-gradient(135deg, #f4ece0 0%, #e8dcc8 50%, #ddd0b8 100%);
             color: #2a2015;
-            padding: 26px 22px;
+            padding: 22px 20px;
             overflow: hidden;
             position: relative;
-            min-height: 320px;
-            max-height: 66vh;
+            min-height: 340px;
+            max-height: 74vh;
             display: flex;
             flex-direction: column;
             box-shadow: 
@@ -617,8 +617,12 @@
         }
 
         .book-page-content p {
-            margin: 0 0 0.85em 0;
+            margin: 0 0 0.65em 0;
             text-indent: 1.2em;
+        }
+
+        .book-page-content p:last-child {
+            margin-bottom: 0;
         }
 
         .book-page-content p:first-child {
@@ -636,10 +640,10 @@
         /* Page number in corner */
         .book-page-num {
             position: absolute;
-            bottom: 12px;
+            bottom: 10px;
             font-family: 'IBM Plex Mono', monospace;
             font-size: 11px;
-            color: #8b7355;
+            color: rgba(74,53,32,0.55);
         }
         .book-page.left .book-page-num { left: 20px; }
         .book-page.right .book-page-num { right: 20px; }
@@ -1754,7 +1758,7 @@
         // ============================================
 
         // Version stamp (helps ensure browser isn't using a cached index.html)
-        const APP_BUILD = 'css-book-v3';
+        const APP_BUILD = 'css-book-v4';
         window.__APP_BUILD = APP_BUILD;
         const buildTagEl = document.getElementById('build-tag');
         if (buildTagEl) buildTagEl.textContent = APP_BUILD;
