@@ -396,8 +396,8 @@
         .reader-container {
             display: flex;
             gap: 4px;
-            max-width: 95%;
-            max-height: 92vh;
+            max-width: 98%;
+            max-height: 98vh;
         }
 
         .reader-page {
@@ -533,7 +533,7 @@
             display: flex;
             flex: 1;
             min-height: 0;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             perspective: 2000px;
             gap: 0;
         }
@@ -542,11 +542,12 @@
             flex: 1;
             background: linear-gradient(135deg, #f4ece0 0%, #e8dcc8 50%, #ddd0b8 100%);
             color: #2a2015;
-            padding: 22px 20px;
+            padding: 20px 18px;
             overflow: hidden;
             position: relative;
             min-height: 340px;
-            max-height: 74vh;
+            /* Height is controlled by the modal layout (flex), avoid vh-caps that waste space */
+            max-height: none;
             display: flex;
             flex-direction: column;
             box-shadow: 
@@ -1758,7 +1759,7 @@
         // ============================================
 
         // Version stamp (helps ensure browser isn't using a cached index.html)
-        const APP_BUILD = 'css-book-v4';
+        const APP_BUILD = 'css-book-v5';
         window.__APP_BUILD = APP_BUILD;
         const buildTagEl = document.getElementById('build-tag');
         if (buildTagEl) buildTagEl.textContent = APP_BUILD;
