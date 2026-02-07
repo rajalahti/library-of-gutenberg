@@ -197,6 +197,7 @@
             pointer-events: none;
             transform: translate(-50%, -50%) rotate(45deg);
             border: 1px solid rgba(212, 197, 160, 0.5);
+            transition: border-color 0.15s ease;
         }
 
         #crosshair.visible {
@@ -238,10 +239,17 @@
             display: none;
             max-width: 400px;
             text-align: center;
+            transition: opacity 0.2s ease;
         }
 
         #book-tooltip.visible {
             display: block;
+            animation: tooltipFadeIn 0.2s ease;
+        }
+
+        @keyframes tooltipFadeIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(4px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
 
         #book-tooltip .author {
@@ -297,6 +305,27 @@
             background: rgba(94, 47, 20, 0.95);
             border-color: #c4943a;
             color: #fff;
+            transform: translateY(-1px);
+        }
+
+        .toolbar-btn.has-indicator {
+            position: relative;
+        }
+
+        .toolbar-btn .indicator {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            width: 8px;
+            height: 8px;
+            background: #c4943a;
+            border-radius: 50%;
+            animation: indicatorPulse 2s infinite;
+        }
+
+        @keyframes indicatorPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.2); }
         }
 
         #reader {
@@ -314,6 +343,19 @@
 
         #reader.visible {
             display: flex;
+            animation: readerFadeIn 0.3s ease;
+        }
+
+        @keyframes readerFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .reader-container {
+            display: flex;
+            gap: 4px;
+            max-width: 95%;
+            max-height: 92vh;
         }
 
         .reader-page {
@@ -326,6 +368,10 @@
             padding: 36px 40px;
             overflow-y: auto;
             box-shadow: 0 0 60px rgba(0,0,0,0.8), inset 0 1px 0 rgba(196,148,58,0.06);
+        }
+
+        .reader-page.two-page-mode {
+            max-width: 520px;
         }
 
         .reader-header {
@@ -366,6 +412,7 @@
             padding: 0;
             width: 32px;
             height: 32px;
+            transition: color 0.2s;
         }
 
         .reader-close:hover {
@@ -401,6 +448,7 @@
             gap: 16px;
             padding-top: 12px;
             border-top: 1px solid #4a3520;
+            flex-wrap: wrap;
         }
 
         .reader-page-num {
@@ -434,6 +482,36 @@
         .reader-nav button:disabled {
             opacity: 0.4;
             cursor: not-allowed;
+        }
+
+        .reader-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .reader-action-btn {
+            background: none;
+            border: 1px solid transparent;
+            color: #8b7355;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .reader-action-btn:hover {
+            color: #c4943a;
+            border-color: #4a3520;
+        }
+
+        .reader-action-btn.active {
+            color: #c4943a;
+        }
+
+        .reader-action-btn.bookmarked {
+            color: #c4943a;
         }
 
         .page-flip {
@@ -484,6 +562,7 @@
             font-size: 28px;
             cursor: pointer;
             line-height: 1;
+            transition: color 0.2s;
         }
 
         .panel-close:hover {
@@ -507,6 +586,12 @@
             padding: 10px;
             border-radius: 4px;
             margin-bottom: 12px;
+            transition: border-color 0.2s;
+        }
+
+        .panel input:focus {
+            outline: none;
+            border-color: #c4943a;
         }
 
         .panel button {
@@ -536,6 +621,54 @@
             margin-bottom: 20px;
         }
 
+        .panel-tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #4a3520;
+            padding-bottom: 12px;
+        }
+
+        .panel-tab {
+            background: none;
+            border: 1px solid transparent;
+            color: #8b7355;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 15px;
+            padding: 8px 14px;
+            cursor: pointer;
+            border-radius: 4px 4px 0 0;
+            transition: all 0.2s;
+            width: auto;
+            margin-bottom: 0;
+        }
+
+        .panel-tab:hover {
+            color: #d4c5a0;
+            border-color: #4a3520;
+        }
+
+        .panel-tab.active {
+            background: rgba(74, 37, 16, 0.5);
+            color: #c4943a;
+            border-color: #4a3520;
+            border-bottom-color: #12100a;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: tabFadeIn 0.3s ease;
+        }
+
+        @keyframes tabFadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         #search-results {
             margin-top: 16px;
         }
@@ -553,6 +686,7 @@
         .search-result-item:hover {
             background: rgba(46, 28, 12, 0.8);
             border-color: #c4943a;
+            transform: translateX(2px);
         }
 
         .search-result-title {
@@ -574,8 +708,108 @@
             margin-top: 8px;
         }
 
+        .search-result-progress {
+            color: #6a5a42;
+            font-size: 11px;
+            margin-top: 4px;
+        }
+
         .nav-field {
             margin-bottom: 20px;
+        }
+
+        .section-divider {
+            margin: 24px 0;
+            padding-top: 16px;
+            border-top: 1px solid #4a3520;
+        }
+
+        .section-title {
+            font-size: 14px;
+            color: #8b7355;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 24px;
+            color: #5a4a32;
+            font-style: italic;
+        }
+
+        .bookmark-item, .recent-item {
+            background: rgba(26, 18, 8, 0.6);
+            border: 1px solid #4a3520;
+            border-radius: 4px;
+            padding: 12px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .bookmark-item:hover, .recent-item:hover {
+            background: rgba(46, 28, 12, 0.8);
+            border-color: #c4943a;
+            transform: translateX(2px);
+        }
+
+        .bookmark-remove {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: none;
+            border: none;
+            color: #5a4a32;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 4px;
+            line-height: 1;
+            width: auto;
+            margin: 0;
+            transition: color 0.2s;
+        }
+
+        .bookmark-remove:hover {
+            color: #c4943a;
+            background: none;
+        }
+
+        .continue-reading-banner {
+            background: linear-gradient(135deg, rgba(74, 37, 16, 0.9), rgba(46, 28, 12, 0.9));
+            border: 1px solid #c4943a;
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .continue-reading-banner:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(196, 148, 58, 0.2);
+        }
+
+        .continue-reading-label {
+            font-size: 11px;
+            color: #c4943a;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .continue-reading-title {
+            font-size: 17px;
+            color: #d4c5a0;
+            font-weight: 600;
+        }
+
+        .continue-reading-progress {
+            font-size: 12px;
+            color: #8b7355;
+            margin-top: 4px;
         }
 
         #about-modal {
@@ -598,6 +832,12 @@
 
         #about-modal.visible {
             display: block;
+            animation: modalFadeIn 0.3s ease;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
+            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
         }
 
         #about-overlay {
@@ -687,6 +927,49 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+        /* Toast notifications */
+        #toast-container {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .toast {
+            background: rgba(26, 18, 8, 0.95);
+            border: 1px solid #c4943a;
+            border-radius: 6px;
+            padding: 12px 24px;
+            color: #d4c5a0;
+            font-size: 14px;
+            animation: toastIn 0.3s ease, toastOut 0.3s ease 2.7s forwards;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes toastOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-10px); }
+        }
+
+        /* Two-page layout */
+        .reader-page-right {
+            display: none;
+        }
+
+        .reader-page-right.visible {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -727,41 +1010,66 @@
     <div id="toolbar">
         <button class="toolbar-btn" onclick="openSearch()">Search</button>
         <button class="toolbar-btn" onclick="openNav()">Navigate</button>
+        <button class="toolbar-btn has-indicator" id="library-btn" onclick="openLibrary()">My Library</button>
         <button class="toolbar-btn" onclick="randomRoom()">Random</button>
         <button class="toolbar-btn" onclick="openAbout()">About</button>
     </div>
 
+    <div id="toast-container"></div>
+
     <div id="reader">
-        <div class="reader-page">
-            <div class="reader-header">
-                <div>
-                    <div class="reader-title" id="reader-title">Loading...</div>
-                    <div class="reader-author" id="reader-author"></div>
-                    <div class="reader-coords" id="reader-coords"></div>
+        <div class="reader-container">
+            <div class="reader-page" id="reader-page-left">
+                <div class="reader-header">
+                    <div>
+                        <div class="reader-title" id="reader-title">Loading...</div>
+                        <div class="reader-author" id="reader-author"></div>
+                        <div class="reader-coords" id="reader-coords"></div>
+                    </div>
+                    <button class="reader-close" onclick="closeBook()">&times;</button>
                 </div>
-                <button class="reader-close" onclick="closeBook()">&times;</button>
+                <div class="reader-content loading" id="reader-content">Loading book text...</div>
+                <div class="reader-footer">
+                    <div class="reader-page-num" id="reader-page-num">Page 1</div>
+                    <div class="reader-actions">
+                        <button class="reader-action-btn" id="bookmark-btn" onclick="toggleBookmark()" title="Bookmark">🔖</button>
+                        <button class="reader-action-btn" id="two-page-btn" onclick="toggleTwoPage()" title="Two-page view">📖</button>
+                    </div>
+                    <div class="reader-nav">
+                        <button onclick="prevPage()" id="prev-page-btn">&larr; Previous</button>
+                        <button onclick="nextPage()" id="next-page-btn">Next &rarr;</button>
+                    </div>
+                    <a id="reader-gutenberg-link" href="#" target="_blank" style="color:#c4943a;font-size:14px;">View on Gutenberg</a>
+                </div>
             </div>
-            <div class="reader-content loading" id="reader-content">Loading book text...</div>
-            <div class="reader-footer">
-                <div class="reader-page-num" id="reader-page-num">Page 1</div>
-                <div class="reader-nav">
-                    <button onclick="prevPage()" id="prev-page-btn">&larr; Previous</button>
-                    <button onclick="nextPage()" id="next-page-btn">Next &rarr;</button>
+            <div class="reader-page reader-page-right two-page-mode" id="reader-page-right">
+                <div class="reader-content" id="reader-content-right"></div>
+                <div class="reader-footer">
+                    <div class="reader-page-num" id="reader-page-num-right"></div>
                 </div>
-                <a id="reader-gutenberg-link" href="#" target="_blank" style="color:#c4943a;font-size:14px;">View on Project Gutenberg</a>
             </div>
         </div>
     </div>
 
     <div id="search-panel" class="panel">
         <div class="panel-header">
-            <div class="panel-title">Search Books</div>
+            <div class="panel-title">Search</div>
             <button class="panel-close" onclick="closeSearch()">&times;</button>
         </div>
         <p class="search-philosophy">Search Project Gutenberg's catalog of over 70,000 free eBooks. Find a book and teleport directly to its shelf.</p>
-        <label>Search by title, author, or subject:</label>
+        
+        <div class="section-divider" style="margin-top:0; padding-top:0; border-top:none;">
+            <div class="section-title">Search by Title/Author</div>
+        </div>
         <input type="text" id="search-input" placeholder="e.g., Pride and Prejudice, Shakespeare...">
         <button onclick="performSearch()">Search</button>
+        
+        <div class="section-divider">
+            <div class="section-title">Jump by Gutenberg ID</div>
+        </div>
+        <input type="number" id="search-gutenberg-id" min="1" placeholder="e.g., 1342 (Pride and Prejudice)">
+        <button onclick="jumpToGutenbergId()">Go to Book</button>
+        
         <div id="search-results"></div>
     </div>
 
@@ -787,10 +1095,36 @@
             <input type="number" id="nav-vol" min="1" max="32" value="1">
         </div>
         <button onclick="navigateToCoords()">Go There</button>
-        <div style="margin-top:24px; padding-top:16px; border-top: 1px solid #4a3520;">
-            <label>Jump to Gutenberg ID:</label>
-            <input type="number" id="nav-gutenberg-id" min="1" placeholder="e.g., 1342">
-            <button onclick="navigateToGutenbergId()">Go to Book</button>
+        <div class="section-divider">
+            <div class="section-title">Jump by Gutenberg ID</div>
+        </div>
+        <input type="number" id="nav-gutenberg-id" min="1" placeholder="e.g., 1342">
+        <button onclick="navigateToGutenbergId()">Go to Book</button>
+    </div>
+
+    <div id="library-panel" class="panel">
+        <div class="panel-header">
+            <div class="panel-title">My Library</div>
+            <button class="panel-close" onclick="closeLibrary()">&times;</button>
+        </div>
+        
+        <div id="continue-reading-section"></div>
+        
+        <div class="panel-tabs">
+            <button class="panel-tab active" data-tab="bookmarks">Bookmarks</button>
+            <button class="panel-tab" data-tab="recents">Recent</button>
+        </div>
+        
+        <div class="tab-content active" id="bookmarks-tab">
+            <div id="bookmarks-list">
+                <div class="empty-state">No bookmarks yet. Open a book and click 🔖 to add one.</div>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="recents-tab">
+            <div id="recents-list">
+                <div class="empty-state">No recent books. Start exploring!</div>
+            </div>
         </div>
     </div>
 
@@ -846,21 +1180,161 @@
         // LIBRARY CONFIGURATION
         // ============================================
 
-        // Library structure: deterministic mapping from book ID to location
         const BOOKS_PER_SHELF = 32;
         const SHELVES_PER_WALL = 5;
         const WALLS_PER_ROOM = 4;
         const BOOKS_PER_ROOM = BOOKS_PER_SHELF * SHELVES_PER_WALL * WALLS_PER_ROOM; // 640
-        const TOTAL_BOOKS = 70000; // Approximate Gutenberg catalog size
+        const TOTAL_BOOKS = 70000;
         const TOTAL_ROOMS = Math.ceil(TOTAL_BOOKS / BOOKS_PER_ROOM); // ~110 rooms
 
-        // Book catalog cache
-        const bookCache = new Map();
-        let catalogLoaded = false;
+        // ============================================
+        // PERSISTENCE (localStorage)
+        // ============================================
+
+        const STORAGE_KEYS = {
+            BOOKMARKS: 'gutenberg-library-bookmarks',
+            RECENTS: 'gutenberg-library-recents',
+            READING_PROGRESS: 'gutenberg-library-progress',
+            METADATA_CACHE: 'gutenberg-library-meta-cache',
+            SETTINGS: 'gutenberg-library-settings'
+        };
+
+        function loadFromStorage(key, defaultValue = null) {
+            try {
+                const stored = localStorage.getItem(key);
+                return stored ? JSON.parse(stored) : defaultValue;
+            } catch (e) {
+                console.warn('Failed to load from storage:', key, e);
+                return defaultValue;
+            }
+        }
+
+        function saveToStorage(key, value) {
+            try {
+                localStorage.setItem(key, JSON.stringify(value));
+            } catch (e) {
+                console.warn('Failed to save to storage:', key, e);
+            }
+        }
+
+        // Load persisted data
+        let bookmarks = loadFromStorage(STORAGE_KEYS.BOOKMARKS, []);
+        let recents = loadFromStorage(STORAGE_KEYS.RECENTS, []);
+        let readingProgress = loadFromStorage(STORAGE_KEYS.READING_PROGRESS, {});
+        let metadataCache = loadFromStorage(STORAGE_KEYS.METADATA_CACHE, {});
+        let settings = loadFromStorage(STORAGE_KEYS.SETTINGS, { twoPageMode: false });
+
+        // Book catalog cache (in-memory + persisted)
+        const bookCache = new Map(Object.entries(metadataCache));
+
+        function persistMetadataCache() {
+            // Only keep last 500 entries to avoid storage bloat
+            const entries = Array.from(bookCache.entries()).slice(-500);
+            saveToStorage(STORAGE_KEYS.METADATA_CACHE, Object.fromEntries(entries));
+        }
 
         // ============================================
-        // GUTENBERG API FUNCTIONS
+        // BOOKMARKS & RECENTS MANAGEMENT
         // ============================================
+
+        function addToRecents(bookId, title, authors) {
+            const existing = recents.findIndex(r => r.bookId === bookId);
+            if (existing !== -1) {
+                recents.splice(existing, 1);
+            }
+            recents.unshift({
+                bookId,
+                title,
+                authors,
+                timestamp: Date.now()
+            });
+            recents = recents.slice(0, 20); // Keep last 20
+            saveToStorage(STORAGE_KEYS.RECENTS, recents);
+            updateLibraryUI();
+        }
+
+        function isBookmarked(bookId) {
+            return bookmarks.some(b => b.bookId === bookId);
+        }
+
+        function addBookmark(bookId, title, authors) {
+            if (isBookmarked(bookId)) return;
+            bookmarks.unshift({
+                bookId,
+                title,
+                authors,
+                timestamp: Date.now()
+            });
+            saveToStorage(STORAGE_KEYS.BOOKMARKS, bookmarks);
+            updateLibraryUI();
+            showToast('Bookmark added');
+        }
+
+        function removeBookmark(bookId) {
+            bookmarks = bookmarks.filter(b => b.bookId !== bookId);
+            saveToStorage(STORAGE_KEYS.BOOKMARKS, bookmarks);
+            updateLibraryUI();
+            showToast('Bookmark removed');
+        }
+
+        window.toggleBookmark = function() {
+            if (!currentBookId) return;
+            const titleEl = document.getElementById('reader-title');
+            const authorEl = document.getElementById('reader-author');
+            
+            if (isBookmarked(currentBookId)) {
+                removeBookmark(currentBookId);
+                document.getElementById('bookmark-btn').classList.remove('bookmarked');
+            } else {
+                addBookmark(currentBookId, titleEl.textContent, authorEl.textContent);
+                document.getElementById('bookmark-btn').classList.add('bookmarked');
+            }
+        };
+
+        function saveReadingProgress(bookId, pageIndex, totalPages) {
+            readingProgress[bookId] = {
+                page: pageIndex,
+                total: totalPages,
+                timestamp: Date.now()
+            };
+            saveToStorage(STORAGE_KEYS.READING_PROGRESS, readingProgress);
+        }
+
+        function getReadingProgress(bookId) {
+            return readingProgress[bookId] || null;
+        }
+
+        function getLastReadBook() {
+            let lastBook = null;
+            let lastTime = 0;
+            for (const [bookId, progress] of Object.entries(readingProgress)) {
+                if (progress.timestamp > lastTime && progress.page > 0) {
+                    lastTime = progress.timestamp;
+                    lastBook = { bookId: parseInt(bookId), ...progress };
+                }
+            }
+            return lastBook;
+        }
+
+        // ============================================
+        // TOAST NOTIFICATIONS
+        // ============================================
+
+        function showToast(message) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // ============================================
+        // GUTENBERG API FUNCTIONS (with caching & debounce)
+        // ============================================
+
+        let hoverDebounceTimer = null;
+        const HOVER_DEBOUNCE_MS = 150;
 
         async function fetchBookMetadata(bookId) {
             if (bookCache.has(bookId)) {
@@ -877,11 +1351,30 @@
                     subjects: data.subjects || [],
                 };
                 bookCache.set(bookId, book);
+                // Persist cache occasionally
+                if (bookCache.size % 10 === 0) {
+                    persistMetadataCache();
+                }
                 return book;
             } catch (e) {
                 console.error('Failed to fetch book metadata:', e);
                 return null;
             }
+        }
+
+        function fetchBookMetadataDebounced(bookId, callback) {
+            if (hoverDebounceTimer) {
+                clearTimeout(hoverDebounceTimer);
+            }
+            // Return cached immediately if available
+            if (bookCache.has(bookId)) {
+                callback(bookCache.get(bookId));
+                return;
+            }
+            hoverDebounceTimer = setTimeout(async () => {
+                const meta = await fetchBookMetadata(bookId);
+                callback(meta);
+            }, HOVER_DEBOUNCE_MS);
         }
 
         async function fetchBookText(bookId) {
@@ -900,6 +1393,19 @@
                 const response = await fetch(`/.netlify/functions/gutenberg?search=${encodeURIComponent(query)}`);
                 if (!response.ok) return [];
                 const data = await response.json();
+                // Cache the results
+                if (data.results) {
+                    for (const book of data.results) {
+                        const cached = {
+                            id: book.id,
+                            title: book.title || 'Unknown Title',
+                            authors: book.authors?.map(a => a.name).join(', ') || 'Unknown Author',
+                            subjects: book.subjects || [],
+                        };
+                        bookCache.set(book.id, cached);
+                    }
+                    persistMetadataCache();
+                }
                 return data.results || [];
             } catch (e) {
                 console.error('Failed to search books:', e);
@@ -912,7 +1418,6 @@
         // ============================================
 
         function bookIdToLocation(bookId) {
-            // Gutenberg IDs start at 1
             const index = bookId - 1;
             const room = Math.floor(index / BOOKS_PER_ROOM);
             const inRoom = index % BOOKS_PER_ROOM;
@@ -928,7 +1433,7 @@
                           wall * BOOKS_PER_SHELF * SHELVES_PER_WALL +
                           shelf * BOOKS_PER_SHELF +
                           volume;
-            return index + 1; // Gutenberg IDs start at 1
+            return index + 1;
         }
 
         // ============================================
@@ -967,6 +1472,31 @@
 
         const columnMaterial = new THREE.MeshStandardMaterial({ color: 0x2a1f15, roughness: 0.85 });
         const sharedMaterials = new Set([wallMaterial, floorMaterial, ceilingMaterial, shelfMaterial, columnMaterial]);
+
+        // ============================================
+        // BOOK HIGHLIGHTING SYSTEM
+        // ============================================
+
+        let highlightedBookInfo = null;
+        let highlightStartTime = 0;
+        const HIGHLIGHT_DURATION = 4000; // 4 seconds
+        const HIGHLIGHT_COLOR = new THREE.Color(0xFFD700); // Gold
+
+        function highlightBook(bookId) {
+            const location = bookIdToLocation(bookId);
+            highlightedBookInfo = {
+                bookId,
+                room: location.room,
+                wall: location.wall,
+                shelf: location.shelf,
+                volume: location.volume
+            };
+            highlightStartTime = performance.now();
+        }
+
+        function clearHighlight() {
+            highlightedBookInfo = null;
+        }
 
         // ============================================
         // HEXAGONAL ROOM GEOMETRY
@@ -1142,9 +1672,9 @@
             group.add(light2);
 
             // Add bookshelves with books
-            const { bookMesh, bookMap } = addBookshelves(group, roomIndex);
+            const { bookMesh, bookMap, originalColors } = addBookshelves(group, roomIndex);
 
-            return { group, bookMesh, bookMap, lights: [light1, light2], roomIndex };
+            return { group, bookMesh, bookMap, originalColors, lights: [light1, light2], roomIndex };
         }
 
         function addBookshelves(group, roomIndex) {
@@ -1177,6 +1707,7 @@
             const bookMesh = new THREE.InstancedMesh(bookGeom, bookMat, totalBooks);
 
             const bookMap = [];
+            const originalColors = new Float32Array(totalBooks * 3);
             let instanceId = 0;
             const matrix = new THREE.Matrix4();
             const color = new THREE.Color();
@@ -1213,8 +1744,13 @@
                         const colorIndex = bookId % BOOK_COLORS.length;
                         color.setHex(BOOK_COLORS[colorIndex]);
                         bookMesh.setColorAt(instanceId, color);
+                        
+                        // Store original color
+                        originalColors[instanceId * 3] = color.r;
+                        originalColors[instanceId * 3 + 1] = color.g;
+                        originalColors[instanceId * 3 + 2] = color.b;
 
-                        bookMap.push({ wall: w, shelf: s, vol: v, bookId });
+                        bookMap.push({ wall: w, shelf: s, vol: v, bookId, instanceId });
                         instanceId++;
                     }
                 }
@@ -1224,7 +1760,7 @@
             bookMesh.instanceColor.needsUpdate = true;
             group.add(bookMesh);
 
-            return { bookMesh, bookMap };
+            return { bookMesh, bookMap, originalColors };
         }
 
         // ============================================
@@ -1255,7 +1791,7 @@
             rooms.clear();
         }
 
-        function teleportTo(roomIndex, callback) {
+        function teleportTo(roomIndex, callback, highlightBookId = null) {
             roomIndex = Math.max(0, Math.min(TOTAL_ROOMS - 1, roomIndex));
             const fade = document.getElementById('transition-fade');
             fade.classList.add('active');
@@ -1265,6 +1801,12 @@
                 clearAllRooms();
                 updateRooms();
                 updateHUD();
+                
+                // Start highlight if requested
+                if (highlightBookId) {
+                    highlightBook(highlightBookId);
+                }
+                
                 setTimeout(() => {
                     fade.classList.remove('active');
                     if (callback) callback();
@@ -1333,10 +1875,11 @@
         let searchOpen = false;
         let navOpen = false;
         let aboutOpen = false;
+        let libraryOpen = false;
         let introHidden = false;
 
         canvas.addEventListener('click', (e) => {
-            if (!readerOpen && !searchOpen && !navOpen && !aboutOpen && introHidden) {
+            if (!readerOpen && !searchOpen && !navOpen && !aboutOpen && !libraryOpen && introHidden) {
                 controls.lock();
             }
         });
@@ -1348,7 +1891,7 @@
 
         controls.addEventListener('unlock', () => {
             document.getElementById('crosshair').classList.remove('visible');
-            if (introHidden && !readerOpen && !searchOpen && !navOpen && !aboutOpen) {
+            if (introHidden && !readerOpen && !searchOpen && !navOpen && !aboutOpen && !libraryOpen) {
                 document.getElementById('instructions').classList.remove('hidden');
             }
         });
@@ -1458,12 +2001,12 @@
         let currentBookId = null;
         let currentBookPages = [];
         let currentPageIndex = 0;
-        const textCache = new Map(); // bookId -> full text
+        let twoPageMode = settings.twoPageMode || false;
+        const textCache = new Map();
 
         function paginateText(text) {
-            // "Book-like" pagination: 40 lines per page (similar feel to the Babel reader)
             const lines = text.split('\n');
-            const perPage = 40;
+            const perPage = twoPageMode ? 35 : 40;
             const pages = [];
             for (let i = 0; i < lines.length; i += perPage) {
                 pages.push(lines.slice(i, i + perPage).join('\n'));
@@ -1486,28 +2029,78 @@
             requestAnimationFrame(() => contentEl.classList.remove('page-flip'));
 
             contentEl.textContent = currentBookPages[idx] || '';
-            pageNumEl.textContent = `Page ${idx + 1} of ${total}`;
-            prevBtn.disabled = idx === 0;
-            nextBtn.disabled = idx >= total - 1;
+            
+            if (twoPageMode) {
+                pageNumEl.textContent = `Page ${idx + 1}`;
+                const rightContent = document.getElementById('reader-content-right');
+                const rightPageNum = document.getElementById('reader-page-num-right');
+                if (idx + 1 < total) {
+                    rightContent.textContent = currentBookPages[idx + 1] || '';
+                    rightPageNum.textContent = `Page ${idx + 2}`;
+                    document.getElementById('reader-page-right').classList.add('visible');
+                } else {
+                    rightContent.textContent = '';
+                    rightPageNum.textContent = '';
+                    document.getElementById('reader-page-right').classList.remove('visible');
+                }
+                prevBtn.disabled = idx === 0;
+                nextBtn.disabled = idx >= total - 2;
+            } else {
+                pageNumEl.textContent = `Page ${idx + 1} of ${total}`;
+                document.getElementById('reader-page-right').classList.remove('visible');
+                prevBtn.disabled = idx === 0;
+                nextBtn.disabled = idx >= total - 1;
+            }
+
+            // Save reading progress
+            if (currentBookId) {
+                saveReadingProgress(currentBookId, idx, total);
+            }
         }
+
+        window.toggleTwoPage = function() {
+            twoPageMode = !twoPageMode;
+            settings.twoPageMode = twoPageMode;
+            saveToStorage(STORAGE_KEYS.SETTINGS, settings);
+            
+            const btn = document.getElementById('two-page-btn');
+            btn.classList.toggle('active', twoPageMode);
+            
+            const leftPage = document.getElementById('reader-page-left');
+            leftPage.classList.toggle('two-page-mode', twoPageMode);
+            
+            // Re-paginate current book
+            if (textCache.has(currentBookId)) {
+                const text = textCache.get(currentBookId);
+                const cleanText = text.replace(/\r\n/g, '\n').replace(/\n{4,}/g, '\n\n\n');
+                currentBookPages = paginateText(cleanText);
+                // Adjust page index for two-page mode
+                if (twoPageMode) {
+                    currentPageIndex = Math.floor(currentPageIndex / 2) * 2;
+                }
+                renderPage();
+            }
+        };
 
         window.nextPage = function() {
             if (!readerOpen) return;
-            if (currentPageIndex < (currentBookPages.length - 1)) {
-                currentPageIndex++;
+            const step = twoPageMode ? 2 : 1;
+            if (currentPageIndex < (currentBookPages.length - step)) {
+                currentPageIndex += step;
                 renderPage();
             }
         };
 
         window.prevPage = function() {
             if (!readerOpen) return;
-            if (currentPageIndex > 0) {
-                currentPageIndex--;
+            const step = twoPageMode ? 2 : 1;
+            if (currentPageIndex >= step) {
+                currentPageIndex -= step;
                 renderPage();
             }
         };
 
-        window.openBook = async function(bookId) {
+        window.openBook = async function(bookId, resumePage = null) {
             currentBookId = bookId;
             readerOpen = true;
 
@@ -1520,15 +2113,25 @@
             document.getElementById('reader-content').classList.add('loading');
             document.getElementById('reader-gutenberg-link').href = `https://www.gutenberg.org/ebooks/${bookId}`;
             document.getElementById('reader').classList.add('visible');
+            
+            // Update bookmark button state
+            document.getElementById('bookmark-btn').classList.toggle('bookmarked', isBookmarked(bookId));
+            
+            // Update two-page button state
+            document.getElementById('two-page-btn').classList.toggle('active', twoPageMode);
+            document.getElementById('reader-page-left').classList.toggle('two-page-mode', twoPageMode);
 
             // Fetch metadata
             const meta = await fetchBookMetadata(bookId);
             if (meta) {
                 document.getElementById('reader-title').textContent = meta.title;
                 document.getElementById('reader-author').textContent = meta.authors;
+                // Add to recents
+                addToRecents(bookId, meta.title, meta.authors);
             } else {
                 document.getElementById('reader-title').textContent = `Book #${bookId}`;
                 document.getElementById('reader-author').textContent = '';
+                addToRecents(bookId, `Book #${bookId}`, '');
             }
 
             // Fetch text (with cache)
@@ -1539,10 +2142,17 @@
             }
 
             if (text) {
-                // Clean up the text a bit (remove excessive whitespace)
                 const cleanText = text.replace(/\r\n/g, '\n').replace(/\n{4,}/g, '\n\n\n');
                 currentBookPages = paginateText(cleanText);
-                currentPageIndex = 0;
+                
+                // Resume from saved progress or specified page
+                if (resumePage !== null) {
+                    currentPageIndex = resumePage;
+                } else {
+                    const progress = getReadingProgress(bookId);
+                    currentPageIndex = progress ? progress.page : 0;
+                }
+                
                 renderPage();
             } else {
                 currentBookPages = ['Unable to load book text. The book may not be available in plain text format.'];
@@ -1553,6 +2163,7 @@
 
         window.closeBook = function() {
             document.getElementById('reader').classList.remove('visible');
+            document.getElementById('reader-page-right').classList.remove('visible');
             readerOpen = false;
             currentBookId = null;
             currentBookPages = [];
@@ -1594,14 +2205,30 @@
             resultsDiv.innerHTML = results.slice(0, 10).map(book => {
                 const location = bookIdToLocation(book.id);
                 const authors = book.authors?.map(a => a.name).join(', ') || 'Unknown Author';
+                const progress = getReadingProgress(book.id);
+                const progressText = progress ? `Progress: Page ${progress.page + 1} of ${progress.total}` : '';
                 return `
                     <div class="search-result-item" onclick="goToBook(${book.id})">
                         <div class="search-result-title">${escapeHtml(book.title)}</div>
                         <div class="search-result-author">${escapeHtml(authors)}</div>
                         <div class="search-result-location">Room ${location.room + 1} · Wall ${location.wall + 1} · Shelf ${location.shelf + 1}</div>
+                        ${progressText ? `<div class="search-result-progress">${progressText}</div>` : ''}
                     </div>
                 `;
             }).join('');
+        };
+
+        window.jumpToGutenbergId = function() {
+            const bookId = parseInt(document.getElementById('search-gutenberg-id').value);
+            if (!bookId || bookId < 1 || bookId > TOTAL_BOOKS) {
+                showToast('Please enter a valid Gutenberg ID (1-70000)');
+                return;
+            }
+            closeSearch();
+            const location = bookIdToLocation(bookId);
+            teleportTo(location.room, () => {
+                openBook(bookId);
+            }, bookId);
         };
 
         window.goToBook = function(bookId) {
@@ -1609,7 +2236,7 @@
             closeSearch();
             teleportTo(location.room, () => {
                 openBook(bookId);
-            });
+            }, bookId);
         };
 
         function escapeHtml(text) {
@@ -1648,7 +2275,7 @@
             closeNav();
             teleportTo(room, () => {
                 openBook(bookId);
-            });
+            }, bookId);
         };
 
         window.navigateToGutenbergId = function() {
@@ -1659,8 +2286,123 @@
             closeNav();
             teleportTo(location.room, () => {
                 openBook(bookId);
-            });
+            }, bookId);
         };
+
+        // ============================================
+        // MY LIBRARY PANEL
+        // ============================================
+
+        window.openLibrary = function() {
+            document.getElementById('library-panel').classList.add('visible');
+            libraryOpen = true;
+            controls.unlock();
+            updateLibraryUI();
+        };
+
+        window.closeLibrary = function() {
+            document.getElementById('library-panel').classList.remove('visible');
+            libraryOpen = false;
+        };
+
+        function updateLibraryUI() {
+            // Continue reading banner
+            const continueSection = document.getElementById('continue-reading-section');
+            const lastBook = getLastReadBook();
+            if (lastBook && lastBook.page > 0) {
+                const meta = bookCache.get(lastBook.bookId);
+                const title = meta?.title || `Book #${lastBook.bookId}`;
+                const percent = Math.round((lastBook.page / lastBook.total) * 100);
+                continueSection.innerHTML = `
+                    <div class="continue-reading-banner" onclick="continueReading(${lastBook.bookId}, ${lastBook.page})">
+                        <div class="continue-reading-label">Continue Reading</div>
+                        <div class="continue-reading-title">${escapeHtml(title)}</div>
+                        <div class="continue-reading-progress">Page ${lastBook.page + 1} of ${lastBook.total} (${percent}%)</div>
+                    </div>
+                `;
+            } else {
+                continueSection.innerHTML = '';
+            }
+            
+            // Update indicator
+            const hasContent = bookmarks.length > 0 || recents.length > 0 || lastBook;
+            const indicator = document.querySelector('#library-btn .indicator');
+            if (indicator) {
+                indicator.style.display = hasContent ? 'block' : 'none';
+            }
+
+            // Bookmarks
+            const bookmarksList = document.getElementById('bookmarks-list');
+            if (bookmarks.length === 0) {
+                bookmarksList.innerHTML = '<div class="empty-state">No bookmarks yet. Open a book and click 🔖 to add one.</div>';
+            } else {
+                bookmarksList.innerHTML = bookmarks.map(b => {
+                    const location = bookIdToLocation(b.bookId);
+                    const progress = getReadingProgress(b.bookId);
+                    const progressText = progress ? `Page ${progress.page + 1} of ${progress.total}` : '';
+                    return `
+                        <div class="bookmark-item" onclick="goToBookFromLibrary(${b.bookId})">
+                            <button class="bookmark-remove" onclick="event.stopPropagation(); removeBookmarkFromUI(${b.bookId})">&times;</button>
+                            <div class="search-result-title">${escapeHtml(b.title)}</div>
+                            <div class="search-result-author">${escapeHtml(b.authors)}</div>
+                            <div class="search-result-location">Room ${location.room + 1} · Wall ${location.wall + 1} · Shelf ${location.shelf + 1}</div>
+                            ${progressText ? `<div class="search-result-progress">${progressText}</div>` : ''}
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // Recents
+            const recentsList = document.getElementById('recents-list');
+            if (recents.length === 0) {
+                recentsList.innerHTML = '<div class="empty-state">No recent books. Start exploring!</div>';
+            } else {
+                recentsList.innerHTML = recents.map(r => {
+                    const location = bookIdToLocation(r.bookId);
+                    const progress = getReadingProgress(r.bookId);
+                    const progressText = progress ? `Page ${progress.page + 1} of ${progress.total}` : '';
+                    return `
+                        <div class="recent-item" onclick="goToBookFromLibrary(${r.bookId})">
+                            <div class="search-result-title">${escapeHtml(r.title)}</div>
+                            <div class="search-result-author">${escapeHtml(r.authors)}</div>
+                            <div class="search-result-location">Room ${location.room + 1} · Wall ${location.wall + 1} · Shelf ${location.shelf + 1}</div>
+                            ${progressText ? `<div class="search-result-progress">${progressText}</div>` : ''}
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        window.goToBookFromLibrary = function(bookId) {
+            closeLibrary();
+            const location = bookIdToLocation(bookId);
+            teleportTo(location.room, () => {
+                openBook(bookId);
+            }, bookId);
+        };
+
+        window.continueReading = function(bookId, page) {
+            closeLibrary();
+            const location = bookIdToLocation(bookId);
+            teleportTo(location.room, () => {
+                openBook(bookId, page);
+            }, bookId);
+        };
+
+        window.removeBookmarkFromUI = function(bookId) {
+            removeBookmark(bookId);
+        };
+
+        // Panel tabs
+        document.querySelectorAll('.panel-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabName = tab.dataset.tab;
+                document.querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(`${tabName}-tab`).classList.add('active');
+            });
+        });
 
         // ============================================
         // RANDOM ROOM
@@ -1735,6 +2477,7 @@
 
             const delta = clock.getDelta();
             const elapsedTime = clock.getElapsedTime();
+            const now = performance.now();
 
             if (controls.isLocked) {
                 const direction = new THREE.Vector3();
@@ -1786,7 +2529,7 @@
                         room.bookMesh.instanceColor.needsUpdate = true;
                         document.getElementById('crosshair').style.borderColor = 'rgba(196, 148, 58, 0.9)';
 
-                        // Show tooltip with book info
+                        // Show tooltip with book info (debounced fetch)
                         if (hoveredBookId !== bookInfo.bookId) {
                             hoveredBookId = bookInfo.bookId;
                             const tooltip = document.getElementById('book-tooltip');
@@ -1794,8 +2537,8 @@
                             tooltip.querySelector('.author').textContent = 'Click to read';
                             tooltip.classList.add('visible');
 
-                            // Fetch actual metadata in background
-                            fetchBookMetadata(bookInfo.bookId).then(meta => {
+                            // Fetch actual metadata with debouncing
+                            fetchBookMetadataDebounced(bookInfo.bookId, (meta) => {
                                 if (meta && hoveredBookId === bookInfo.bookId) {
                                     tooltip.querySelector('.title').textContent = meta.title;
                                     tooltip.querySelector('.author').textContent = meta.authors;
@@ -1808,6 +2551,48 @@
 
                 if (!hoveredBook) {
                     hoveredBookId = null;
+                }
+            }
+
+            // Update book highlighting (search/teleport target glow)
+            if (highlightedBookInfo) {
+                const elapsed = now - highlightStartTime;
+                if (elapsed > HIGHLIGHT_DURATION) {
+                    // Restore original color and clear highlight
+                    const room = rooms.get(highlightedBookInfo.room);
+                    if (room) {
+                        const bookEntry = room.bookMap.find(b => b.bookId === highlightedBookInfo.bookId);
+                        if (bookEntry) {
+                            const origR = room.originalColors[bookEntry.instanceId * 3];
+                            const origG = room.originalColors[bookEntry.instanceId * 3 + 1];
+                            const origB = room.originalColors[bookEntry.instanceId * 3 + 2];
+                            tempColor.setRGB(origR, origG, origB);
+                            room.bookMesh.setColorAt(bookEntry.instanceId, tempColor);
+                            room.bookMesh.instanceColor.needsUpdate = true;
+                        }
+                    }
+                    clearHighlight();
+                } else {
+                    // Pulsing glow effect
+                    const room = rooms.get(highlightedBookInfo.room);
+                    if (room) {
+                        const bookEntry = room.bookMap.find(b => b.bookId === highlightedBookInfo.bookId);
+                        if (bookEntry) {
+                            const pulse = Math.sin(elapsed * 0.008) * 0.5 + 0.5; // 0-1 pulsing
+                            const origR = room.originalColors[bookEntry.instanceId * 3];
+                            const origG = room.originalColors[bookEntry.instanceId * 3 + 1];
+                            const origB = room.originalColors[bookEntry.instanceId * 3 + 2];
+                            
+                            // Blend between original color and gold highlight
+                            tempColor.setRGB(
+                                origR + (HIGHLIGHT_COLOR.r - origR) * pulse * 0.7,
+                                origG + (HIGHLIGHT_COLOR.g - origG) * pulse * 0.7,
+                                origB + (HIGHLIGHT_COLOR.b - origB) * pulse * 0.7
+                            );
+                            room.bookMesh.setColorAt(bookEntry.instanceId, tempColor);
+                            room.bookMesh.instanceColor.needsUpdate = true;
+                        }
+                    }
                 }
             }
 
@@ -1886,14 +2671,21 @@
                 if (e.code === 'Escape') { closeBook(); }
                 if (e.code === 'ArrowRight' || e.code === 'ArrowDown') { e.preventDefault(); nextPage(); }
                 if (e.code === 'ArrowLeft' || e.code === 'ArrowUp') { e.preventDefault(); prevPage(); }
+                if (e.code === 'KeyB') { toggleBookmark(); }
             } else if (searchOpen) {
                 if (e.code === 'Escape') { closeSearch(); }
-                if (e.code === 'Enter' && e.target.id === 'search-input') {
+                if (e.code === 'Enter' && (e.target.id === 'search-input' || e.target.id === 'search-gutenberg-id')) {
                     e.preventDefault();
-                    performSearch();
+                    if (e.target.id === 'search-gutenberg-id') {
+                        jumpToGutenbergId();
+                    } else {
+                        performSearch();
+                    }
                 }
             } else if (navOpen) {
                 if (e.code === 'Escape') { closeNav(); }
+            } else if (libraryOpen) {
+                if (e.code === 'Escape') { closeLibrary(); }
             } else if (aboutOpen) {
                 if (e.code === 'Escape') { closeAbout(); }
             }
@@ -1915,6 +2707,7 @@
 
         updateRooms();
         updateHUD();
+        updateLibraryUI();
         animate();
     </script>
 </body>

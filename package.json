@@ -1,0 +1,10 @@
+{
+  "name": "library-of-gutenberg",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "A finite library filled with Project Gutenberg books",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js"
+  }
+}
