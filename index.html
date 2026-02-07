@@ -850,19 +850,23 @@
             position: absolute;
             left: 0;
             top: 0;
-            width: 280px;
             height: 100%;
             background: #12100a;
-            border-right: 1px solid #4a3520;
-            padding: 20px;
-            overflow-y: auto;
-            transform: translateX(-100%);
-            transition: transform 0.3s ease;
             z-index: 5;
+
+            /* Keep it out of layout when hidden so the reader stays perfectly centered */
+            width: 0;
+            padding: 0;
+            border-right: none;
+            overflow: hidden;
+            transition: width 0.25s ease, padding 0.25s ease;
         }
 
         .chapter-sidebar.visible {
-            transform: translateX(0);
+            width: 280px;
+            padding: 20px;
+            border-right: 1px solid #4a3520;
+            overflow-y: auto;
         }
 
         .chapter-sidebar-title {
@@ -1758,7 +1762,7 @@
         // ============================================
 
         // Version stamp (helps ensure browser isn't using a cached index.html)
-        const APP_BUILD = 'css-book-v6';
+        const APP_BUILD = 'css-book-v7';
         window.__APP_BUILD = APP_BUILD;
         const buildTagEl = document.getElementById('build-tag');
         if (buildTagEl) buildTagEl.textContent = APP_BUILD;
