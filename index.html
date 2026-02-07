@@ -549,6 +549,7 @@
             width: min(920px, calc(100vw - 140px));
             height: min(560px, calc(100vh - 340px));
             margin: 0 auto;
+            overflow: hidden;
         }
 
         .flip-page {
@@ -2971,6 +2972,9 @@
             const flipEl = document.getElementById('flipbook');
             if (!flipEl) return;
 
+            // Keep flip mode aligned to spreads (even page index) to avoid "missing left page" feel
+            currentPageIndex = Math.max(0, Math.floor((currentPageIndex || 0) / 2) * 2);
+
             // Build pages (cap for performance)
             const total = currentBookPages.length || 1;
             const capped = Math.min(total, MAX_FLIP_PAGES);
@@ -2997,8 +3001,12 @@
                 minHeight: 420,
                 maxHeight: 800,
                 maxShadowOpacity: 0.45,
+                drawShadow: true,
+                flippingTime: 700,
                 showCover: false,
+                startPage: currentPageIndex,
                 usePortrait: false,
+                autoSize: true,
                 mobileScrollSupport: false,
                 useMouseEvents: true
             });
@@ -3006,7 +3014,9 @@
             pageFlip.loadFromHTML(flipPageEls);
 
             pageFlip.on('flip', (e) => {
-                currentPageIndex = e.data;
+                // Snap to even index so spreads feel stable
+                currentPageIndex = Math.max(0, Math.floor((e.data || 0) / 2) * 2);
+                try { pageFlip.flip(currentPageIndex); } catch (err) {}
                 updateReaderChrome();
                 renderFlipPageContent(currentPageIndex);
                 playPageTurn();
