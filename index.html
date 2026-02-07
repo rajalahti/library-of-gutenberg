@@ -547,6 +547,8 @@
             position: relative;
             min-height: 320px;
             max-height: 66vh;
+            display: flex;
+            flex-direction: column;
             box-shadow: 
                 inset 0 0 40px rgba(0,0,0,0.08),
                 0 2px 20px rgba(0,0,0,0.3);
@@ -610,6 +612,8 @@
             hyphens: manual;
             word-break: normal;
             overflow-wrap: normal;
+            flex: 1;
+            min-height: 0;
         }
 
         .book-page-content p {
@@ -1750,7 +1754,7 @@
         // ============================================
 
         // Version stamp (helps ensure browser isn't using a cached index.html)
-        const APP_BUILD = 'css-book-v2';
+        const APP_BUILD = 'css-book-v3';
         window.__APP_BUILD = APP_BUILD;
         const buildTagEl = document.getElementById('build-tag');
         if (buildTagEl) buildTagEl.textContent = APP_BUILD;
@@ -2955,13 +2959,20 @@
 
         function setupMeasureBox() {
             const measure = document.getElementById('paginator-measure');
+            const leftPage = document.getElementById('book-page-left');
             const leftContent = document.getElementById('book-content-left');
-            if (!measure || !leftContent) return null;
+            if (!measure || !leftPage || !leftContent) return null;
 
-            // Make measure box match the visible content box size
-            const rect = leftContent.getBoundingClientRect();
-            measure.style.width = rect.width + 'px';
-            measure.style.height = rect.height + 'px';
+            // Match the *inner* printable area of the page (page size minus padding)
+            const pageRect = leftPage.getBoundingClientRect();
+            const pageStyle = getComputedStyle(leftPage);
+            const padX = (parseFloat(pageStyle.paddingLeft) || 0) + (parseFloat(pageStyle.paddingRight) || 0);
+            const padY = (parseFloat(pageStyle.paddingTop) || 0) + (parseFloat(pageStyle.paddingBottom) || 0);
+
+            const w = Math.max(200, pageRect.width - padX);
+            const h = Math.max(200, pageRect.height - padY);
+            measure.style.width = w + 'px';
+            measure.style.height = h + 'px';
 
             // Mirror typography classes
             measure.className = leftContent.className; // includes book-page-content + font/size
