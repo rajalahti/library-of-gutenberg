@@ -2968,16 +2968,17 @@
         }
 
         function initFlipBook() {
-            destroyFlipBook();
-            const flipEl = document.getElementById('flipbook');
-            if (!flipEl) return;
+            try {
+                destroyFlipBook();
+                const flipEl = document.getElementById('flipbook');
+                if (!flipEl) return;
 
-            // Keep flip mode aligned to spreads (even page index) to avoid "missing left page" feel
-            currentPageIndex = Math.max(0, Math.floor((currentPageIndex || 0) / 2) * 2);
+                // Keep flip mode aligned to spreads (even page index) to avoid "missing left page" feel
+                currentPageIndex = Math.max(0, Math.floor((currentPageIndex || 0) / 2) * 2);
 
-            // Build pages (cap for performance)
-            const total = currentBookPages.length || 1;
-            const capped = Math.min(total, MAX_FLIP_PAGES);
+                // Build pages (cap for performance)
+                const total = currentBookPages.length || 1;
+                const capped = Math.min(total, MAX_FLIP_PAGES);
 
             flipPageEls = [];
             const frag = document.createDocumentFragment();
@@ -3014,9 +3015,8 @@
             pageFlip.loadFromHTML(flipPageEls);
 
             pageFlip.on('flip', (e) => {
-                // Snap to even index so spreads feel stable
-                currentPageIndex = Math.max(0, Math.floor((e.data || 0) / 2) * 2);
-                try { pageFlip.flip(currentPageIndex); } catch (err) {}
+                // Keep state in sync with the library. We don't force-snap here to avoid re-entrant flips.
+                currentPageIndex = e.data || 0;
                 updateReaderChrome();
                 renderFlipPageContent(currentPageIndex);
                 playPageTurn();
@@ -3025,6 +3025,16 @@
             // initial content refresh (highlights, etc)
             renderFlipPageContent(currentPageIndex);
             updateReaderChrome();
+            } catch (err) {
+                console.warn('PageFlip init failed; falling back to Classic mode', err);
+                readerMode = 'classic';
+                settings.readerMode = readerMode;
+                saveToStorage(STORAGE_KEYS.SETTINGS, settings);
+                showToast('Real book mode failed — using Classic reader.');
+                setReaderModeUI();
+                destroyFlipBook();
+                try { renderPage(); } catch (e) {}
+            }
         }
 
         function updateReaderChrome() {
