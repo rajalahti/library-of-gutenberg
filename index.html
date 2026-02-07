@@ -1476,7 +1476,24 @@
             color: #8b7355;
             margin-top: 2px;
         }
-    </style>
+    
+        #elevator-hint {
+            position: fixed;
+            left: 50%;
+            bottom: 18px;
+            transform: translateX(-50%);
+            background: rgba(10, 8, 6, 0.88);
+            border: 1px solid rgba(196, 148, 58, 0.35);
+            padding: 8px 12px;
+            border-radius: 8px;
+            color: #d4c5a0;
+            font-family: "IBM Plex Mono", monospace;
+            font-size: 13px;
+            z-index: 9999;
+            pointer-events: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+        }
+</style>
 </head>
 <body>
     <canvas id="scene"></canvas>
@@ -1690,6 +1707,19 @@
         </div>
         <input type="number" id="nav-gutenberg-id" min="1" placeholder="e.g., 1342">
         <button onclick="navigateToGutenbergId()">Go to Book</button>
+    </div>
+
+    <div id="elevator-hint" style="display:none;">Press <strong>E</strong> — Elevator</div>
+
+    <div id="elevator-panel" class="panel">
+        <div class="panel-header">
+            <div class="panel-title">Elevator</div>
+            <button class="panel-close" onclick="closeElevator()">&times;</button>
+        </div>
+        <p style="margin: 6px 0 10px; color: #b7a98a; font-size: 13px; line-height: 1.3;">
+            Choose a theme section to teleport to.
+        </p>
+        <div id="elevator-buttons" style="display:grid; grid-template-columns: 1fr; gap: 8px;"></div>
     </div>
 
     <div id="library-panel" class="panel">
@@ -2185,6 +2215,9 @@
             { id: 'children', label: 'CHILDREN' },
             { id: 'general', label: 'GENERAL WORKS' },
         ];
+
+        // Build elevator UI buttons once
+        setTimeout(() => { try { ensureElevatorButtons(); } catch(e){} }, 0);
 
         // Allocate rooms per theme so total stays exactly TOTAL_ROOMS
         const ROOMS_PER_THEME_V2 = (() => {
@@ -2707,7 +2740,63 @@
             // Add bookshelves with books and wall/shelf signs
             const { bookMesh, bookMap, originalColors, shelfLabels } = addBookshelves(group, roomIndex);
 
-            return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1, light2], lamps: [lamp1, lamp2], roomIndex };
+            
+
+            // Elevator at pipe ends (visual + interaction point)
+            let elevatorLocal = null;
+            if (roomIndex === 0 || roomIndex === TOTAL_ROOMS - 1) {
+                // Use one of the passage corridors as the elevator bay
+                const elevatorPassIdx = (roomIndex === 0) ? 4 : 1;
+                const vaE = HEX_VERTICES[elevatorPassIdx];
+                const vbE = HEX_VERTICES[(elevatorPassIdx + 1) % 6];
+                const cE = new THREE.Vector3((vaE.x + vbE.x) / 2, 0, (vaE.z + vbE.z) / 2);
+                const outwardE = cE.clone().normalize();
+                const passAngleE = Math.atan2(-cE.x, -cE.z);
+                const corridorDepthE = CORRIDOR_LENGTH / 2;
+                const passageEdgeZE = R * Math.sqrt(3) / 2;
+                const corridorEndE = passageEdgeZE + corridorDepthE;
+
+                elevatorLocal = outwardE.clone().multiplyScalar(corridorEndE - 0.35);
+                elevatorLocal.y = 0;
+
+                const elev = new THREE.Group();
+                elev.position.copy(elevatorLocal);
+                elev.position.y = 0;
+                elev.rotation.y = passAngleE;
+
+                const cabinMat = new THREE.MeshStandardMaterial({ color: 0x1a1510, roughness: 0.85, metalness: 0.1 });
+                const frameMat = new THREE.MeshStandardMaterial({ color: 0x3a2a1a, roughness: 0.6, metalness: 0.25 });
+                const glowMat = new THREE.MeshBasicMaterial({ color: 0xc4943a, transparent: true, opacity: 0.25 });
+
+                const frame = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.6, 0.25), frameMat);
+                frame.position.set(0, 1.3, -0.15);
+                elev.add(frame);
+
+                const door = new THREE.Mesh(new THREE.BoxGeometry(1.0, 2.2, 0.12), cabinMat);
+                door.position.set(0, 1.1, -0.26);
+                elev.add(door);
+
+                const panel = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.5, 0.06), frameMat);
+                panel.position.set(0.55, 1.15, -0.22);
+                elev.add(panel);
+
+                const panelGlow = new THREE.Mesh(new THREE.PlaneGeometry(0.18, 0.46), glowMat);
+                panelGlow.position.set(0.55, 1.15, -0.19);
+                elev.add(panelGlow);
+
+                const signTex = createTextTexture('ELEVATOR', { fontSize: 26, width: 220, height: 48, lineGap: 4 });
+                const sign = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.18), new THREE.MeshBasicMaterial({ map: signTex, transparent: true }));
+                sign.position.set(0, 2.35, -0.12);
+                elev.add(sign);
+
+                // Soft light
+                const elevLight = new THREE.PointLight(0xffe0b0, 0.8, 4.0, 1.5);
+                elevLight.position.set(0, 2.0, 0.4);
+                elev.add(elevLight);
+
+                group.add(elev);
+            }
+return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1, light2], lamps: [lamp1, lamp2], roomIndex, elevatorLocal };
         }
 
         function addBookshelves(group, roomIndex) {
@@ -2953,6 +3042,9 @@
         let navOpen = false;
         let aboutOpen = false;
         let libraryOpen = false;
+        let elevatorOpen = false;
+        let elevatorInRange = false;
+
         let introHidden = false;
 
         canvas.addEventListener('click', (e) => {
@@ -2990,6 +3082,7 @@
                 case 'KeyS': if (controls.isLocked) keys.backward = true; break;
                 case 'KeyA': keys.left = true; break;
                 case 'KeyD': keys.right = true; break;
+                case 'KeyE': if (elevatorInRange) { openElevator(); } break;
             }
         });
 
@@ -3048,6 +3141,22 @@
                 checkSegmentCollision(pos, seg[0], seg[1], seg[2], seg[3], minDist);
             }
         }
+
+        function updateElevatorHint() {
+            const hint = document.getElementById('elevator-hint');
+            if (!hint) return;
+            const room = rooms.get(currentRoomIndex);
+            elevatorInRange = false;
+            if (room && room.elevatorLocal && controls.isLocked && !readerOpen && !searchOpen && !navOpen && !aboutOpen && !libraryOpen && !elevatorOpen) {
+                const localPos = camera.position.clone().applyMatrix4(new THREE.Matrix4().copy(room.group.matrixWorld).invert());
+                const dx = localPos.x - room.elevatorLocal.x;
+                const dz = localPos.z - room.elevatorLocal.z;
+                const d2 = dx*dx + dz*dz;
+                if (d2 < 1.1 * 1.1) elevatorInRange = true;
+            }
+            hint.style.display = elevatorInRange ? 'block' : 'none';
+        }
+
 
         // ============================================
         // RAYCASTING FOR BOOK SELECTION
@@ -3874,6 +3983,55 @@
             navOpen = false;
         };
 
+        // ============================================
+        // ELEVATOR (teleport between theme sections)
+        // ============================================
+
+        window.openElevator = function() {
+            document.getElementById('elevator-panel').classList.add('visible');
+            elevatorOpen = true;
+            controls.unlock();
+        };
+
+        window.closeElevator = function() {
+            document.getElementById('elevator-panel').classList.remove('visible');
+            elevatorOpen = false;
+        };
+
+        function themeBaseRoom(themeIndex) {
+            return THEME_ROOM_BASE_V2[themeIndex] ?? 0;
+        }
+
+        window.teleportToTheme = function(themeIndex) {
+            const room = themeBaseRoom(themeIndex);
+            closeElevator();
+            teleportTo(room, null, null);
+            showToast(`Teleporting to ${THEMES_V2[themeIndex]?.label || 'theme'}`);
+        };
+
+        function ensureElevatorButtons() {
+            const host = document.getElementById('elevator-buttons');
+            if (!host || host.dataset.built === '1') return;
+            host.dataset.built = '1';
+            host.innerHTML = '';
+            for (let i = 0; i < THEMES_V2.length; i++) {
+                const btn = document.createElement('button');
+                btn.textContent = THEMES_V2[i].label;
+                btn.onclick = () => teleportToTheme(i);
+                btn.style.background = 'linear-gradient(135deg, rgba(196,148,58,0.25), rgba(196,148,58,0.08))';
+                btn.style.border = '1px solid rgba(196,148,58,0.35)';
+                btn.style.padding = '10px 10px';
+                btn.style.borderRadius = '8px';
+                btn.style.color = '#d4c5a0';
+                btn.style.cursor = 'pointer';
+                btn.style.textAlign = 'left';
+                btn.style.fontFamily = '"IBM Plex Mono", monospace';
+                btn.style.letterSpacing = '0.5px';
+                host.appendChild(btn);
+            }
+        }
+
+
         window.navigateToCoords = function() {
             const room = parseInt(document.getElementById('nav-room').value) - 1 || 0;
             const wall = parseInt(document.getElementById('nav-wall').value) - 1 || 0;
@@ -4138,6 +4296,7 @@
                     camera.position.add(moveDir.multiplyScalar(moveSpeed * delta));
 
                     applyCollision();
+            updateElevatorHint();
                     checkRoomTransition();
                 }
 
