@@ -409,7 +409,9 @@
             border: 1px solid #4a3520;
             border-radius: 3px;
             padding: 36px 40px;
-            overflow-y: auto;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
             box-shadow: 0 0 60px rgba(0,0,0,0.8), inset 0 1px 0 rgba(196,148,58,0.06);
         }
 
@@ -470,7 +472,8 @@
             margin-bottom: 24px;
             overflow-x: auto;
             overflow-y: auto;
-            max-height: 60vh;
+            flex: 1;
+            min-height: 0;
             padding: 16px;
             background: rgba(10, 8, 6, 0.4);
             border-radius: 2px;
@@ -533,13 +536,18 @@
             border: 1px solid rgba(74, 53, 32, 0.6);
             border-radius: 6px;
             padding: 14px;
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .reader-book.hidden { display: none; }
 
         #flipbook {
-            width: min(920px, calc(100vw - 120px));
-            height: min(640px, calc(100vh - 260px));
+            width: min(920px, calc(100vw - 140px));
+            height: min(560px, calc(100vh - 340px));
             margin: 0 auto;
         }
 
@@ -2908,6 +2916,15 @@
                 twoPageBtn.style.display = '';
                 modeBtn.classList.remove('active');
             }
+
+            // Ensure footer/nav is visible even on first open
+            requestAnimationFrame(() => {
+                try {
+                    if (isFlipMode() && pageFlip && pageFlip.getUI) {
+                        // no-op, but keeps layout stable in some browsers
+                    }
+                } catch (e) {}
+            });
         }
 
         function destroyFlipBook() {
@@ -2973,7 +2990,7 @@
 
             pageFlip = new PageFlip(flipEl, {
                 width: 460,
-                height: 640,
+                height: 560,
                 size: 'stretch',
                 minWidth: 320,
                 maxWidth: 1000,
@@ -2981,6 +2998,7 @@
                 maxHeight: 800,
                 maxShadowOpacity: 0.45,
                 showCover: false,
+                usePortrait: false,
                 mobileScrollSupport: false,
                 useMouseEvents: true
             });
