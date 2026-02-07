@@ -1,69 +1,153 @@
-# The Library of Babel
+# The Library of Gutenberg
 
-**[Live Demo](https://library-of-babel-3d.netlify.app)**
+A 3D immersive virtual library containing **70,000 real books** from Project Gutenberg. Walk through hexagonal rooms inspired by Borges's "Library of Babel" and read classic literature in a beautiful, atmospheric setting.
 
-A 3D immersive recreation of Jorge Luis Borges's 1941 short story "The Library of Babel" — an infinite library containing every possible book that could ever be written.
+![The Library of Gutenberg](images/hero.png)
 
-![The Library of Babel](images/hero.png)
+## ✨ Features
 
-## The Library
+### 3D Exploration
+- **First-person navigation** through hexagonal galleries connected by corridors
+- **WASD movement** with smooth collision detection
+- **Atmospheric lighting** with flickering lamps and floating dust particles
+- **In-world signage**: Room numbers, wall labels, and shelf indicators
 
-> *"The universe (which others call the Library) is composed of an indefinite, perhaps infinite, number of hexagonal galleries..."*
+### Reading Experience
+- **Click any book** to open and read the full text
+- **Paginated reader** with page turn animations
+- **Two-page spread mode** for wider screens
+- **Typography settings**: Choose from 3 fonts and 4 sizes
+- **In-book search** (Ctrl+F) with highlighting and navigation
+- **Chapter detection** with table of contents sidebar
+- **Reading progress** saved automatically
 
-Walk through infinite hexagonal rooms lined with bookshelves. Each room holds 640 books across 4 walls of 5 shelves. Every book contains 410 pages of 40 lines, each 80 characters long, drawn from 29 symbols.
+### Search & Navigation
+- **Full-text search** of the Gutenberg catalog
+- **Filters**: Language (10+ languages) and subject/topic
+- **Keyboard navigation** in search results (↑↓ to navigate, Enter to open)
+- **Direct coordinates**: Jump to any room/wall/shelf/volume
+- **Gutenberg ID lookup**: Enter a book ID to teleport directly to it
+- **Random room** button for serendipitous discovery
 
-The total number of distinct pages is 29^3200 — a number with over 4,600 digits. For comparison, the observable universe contains roughly 10^80 atoms.
+### Personal Library
+- **Bookmarks** saved to localStorage
+- **Reading history** with recent books
+- **Continue Reading** — resume where you left off
+- **Progress tracking** across all books
 
-Somewhere in these hexagons exists every poem, every scientific paper, every novel, every lie, and every truth — buried in an ocean of gibberish.
+### Atmosphere
+- **Optional ambient audio** with volume control
+- **Page turn sounds** (subtle paper rustle)
+- **Enhanced dust particles** with gentle floating motion
+- **Dynamic lamp flicker** with occasional stronger flickers
+- **Warm color temperature shifts** on lamps
 
-## Features
+## 🎮 Controls
 
-- **First-person 3D exploration** — Walk through hexagonal galleries connected by narrow vestibules with spiral staircases, mirrors, and sleeping alcoves, faithful to Borges's descriptions
-- **Click any book to read it** — Each book's content is deterministic and permanent. Return to the same shelf and you'll find the same text
-- **Search for any text** — Type anything and the algorithm computes the exact room, wall, shelf, volume, page, and line where that text has always existed
-- **Navigate between floors** — Use the spiral staircases (Q/E keys) to move between the Library's vertical levels
-- **Direct navigation** — Jump to any coordinates by hexagon ID, wall, shelf, volume, and page
-- **Atmospheric details** — Flickering amber lamps, floating dust particles, ambient ventilation hum, film grain
+| Key/Action | Function |
+|------------|----------|
+| **Click** | Enter exploration mode / Select book |
+| **WASD** | Walk around |
+| **Mouse** | Look around (when locked) |
+| **ESC** | Exit reader / Release mouse / Close panels |
+| **←/→** | Turn pages in reader |
+| **Ctrl+F** | Search within book |
+| **B** | Toggle bookmark (in reader) |
 
-## How It Works
-
-The Library uses an 8-round Feistel cipher as a format-preserving permutation over the space of 29^80 possible lines (~390 bits). This creates a bijective mapping: every address produces exactly one line of text, and every possible line of text exists at exactly one address.
-
-- **Forward**: Library coordinates &rarr; Feistel encrypt &rarr; base-29 decode &rarr; text
-- **Reverse (search)**: text &rarr; base-29 encode &rarr; Feistel decrypt &rarr; coordinates
-
-See [CIPHER.md](CIPHER.md) for the full technical explanation.
-
-## Controls
-
-| Key | Action |
-|-----|--------|
-| **Click** | Enter / look around |
-| **WASD** | Walk |
-| **Click book** | Open and read |
-| **Arrow keys** | Turn pages |
-| **Escape** | Close book / release mouse |
-| **Q / E** | Descend / ascend floors (near staircases) |
-| **S** | Open search |
-| **N** | Open navigation |
-| **R** | Random room |
-
-## Running Locally
-
-The project is a single HTML file with no build step. Serve it over HTTP (required for ES modules):
+## 🏗️ Architecture
 
 ```
-npx serve
+library-of-babel-gutenberg/
+├── index.html          # Main application (self-contained)
+├── server.js           # Local development server
+├── netlify/
+│   └── functions/
+│       └── gutenberg.js # Serverless API proxy for Gutenberg
+├── images/
+│   └── hero.png        # Background image
+└── package.json
 ```
 
-## Acknowledgments
+The library contains **110 hexagonal rooms**, each with:
+- 4 bookshelf walls
+- 5 shelves per wall
+- 32 books per shelf
+- = **640 books per room**
 
-Inspired by Jonathan Basile's [libraryofbabel.info](https://libraryofbabel.info), the original digital Library of Babel. Basile's implementation uses a Linear Congruential Generator with modular inverses; this one uses a Feistel cipher at line-level granularity. Different math, same beautiful idea.
+Books are mapped deterministically: Book #N is always at the same location.
 
-Based on "La biblioteca de Babel" by Jorge Luis Borges (1941).
+## 🚀 Development
 
-Built with [Three.js](https://threejs.org/).
+### Local Development (with Netlify Functions)
 
-## License
+```bash
+# Install dependencies
+npm install
+
+# Start Netlify dev server (recommended)
+npx netlify dev
+
+# Or use the simple Node.js server (no API proxy)
+node server.js
+```
+
+Open http://localhost:8888 (Netlify) or http://localhost:8888 (Node).
+
+### Without Netlify
+
+The app will work without the Netlify function, but book searches and text loading will fail due to CORS. For local testing without API:
+- Search panel will show errors
+- Pre-cached book metadata still works
+- You can navigate rooms and see the 3D environment
+
+## 📦 Deployment
+
+### Netlify (Recommended)
+
+1. **Connect your repository** to Netlify
+2. **Build settings**:
+   - Build command: (leave empty)
+   - Publish directory: `.`
+3. **Deploy!**
+
+The Netlify function at `/.netlify/functions/gutenberg` proxies:
+- `/gutenberg?search=<query>&languages=<lang>&topic=<topic>` — Search books
+- `/gutenberg?meta=<id>` — Get book metadata
+- `/gutenberg?id=<id>` — Get book text
+- `/gutenberg?page=<n>` — List books (paginated)
+
+### Other Platforms
+
+For Vercel, Cloudflare Workers, or similar:
+- Adapt the `netlify/functions/gutenberg.js` to the platform's serverless format
+- The function is just a CORS proxy for `gutendex.com` and `gutenberg.org`
+
+### Static Hosting (Limited)
+
+Deploy to GitHub Pages, S3, etc.:
+- The 3D environment works
+- Search/reading requires an external API proxy (set up separately)
+
+## 🔧 Configuration
+
+The app uses localStorage for:
+- `gutenberg-library-bookmarks` — Saved bookmarks
+- `gutenberg-library-recents` — Reading history
+- `gutenberg-library-progress` — Page positions per book
+- `gutenberg-library-meta-cache` — Cached book metadata (last 500)
+- `gutenberg-library-settings` — User preferences
+
+## 🙏 Credits
+
+- **Book data**: [Project Gutenberg](https://www.gutenberg.org) via [Gutendex API](https://gutendex.com)
+- **3D engine**: [Three.js](https://threejs.org)
+- **Visual design**: Inspired by Jorge Luis Borges's "The Library of Babel" and [Ethan Mollick's digital recreation](https://twitter.com/emollick)
+- **Fonts**: Cormorant Garamond, Libre Baskerville, IBM Plex Mono (Google Fonts)
+
+## 📄 License
 
 MIT
+
+---
+
+*"A library is not a luxury but one of the necessities of life."* — Henry Ward Beecher
