@@ -8,7 +8,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -82,8 +82,14 @@
             pointer-events: auto;
         }
 
-        #brightness-slider {
-            width: 80px;
+        .title-bar-controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        #brightness-slider, #volume-slider {
+            width: 60px;
             height: 3px;
             -webkit-appearance: none;
             appearance: none;
@@ -95,11 +101,11 @@
             border-radius: 2px;
         }
 
-        #brightness-slider:hover {
+        #brightness-slider:hover, #volume-slider:hover {
             opacity: 1;
         }
 
-        #brightness-slider::-webkit-slider-thumb {
+        #brightness-slider::-webkit-slider-thumb, #volume-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
             width: 10px;
@@ -107,6 +113,30 @@
             border-radius: 50%;
             background: #c4943a;
             cursor: pointer;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: #5a4a32;
+        }
+
+        .control-icon {
+            font-size: 14px;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+
+        .control-icon:hover {
+            opacity: 1;
+        }
+
+        .control-icon.active {
+            opacity: 1;
+            color: #c4943a;
         }
 
         #intro {
@@ -252,10 +282,22 @@
             to { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
 
+        #book-tooltip .title {
+            color: #c4943a;
+            font-weight: 600;
+        }
+
         #book-tooltip .author {
             color: #8b7355;
             font-size: 12px;
             margin-top: 4px;
+        }
+
+        #book-tooltip .location-hint {
+            color: #5a4a32;
+            font-size: 11px;
+            margin-top: 6px;
+            font-family: 'IBM Plex Mono', monospace;
         }
 
         #hud {
@@ -420,7 +462,6 @@
         }
 
         .reader-content {
-            font-family: 'Cormorant Garamond', serif;
             font-size: 16px;
             line-height: 1.8;
             color: #c4b590;
@@ -434,11 +475,51 @@
             border-radius: 2px;
         }
 
+        .reader-content.font-serif {
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        .reader-content.font-baskerville {
+            font-family: 'Libre Baskerville', serif;
+        }
+
+        .reader-content.font-mono {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .reader-content.font-size-small {
+            font-size: 14px;
+        }
+
+        .reader-content.font-size-medium {
+            font-size: 16px;
+        }
+
+        .reader-content.font-size-large {
+            font-size: 18px;
+        }
+
+        .reader-content.font-size-xlarge {
+            font-size: 20px;
+        }
+
         .reader-content.loading {
             color: #8b7355;
             font-style: italic;
             text-align: center;
             padding: 40px;
+        }
+
+        .reader-content .search-highlight {
+            background: rgba(196, 148, 58, 0.4);
+            border-radius: 2px;
+            padding: 0 2px;
+        }
+
+        .reader-content .search-highlight.current {
+            background: rgba(196, 148, 58, 0.8);
         }
 
         .reader-footer {
@@ -460,6 +541,7 @@
         .reader-nav {
             display: flex;
             gap: 12px;
+            align-items: center;
         }
 
         .reader-nav button {
@@ -482,6 +564,29 @@
         .reader-nav button:disabled {
             opacity: 0.4;
             cursor: not-allowed;
+        }
+
+        .reader-page-jump {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .reader-page-jump input {
+            width: 50px;
+            background: #1a1208;
+            border: 1px solid #4a3520;
+            color: #d4c5a0;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            padding: 6px;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .reader-page-jump input:focus {
+            outline: none;
+            border-color: #c4943a;
         }
 
         .reader-actions {
@@ -521,6 +626,153 @@
         @keyframes pageFlip {
             0% { opacity: 0.35; transform: translateX(8px); }
             100% { opacity: 1; transform: translateX(0); }
+        }
+
+        /* In-book search bar */
+        .reader-search-bar {
+            display: none;
+            position: absolute;
+            top: 10px;
+            right: 80px;
+            background: rgba(26, 18, 8, 0.95);
+            border: 1px solid #4a3520;
+            border-radius: 4px;
+            padding: 8px 12px;
+            gap: 8px;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .reader-search-bar.visible {
+            display: flex;
+        }
+
+        .reader-search-bar input {
+            width: 200px;
+            background: #1a1208;
+            border: 1px solid #4a3520;
+            color: #d4c5a0;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            padding: 6px 10px;
+            border-radius: 4px;
+        }
+
+        .reader-search-bar input:focus {
+            outline: none;
+            border-color: #c4943a;
+        }
+
+        .reader-search-bar .search-info {
+            color: #8b7355;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .reader-search-bar button {
+            background: none;
+            border: none;
+            color: #8b7355;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .reader-search-bar button:hover {
+            color: #c4943a;
+        }
+
+        /* Chapter sidebar */
+        .chapter-sidebar {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100%;
+            background: #12100a;
+            border-right: 1px solid #4a3520;
+            padding: 20px;
+            overflow-y: auto;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            z-index: 5;
+        }
+
+        .chapter-sidebar.visible {
+            transform: translateX(0);
+        }
+
+        .chapter-sidebar-title {
+            font-size: 16px;
+            color: #c4943a;
+            margin-bottom: 16px;
+            letter-spacing: 1px;
+        }
+
+        .chapter-item {
+            padding: 10px 12px;
+            color: #d4c5a0;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+        }
+
+        .chapter-item:hover {
+            background: rgba(74, 37, 16, 0.5);
+        }
+
+        .chapter-item.active {
+            background: rgba(74, 37, 16, 0.7);
+            border-left: 2px solid #c4943a;
+        }
+
+        /* Typography settings dropdown */
+        .typography-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: rgba(26, 18, 8, 0.98);
+            border: 1px solid #4a3520;
+            border-radius: 4px;
+            padding: 16px;
+            display: none;
+            min-width: 200px;
+            z-index: 20;
+        }
+
+        .typography-dropdown.visible {
+            display: block;
+        }
+
+        .typography-dropdown label {
+            display: block;
+            color: #8b7355;
+            font-size: 12px;
+            margin-bottom: 6px;
+            margin-top: 12px;
+        }
+
+        .typography-dropdown label:first-child {
+            margin-top: 0;
+        }
+
+        .typography-dropdown select {
+            width: 100%;
+            background: #1a1208;
+            border: 1px solid #4a3520;
+            color: #d4c5a0;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 14px;
+            padding: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .typography-dropdown select:focus {
+            outline: none;
+            border-color: #c4943a;
         }
 
         .panel {
@@ -576,7 +828,7 @@
             font-size: 14px;
         }
 
-        .panel input {
+        .panel input, .panel select {
             width: 100%;
             background: #1a1208;
             border: 1px solid #4a3520;
@@ -589,9 +841,13 @@
             transition: border-color 0.2s;
         }
 
-        .panel input:focus {
+        .panel input:focus, .panel select:focus {
             outline: none;
             border-color: #c4943a;
+        }
+
+        .panel select {
+            cursor: pointer;
         }
 
         .panel button {
@@ -669,6 +925,17 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        .filter-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .filter-row select {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
         #search-results {
             margin-top: 16px;
         }
@@ -683,10 +950,14 @@
             transition: all 0.2s;
         }
 
-        .search-result-item:hover {
+        .search-result-item:hover, .search-result-item.selected {
             background: rgba(46, 28, 12, 0.8);
             border-color: #c4943a;
             transform: translateX(2px);
+        }
+
+        .search-result-item.selected {
+            box-shadow: 0 0 0 1px #c4943a inset;
         }
 
         .search-result-title {
@@ -701,6 +972,12 @@
             margin-top: 4px;
         }
 
+        .search-result-meta {
+            color: #6a5a42;
+            font-size: 11px;
+            margin-top: 6px;
+        }
+
         .search-result-location {
             color: #5a4a32;
             font-family: 'IBM Plex Mono', monospace;
@@ -712,6 +989,13 @@
             color: #6a5a42;
             font-size: 11px;
             margin-top: 4px;
+        }
+
+        .search-keyboard-hint {
+            font-size: 11px;
+            color: #5a4a32;
+            margin-top: 12px;
+            text-align: center;
         }
 
         .nav-field {
@@ -970,16 +1254,67 @@
         .reader-page-right.visible {
             display: block;
         }
+
+        /* Spine label overlay (CSS2D-style) */
+        #spine-label-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 4;
+        }
+
+        .spine-label {
+            position: absolute;
+            background: rgba(26, 18, 8, 0.9);
+            border: 1px solid rgba(196, 148, 58, 0.6);
+            border-radius: 3px;
+            padding: 4px 8px;
+            font-size: 11px;
+            color: #d4c5a0;
+            white-space: nowrap;
+            transform: translate(-50%, -100%);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .spine-label.visible {
+            opacity: 1;
+        }
+
+        .spine-label .spine-title {
+            font-weight: 600;
+            color: #c4943a;
+        }
+
+        .spine-label .spine-author {
+            font-size: 10px;
+            color: #8b7355;
+            margin-top: 2px;
+        }
     </style>
 </head>
 <body>
     <canvas id="scene"></canvas>
     <div id="transition-fade"></div>
     <div id="vignette"></div>
+    <div id="spine-label-container"></div>
     <div id="title-bar">
         <span>THE LIBRARY OF GUTENBERG</span>
-        <div style="display: flex; align-items: center; gap: 12px;">
-            <input type="range" id="brightness-slider" min="30" max="150" value="80" title="Brightness">
+        <div class="title-bar-controls">
+            <div class="control-group">
+                <span class="control-icon" id="audio-toggle" title="Toggle ambient audio">🔇</span>
+                <input type="range" id="volume-slider" min="0" max="100" value="30" title="Volume">
+            </div>
+            <div class="control-group">
+                <span>☀</span>
+                <input type="range" id="brightness-slider" min="30" max="150" value="80" title="Brightness">
+            </div>
         </div>
     </div>
 
@@ -1000,6 +1335,7 @@
     <div id="book-tooltip">
         <div class="title"></div>
         <div class="author"></div>
+        <div class="location-hint"></div>
     </div>
 
     <div id="hud">
@@ -1018,8 +1354,19 @@
     <div id="toast-container"></div>
 
     <div id="reader">
+        <div class="chapter-sidebar" id="chapter-sidebar">
+            <div class="chapter-sidebar-title">TABLE OF CONTENTS</div>
+            <div id="chapter-list"></div>
+        </div>
         <div class="reader-container">
             <div class="reader-page" id="reader-page-left">
+                <div class="reader-search-bar" id="reader-search-bar">
+                    <input type="text" id="reader-search-input" placeholder="Search in book...">
+                    <span class="search-info" id="reader-search-info"></span>
+                    <button onclick="readerSearchPrev()" title="Previous">↑</button>
+                    <button onclick="readerSearchNext()" title="Next">↓</button>
+                    <button onclick="closeReaderSearch()" title="Close">×</button>
+                </div>
                 <div class="reader-header">
                     <div>
                         <div class="reader-title" id="reader-title">Loading...</div>
@@ -1028,22 +1375,46 @@
                     </div>
                     <button class="reader-close" onclick="closeBook()">&times;</button>
                 </div>
-                <div class="reader-content loading" id="reader-content">Loading book text...</div>
+                <div class="reader-content font-serif font-size-medium" id="reader-content">Loading book text...</div>
                 <div class="reader-footer">
                     <div class="reader-page-num" id="reader-page-num">Page 1</div>
                     <div class="reader-actions">
+                        <button class="reader-action-btn" id="toc-btn" onclick="toggleChapterSidebar()" title="Table of Contents">📑</button>
+                        <button class="reader-action-btn" id="search-book-btn" onclick="openReaderSearch()" title="Search in book (Ctrl+F)">🔍</button>
                         <button class="reader-action-btn" id="bookmark-btn" onclick="toggleBookmark()" title="Bookmark">🔖</button>
+                        <div style="position:relative;">
+                            <button class="reader-action-btn" id="typography-btn" onclick="toggleTypographyDropdown()" title="Typography">Aa</button>
+                            <div class="typography-dropdown" id="typography-dropdown">
+                                <label>Font</label>
+                                <select id="font-select" onchange="changeFont(this.value)">
+                                    <option value="serif">Cormorant Garamond</option>
+                                    <option value="baskerville">Libre Baskerville</option>
+                                    <option value="mono">IBM Plex Mono</option>
+                                </select>
+                                <label>Size</label>
+                                <select id="font-size-select" onchange="changeFontSize(this.value)">
+                                    <option value="small">Small</option>
+                                    <option value="medium" selected>Medium</option>
+                                    <option value="large">Large</option>
+                                    <option value="xlarge">Extra Large</option>
+                                </select>
+                            </div>
+                        </div>
                         <button class="reader-action-btn" id="two-page-btn" onclick="toggleTwoPage()" title="Two-page view">📖</button>
                     </div>
                     <div class="reader-nav">
-                        <button onclick="prevPage()" id="prev-page-btn">&larr; Previous</button>
+                        <button onclick="prevPage()" id="prev-page-btn">&larr; Prev</button>
+                        <div class="reader-page-jump">
+                            <input type="number" id="page-jump-input" min="1" title="Jump to page">
+                            <button onclick="jumpToPage()" style="padding:6px 10px;font-size:12px;">Go</button>
+                        </div>
                         <button onclick="nextPage()" id="next-page-btn">Next &rarr;</button>
                     </div>
                     <a id="reader-gutenberg-link" href="#" target="_blank" style="color:#c4943a;font-size:14px;">View on Gutenberg</a>
                 </div>
             </div>
             <div class="reader-page reader-page-right two-page-mode" id="reader-page-right">
-                <div class="reader-content" id="reader-content-right"></div>
+                <div class="reader-content font-serif font-size-medium" id="reader-content-right"></div>
                 <div class="reader-footer">
                     <div class="reader-page-num" id="reader-page-num-right"></div>
                 </div>
@@ -1062,6 +1433,37 @@
             <div class="section-title">Search by Title/Author</div>
         </div>
         <input type="text" id="search-input" placeholder="e.g., Pride and Prejudice, Shakespeare...">
+        <div class="filter-row">
+            <select id="search-language">
+                <option value="">Any Language</option>
+                <option value="en">English</option>
+                <option value="fr">French</option>
+                <option value="de">German</option>
+                <option value="es">Spanish</option>
+                <option value="it">Italian</option>
+                <option value="pt">Portuguese</option>
+                <option value="nl">Dutch</option>
+                <option value="fi">Finnish</option>
+                <option value="zh">Chinese</option>
+                <option value="ja">Japanese</option>
+            </select>
+            <select id="search-topic">
+                <option value="">Any Subject</option>
+                <option value="Fiction">Fiction</option>
+                <option value="Science Fiction">Science Fiction</option>
+                <option value="Adventure">Adventure</option>
+                <option value="Mystery">Mystery</option>
+                <option value="Romance">Romance</option>
+                <option value="Horror">Horror</option>
+                <option value="Poetry">Poetry</option>
+                <option value="Drama">Drama</option>
+                <option value="History">History</option>
+                <option value="Philosophy">Philosophy</option>
+                <option value="Science">Science</option>
+                <option value="Biography">Biography</option>
+                <option value="Children">Children</option>
+            </select>
+        </div>
         <button onclick="performSearch()">Search</button>
         
         <div class="section-divider">
@@ -1071,6 +1473,9 @@
         <button onclick="jumpToGutenbergId()">Go to Book</button>
         
         <div id="search-results"></div>
+        <div class="search-keyboard-hint" id="search-keyboard-hint" style="display:none;">
+            ↑↓ Navigate · Enter to open · Esc to close
+        </div>
     </div>
 
     <div id="nav-panel" class="panel">
@@ -1152,7 +1557,8 @@
             <p><strong>WASD</strong> — Move around<br>
             <strong>Mouse</strong> — Look around (click to engage)<br>
             <strong>Click a book</strong> — Read it<br>
-            <strong>ESC</strong> — Release mouse / Close panels</p>
+            <strong>ESC</strong> — Release mouse / Close panels<br>
+            <strong>Ctrl+F</strong> — Search within book</p>
         </div>
         <div class="about-section-title">CREDITS</div>
         <div class="about-content">
@@ -1162,6 +1568,11 @@
         </div>
         <button class="about-close" onclick="closeAbout()">Close</button>
     </div>
+
+    <!-- Audio elements for ambient sound -->
+    <audio id="ambient-audio" loop preload="none">
+        <source src="https://freesound.org/data/previews/463/463903_4397472-lq.mp3" type="audio/mpeg">
+    </audio>
 
     <script type="importmap">
     {
@@ -1186,6 +1597,8 @@
         const BOOKS_PER_ROOM = BOOKS_PER_SHELF * SHELVES_PER_WALL * WALLS_PER_ROOM; // 640
         const TOTAL_BOOKS = 70000;
         const TOTAL_ROOMS = Math.ceil(TOTAL_BOOKS / BOOKS_PER_ROOM); // ~110 rooms
+
+        const WALL_NAMES = ['North', 'East', 'South', 'West'];
 
         // ============================================
         // PERSISTENCE (localStorage)
@@ -1222,7 +1635,13 @@
         let recents = loadFromStorage(STORAGE_KEYS.RECENTS, []);
         let readingProgress = loadFromStorage(STORAGE_KEYS.READING_PROGRESS, {});
         let metadataCache = loadFromStorage(STORAGE_KEYS.METADATA_CACHE, {});
-        let settings = loadFromStorage(STORAGE_KEYS.SETTINGS, { twoPageMode: false });
+        let settings = loadFromStorage(STORAGE_KEYS.SETTINGS, { 
+            twoPageMode: false, 
+            font: 'serif', 
+            fontSize: 'medium',
+            audioEnabled: false,
+            volume: 30
+        });
 
         // Book catalog cache (in-memory + persisted)
         const bookCache = new Map(Object.entries(metadataCache));
@@ -1232,6 +1651,88 @@
             const entries = Array.from(bookCache.entries()).slice(-500);
             saveToStorage(STORAGE_KEYS.METADATA_CACHE, Object.fromEntries(entries));
         }
+
+        // ============================================
+        // AUDIO SYSTEM
+        // ============================================
+
+        const ambientAudio = document.getElementById('ambient-audio');
+        let audioEnabled = settings.audioEnabled || false;
+        let audioVolume = settings.volume || 30;
+
+        // Page turn sound (Web Audio API for low latency)
+        let audioContext = null;
+        let pageTurnBuffer = null;
+
+        async function initAudio() {
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                // Create a simple page turn sound using oscillator
+                const duration = 0.15;
+                const sampleRate = audioContext.sampleRate;
+                const buffer = audioContext.createBuffer(1, duration * sampleRate, sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < data.length; i++) {
+                    const t = i / sampleRate;
+                    // White noise with envelope
+                    const envelope = Math.exp(-t * 20) * 0.3;
+                    data[i] = (Math.random() * 2 - 1) * envelope;
+                }
+                pageTurnBuffer = buffer;
+            } catch (e) {
+                console.warn('Audio initialization failed:', e);
+            }
+        }
+
+        function playPageTurn() {
+            if (!audioEnabled || !audioContext || !pageTurnBuffer) return;
+            try {
+                const source = audioContext.createBufferSource();
+                const gain = audioContext.createGain();
+                source.buffer = pageTurnBuffer;
+                gain.gain.value = audioVolume / 100 * 0.5;
+                source.connect(gain);
+                gain.connect(audioContext.destination);
+                source.start();
+            } catch (e) {
+                // Ignore audio errors
+            }
+        }
+
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            settings.audioEnabled = audioEnabled;
+            saveToStorage(STORAGE_KEYS.SETTINGS, settings);
+            
+            const icon = document.getElementById('audio-toggle');
+            if (audioEnabled) {
+                icon.textContent = '🔊';
+                icon.classList.add('active');
+                if (!audioContext) initAudio();
+                ambientAudio.volume = audioVolume / 100;
+                ambientAudio.play().catch(() => {});
+            } else {
+                icon.textContent = '🔇';
+                icon.classList.remove('active');
+                ambientAudio.pause();
+            }
+        }
+
+        document.getElementById('audio-toggle').addEventListener('click', toggleAudio);
+        
+        document.getElementById('volume-slider').addEventListener('input', (e) => {
+            audioVolume = parseInt(e.target.value);
+            settings.volume = audioVolume;
+            saveToStorage(STORAGE_KEYS.SETTINGS, settings);
+            ambientAudio.volume = audioVolume / 100;
+        });
+
+        // Initialize audio state
+        if (audioEnabled) {
+            document.getElementById('audio-toggle').textContent = '🔊';
+            document.getElementById('audio-toggle').classList.add('active');
+        }
+        document.getElementById('volume-slider').value = audioVolume;
 
         // ============================================
         // BOOKMARKS & RECENTS MANAGEMENT
@@ -1349,6 +1850,7 @@
                     title: data.title || 'Unknown Title',
                     authors: data.authors?.map(a => a.name).join(', ') || 'Unknown Author',
                     subjects: data.subjects || [],
+                    languages: data.languages || [],
                 };
                 bookCache.set(bookId, book);
                 // Persist cache occasionally
@@ -1388,9 +1890,13 @@
             }
         }
 
-        async function searchBooks(query) {
+        async function searchBooks(query, language = '', topic = '') {
             try {
-                const response = await fetch(`/.netlify/functions/gutenberg?search=${encodeURIComponent(query)}`);
+                let url = `/.netlify/functions/gutenberg?search=${encodeURIComponent(query)}`;
+                if (language) url += `&languages=${language}`;
+                if (topic) url += `&topic=${encodeURIComponent(topic)}`;
+                
+                const response = await fetch(url);
                 if (!response.ok) return [];
                 const data = await response.json();
                 // Cache the results
@@ -1401,6 +1907,7 @@
                             title: book.title || 'Unknown Title',
                             authors: book.authors?.map(a => a.name).join(', ') || 'Unknown Author',
                             subjects: book.subjects || [],
+                            languages: book.languages || [],
                         };
                         bookCache.set(book.id, cached);
                     }
@@ -1471,7 +1978,11 @@
         ];
 
         const columnMaterial = new THREE.MeshStandardMaterial({ color: 0x2a1f15, roughness: 0.85 });
-        const sharedMaterials = new Set([wallMaterial, floorMaterial, ceilingMaterial, shelfMaterial, columnMaterial]);
+        const signMaterial = new THREE.MeshStandardMaterial({ color: 0x1a1208, roughness: 0.8 });
+        const sharedMaterials = new Set([wallMaterial, floorMaterial, ceilingMaterial, shelfMaterial, columnMaterial, signMaterial]);
+
+        // Sign texture loader
+        const textureLoader = new THREE.TextureLoader();
 
         // ============================================
         // BOOK HIGHLIGHTING SYSTEM
@@ -1496,6 +2007,80 @@
 
         function clearHighlight() {
             highlightedBookInfo = null;
+        }
+
+        // ============================================
+        // TEXT CANVAS FOR IN-WORLD SIGNS
+        // ============================================
+
+        function createTextTexture(text, options = {}) {
+            const {
+                fontSize = 48,
+                fontFamily = 'Georgia, serif',
+                color = '#c4943a',
+                backgroundColor = 'rgba(26, 18, 8, 0.9)',
+                padding = 20,
+                width = 256,
+                height = 64
+            } = options;
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+
+            // Background
+            ctx.fillStyle = backgroundColor;
+            ctx.fillRect(0, 0, width, height);
+
+            // Border
+            ctx.strokeStyle = '#4a3520';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(2, 2, width - 4, height - 4);
+
+            // Text
+            ctx.fillStyle = color;
+            ctx.font = `${fontSize}px ${fontFamily}`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, width / 2, height / 2);
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+            return texture;
+        }
+
+        function createShelfLabel(text, options = {}) {
+            const {
+                fontSize = 24,
+                width = 128,
+                height = 32
+            } = options;
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+
+            // Dark background
+            ctx.fillStyle = 'rgba(26, 18, 8, 0.85)';
+            ctx.fillRect(0, 0, width, height);
+
+            // Subtle border
+            ctx.strokeStyle = 'rgba(74, 53, 32, 0.6)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(0, 0, width, height);
+
+            // Text
+            ctx.fillStyle = '#8b7355';
+            ctx.font = `${fontSize}px "IBM Plex Mono", monospace`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, width / 2, height / 2);
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+            return texture;
         }
 
         // ============================================
@@ -1579,6 +2164,21 @@
                 beamMesh.rotation.y = passAngle;
                 group.add(beamMesh);
 
+                // Room number sign on beam
+                const roomNum = roomIndex + 1;
+                const signTexture = createTextTexture(`ROOM ${roomNum}`, {
+                    fontSize: 36,
+                    width: 200,
+                    height: 48
+                });
+                const signGeom = new THREE.PlaneGeometry(0.6, 0.15);
+                const signMatInstance = new THREE.MeshBasicMaterial({ map: signTexture, transparent: true });
+                const signMesh = new THREE.Mesh(signGeom, signMatInstance);
+                signMesh.position.set(center.x, ROOM_HEIGHT - 0.2, center.z);
+                signMesh.position.add(new THREE.Vector3(-center.x, 0, -center.z).normalize().multiplyScalar(0.12));
+                signMesh.rotation.y = passAngle;
+                group.add(signMesh);
+
                 // Side columns
                 const colGeom = new THREE.BoxGeometry(0.15, ROOM_HEIGHT, 0.2);
                 const col1 = new THREE.Mesh(colGeom, columnMaterial);
@@ -1654,7 +2254,7 @@
                 }
             }
 
-            // Lamps
+            // Lamps with more dynamic flicker
             const lampGeom = new THREE.SphereGeometry(0.12, 16, 16);
             const lampMat = new THREE.MeshBasicMaterial({ color: 0xFFE0A0 });
             const lamp1 = new THREE.Mesh(lampGeom, lampMat);
@@ -1671,22 +2271,42 @@
             light2.position.copy(lamp2.position);
             group.add(light2);
 
-            // Add bookshelves with books
-            const { bookMesh, bookMap, originalColors } = addBookshelves(group, roomIndex);
+            // Add bookshelves with books and wall/shelf signs
+            const { bookMesh, bookMap, originalColors, shelfLabels } = addBookshelves(group, roomIndex);
 
-            return { group, bookMesh, bookMap, originalColors, lights: [light1, light2], roomIndex };
+            return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1, light2], lamps: [lamp1, lamp2], roomIndex };
         }
 
         function addBookshelves(group, roomIndex) {
             const SHELF_DEPTH = 0.25;
             const SHELF_THICKNESS = 0.02;
+            const shelfLabels = [];
 
-            // Shelf planks
-            for (const wallIdx of BOOKSHELF_WALLS) {
+            // Shelf planks and wall/shelf labels
+            for (let w = 0; w < BOOKSHELF_WALLS.length; w++) {
+                const wallIdx = BOOKSHELF_WALLS[w];
                 const va = HEX_VERTICES[wallIdx];
                 const vb = HEX_VERTICES[(wallIdx + 1) % 6];
                 const wallCenter = new THREE.Vector3((va.x + vb.x) / 2, 0, (va.z + vb.z) / 2);
                 const inwardDir = new THREE.Vector3(-wallCenter.x, 0, -wallCenter.z).normalize();
+                const wallAngle = Math.atan2(-wallCenter.x, -wallCenter.z);
+
+                // Wall label (top of wall)
+                const wallLabelTexture = createTextTexture(`WALL ${w + 1} · ${WALL_NAMES[w]}`, {
+                    fontSize: 28,
+                    width: 220,
+                    height: 40,
+                    color: '#8b7355',
+                    backgroundColor: 'rgba(26, 18, 8, 0.7)'
+                });
+                const wallLabelGeom = new THREE.PlaneGeometry(0.5, 0.1);
+                const wallLabelMat = new THREE.MeshBasicMaterial({ map: wallLabelTexture, transparent: true });
+                const wallLabelMesh = new THREE.Mesh(wallLabelGeom, wallLabelMat);
+                const wallLabelPos = wallCenter.clone().add(inwardDir.clone().multiplyScalar(0.3));
+                wallLabelPos.y = ROOM_HEIGHT - 0.15;
+                wallLabelMesh.position.copy(wallLabelPos);
+                wallLabelMesh.rotation.y = wallAngle;
+                group.add(wallLabelMesh);
 
                 for (let s = 0; s < SHELF_HEIGHTS.length; s++) {
                     const shelfGeom = new THREE.BoxGeometry(R - 0.1, SHELF_THICKNESS, SHELF_DEPTH);
@@ -1695,8 +2315,32 @@
                     const shelfPos = wallCenter.clone().add(inwardDir.clone().multiplyScalar(SHELF_DEPTH / 2 + 0.02));
                     shelfPos.y = SHELF_HEIGHTS[s];
                     shelfMesh.position.copy(shelfPos);
-                    shelfMesh.rotation.y = Math.atan2(-wallCenter.x, -wallCenter.z);
+                    shelfMesh.rotation.y = wallAngle;
                     group.add(shelfMesh);
+
+                    // Shelf label (small tag on side)
+                    const startBookId = locationToBookId(roomIndex, w, s, 0);
+                    const endBookId = locationToBookId(roomIndex, w, s, BOOKS_PER_SHELF - 1);
+                    const shelfLabelTexture = createShelfLabel(`S${s + 1} · #${startBookId}-${endBookId}`, {
+                        fontSize: 16,
+                        width: 140,
+                        height: 24
+                    });
+                    const shelfLabelGeom = new THREE.PlaneGeometry(0.28, 0.05);
+                    const shelfLabelMat = new THREE.MeshBasicMaterial({ map: shelfLabelTexture, transparent: true });
+                    const shelfLabelMesh = new THREE.Mesh(shelfLabelGeom, shelfLabelMat);
+                    
+                    // Position at right edge of shelf
+                    const wallDir = new THREE.Vector3().subVectors(vb, va).normalize();
+                    const labelPos = shelfPos.clone()
+                        .add(wallDir.clone().multiplyScalar((R - 0.1) / 2 - 0.15))
+                        .add(inwardDir.clone().multiplyScalar(0.08));
+                    labelPos.y = SHELF_HEIGHTS[s] + 0.03;
+                    shelfLabelMesh.position.copy(labelPos);
+                    shelfLabelMesh.rotation.y = wallAngle;
+                    group.add(shelfLabelMesh);
+                    
+                    shelfLabels.push({ mesh: shelfLabelMesh, wall: w, shelf: s });
                 }
             }
 
@@ -1750,7 +2394,7 @@
                         originalColors[instanceId * 3 + 1] = color.g;
                         originalColors[instanceId * 3 + 2] = color.b;
 
-                        bookMap.push({ wall: w, shelf: s, vol: v, bookId, instanceId });
+                        bookMap.push({ wall: w, shelf: s, vol: v, bookId, instanceId, worldPos: bookPos.clone() });
                         instanceId++;
                     }
                 }
@@ -1760,7 +2404,7 @@
             bookMesh.instanceColor.needsUpdate = true;
             group.add(bookMesh);
 
-            return { bookMesh, bookMap, originalColors };
+            return { bookMesh, bookMap, originalColors, shelfLabels };
         }
 
         // ============================================
@@ -1887,6 +2531,12 @@
         controls.addEventListener('lock', () => {
             document.getElementById('crosshair').classList.add('visible');
             document.getElementById('instructions').classList.add('hidden');
+            // Start ambient audio on interaction
+            if (audioEnabled && !audioContext) {
+                initAudio();
+                ambientAudio.volume = audioVolume / 100;
+                ambientAudio.play().catch(() => {});
+            }
         });
 
         controls.addEventListener('unlock', () => {
@@ -1995,14 +2645,66 @@
         });
 
         // ============================================
+        // SPINE LABEL SYSTEM (screen-space overlay)
+        // ============================================
+
+        let currentSpineLabel = null;
+
+        function updateSpineLabel(bookInfo, screenPos) {
+            let label = document.querySelector('.spine-label');
+            if (!label) {
+                label = document.createElement('div');
+                label.className = 'spine-label';
+                label.innerHTML = '<div class="spine-title"></div><div class="spine-author"></div>';
+                document.getElementById('spine-label-container').appendChild(label);
+            }
+            
+            label.style.left = `${screenPos.x}px`;
+            label.style.top = `${screenPos.y - 30}px`;
+            label.classList.add('visible');
+            
+            currentSpineLabel = { label, bookId: bookInfo.bookId };
+            
+            // Update content
+            const titleEl = label.querySelector('.spine-title');
+            const authorEl = label.querySelector('.spine-author');
+            
+            if (bookCache.has(bookInfo.bookId)) {
+                const meta = bookCache.get(bookInfo.bookId);
+                titleEl.textContent = meta.title.substring(0, 30) + (meta.title.length > 30 ? '...' : '');
+                authorEl.textContent = meta.authors.substring(0, 25) + (meta.authors.length > 25 ? '...' : '');
+            } else {
+                titleEl.textContent = `Book #${bookInfo.bookId}`;
+                authorEl.textContent = 'Loading...';
+            }
+        }
+
+        function hideSpineLabel() {
+            const label = document.querySelector('.spine-label');
+            if (label) {
+                label.classList.remove('visible');
+            }
+            currentSpineLabel = null;
+        }
+
+        // ============================================
         // BOOK READER UI
         // ============================================
 
         let currentBookId = null;
+        let currentBookText = '';
         let currentBookPages = [];
         let currentPageIndex = 0;
+        let detectedChapters = [];
         let twoPageMode = settings.twoPageMode || false;
+        let currentFont = settings.font || 'serif';
+        let currentFontSize = settings.fontSize || 'medium';
         const textCache = new Map();
+
+        // In-book search state
+        let readerSearchQuery = '';
+        let readerSearchMatches = [];
+        let readerSearchCurrentIndex = -1;
 
         function paginateText(text) {
             const lines = text.split('\n');
@@ -2014,11 +2716,70 @@
             return pages.length ? pages : [''];
         }
 
+        function detectChapters(text) {
+            const chapters = [];
+            const lines = text.split('\n');
+            const chapterPatterns = [
+                /^(CHAPTER|Chapter|PART|Part|BOOK|Book)\s+([IVXLC\d]+)/,
+                /^(CHAPTER|Chapter|PART|Part|BOOK|Book)\s+\d+/,
+                /^([IVXLC]+)\.\s/,
+                /^\d+\.\s+[A-Z]/,
+            ];
+            
+            let lineCount = 0;
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                for (const pattern of chapterPatterns) {
+                    if (pattern.test(line)) {
+                        const pageIndex = Math.floor(lineCount / (twoPageMode ? 35 : 40));
+                        chapters.push({
+                            title: line.substring(0, 50),
+                            page: pageIndex,
+                            line: lineCount
+                        });
+                        break;
+                    }
+                }
+                lineCount++;
+            }
+            return chapters;
+        }
+
+        function updateChapterList() {
+            const listEl = document.getElementById('chapter-list');
+            if (detectedChapters.length === 0) {
+                listEl.innerHTML = '<div class="empty-state">No chapters detected</div>';
+                return;
+            }
+            
+            listEl.innerHTML = detectedChapters.map((ch, i) => `
+                <div class="chapter-item ${ch.page === currentPageIndex ? 'active' : ''}" 
+                     onclick="jumpToChapter(${i})">
+                    ${escapeHtml(ch.title)}
+                </div>
+            `).join('');
+        }
+
+        window.jumpToChapter = function(index) {
+            if (index >= 0 && index < detectedChapters.length) {
+                currentPageIndex = detectedChapters[index].page;
+                renderPage();
+                updateChapterList();
+            }
+        };
+
+        window.toggleChapterSidebar = function() {
+            const sidebar = document.getElementById('chapter-sidebar');
+            sidebar.classList.toggle('visible');
+            document.getElementById('toc-btn').classList.toggle('active', sidebar.classList.contains('visible'));
+        };
+
         function renderPage() {
             const contentEl = document.getElementById('reader-content');
             const pageNumEl = document.getElementById('reader-page-num');
             const prevBtn = document.getElementById('prev-page-btn');
             const nextBtn = document.getElementById('next-page-btn');
+            const pageJumpInput = document.getElementById('page-jump-input');
 
             const total = currentBookPages.length || 1;
             const idx = Math.max(0, Math.min(currentPageIndex, total - 1));
@@ -2028,18 +2789,31 @@
             contentEl.classList.add('page-flip');
             requestAnimationFrame(() => contentEl.classList.remove('page-flip'));
 
-            contentEl.textContent = currentBookPages[idx] || '';
+            // Apply search highlighting if active
+            let pageContent = currentBookPages[idx] || '';
+            if (readerSearchQuery && readerSearchMatches.length > 0) {
+                pageContent = highlightSearchInText(pageContent, readerSearchQuery);
+            }
+            contentEl.innerHTML = pageContent.replace(/\n/g, '<br>');
+            
+            // Update page jump input
+            pageJumpInput.value = idx + 1;
+            pageJumpInput.max = total;
             
             if (twoPageMode) {
                 pageNumEl.textContent = `Page ${idx + 1}`;
                 const rightContent = document.getElementById('reader-content-right');
                 const rightPageNum = document.getElementById('reader-page-num-right');
                 if (idx + 1 < total) {
-                    rightContent.textContent = currentBookPages[idx + 1] || '';
+                    let rightPageContent = currentBookPages[idx + 1] || '';
+                    if (readerSearchQuery && readerSearchMatches.length > 0) {
+                        rightPageContent = highlightSearchInText(rightPageContent, readerSearchQuery);
+                    }
+                    rightContent.innerHTML = rightPageContent.replace(/\n/g, '<br>');
                     rightPageNum.textContent = `Page ${idx + 2}`;
                     document.getElementById('reader-page-right').classList.add('visible');
                 } else {
-                    rightContent.textContent = '';
+                    rightContent.innerHTML = '';
                     rightPageNum.textContent = '';
                     document.getElementById('reader-page-right').classList.remove('visible');
                 }
@@ -2056,7 +2830,31 @@
             if (currentBookId) {
                 saveReadingProgress(currentBookId, idx, total);
             }
+            
+            // Update chapter highlight
+            updateChapterList();
         }
+
+        function highlightSearchInText(text, query) {
+            if (!query) return escapeHtml(text);
+            const escaped = escapeHtml(text);
+            const regex = new RegExp(`(${escapeRegex(query)})`, 'gi');
+            return escaped.replace(regex, '<span class="search-highlight">$1</span>');
+        }
+
+        function escapeRegex(str) {
+            return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        window.jumpToPage = function() {
+            const input = document.getElementById('page-jump-input');
+            const page = parseInt(input.value) - 1;
+            if (page >= 0 && page < currentBookPages.length) {
+                currentPageIndex = page;
+                renderPage();
+                playPageTurn();
+            }
+        };
 
         window.toggleTwoPage = function() {
             twoPageMode = !twoPageMode;
@@ -2070,10 +2868,10 @@
             leftPage.classList.toggle('two-page-mode', twoPageMode);
             
             // Re-paginate current book
-            if (textCache.has(currentBookId)) {
-                const text = textCache.get(currentBookId);
-                const cleanText = text.replace(/\r\n/g, '\n').replace(/\n{4,}/g, '\n\n\n');
+            if (currentBookText) {
+                const cleanText = currentBookText.replace(/\r\n/g, '\n').replace(/\n{4,}/g, '\n\n\n');
                 currentBookPages = paginateText(cleanText);
+                detectedChapters = detectChapters(cleanText);
                 // Adjust page index for two-page mode
                 if (twoPageMode) {
                     currentPageIndex = Math.floor(currentPageIndex / 2) * 2;
@@ -2082,12 +2880,127 @@
             }
         };
 
+        // Typography controls
+        window.toggleTypographyDropdown = function() {
+            const dropdown = document.getElementById('typography-dropdown');
+            dropdown.classList.toggle('visible');
+        };
+
+        window.changeFont = function(font) {
+            currentFont = font;
+            settings.font = font;
+            saveToStorage(STORAGE_KEYS.SETTINGS, settings);
+            
+            const contents = document.querySelectorAll('.reader-content');
+            contents.forEach(el => {
+                el.classList.remove('font-serif', 'font-baskerville', 'font-mono');
+                el.classList.add(`font-${font}`);
+            });
+        };
+
+        window.changeFontSize = function(size) {
+            currentFontSize = size;
+            settings.fontSize = size;
+            saveToStorage(STORAGE_KEYS.SETTINGS, settings);
+            
+            const contents = document.querySelectorAll('.reader-content');
+            contents.forEach(el => {
+                el.classList.remove('font-size-small', 'font-size-medium', 'font-size-large', 'font-size-xlarge');
+                el.classList.add(`font-size-${size}`);
+            });
+        };
+
+        // In-book search
+        window.openReaderSearch = function() {
+            const searchBar = document.getElementById('reader-search-bar');
+            searchBar.classList.add('visible');
+            document.getElementById('reader-search-input').focus();
+        };
+
+        window.closeReaderSearch = function() {
+            const searchBar = document.getElementById('reader-search-bar');
+            searchBar.classList.remove('visible');
+            readerSearchQuery = '';
+            readerSearchMatches = [];
+            readerSearchCurrentIndex = -1;
+            document.getElementById('reader-search-info').textContent = '';
+            renderPage(); // Remove highlights
+        };
+
+        window.readerSearchPrev = function() {
+            if (readerSearchMatches.length === 0) return;
+            readerSearchCurrentIndex = (readerSearchCurrentIndex - 1 + readerSearchMatches.length) % readerSearchMatches.length;
+            goToSearchMatch();
+        };
+
+        window.readerSearchNext = function() {
+            if (readerSearchMatches.length === 0) return;
+            readerSearchCurrentIndex = (readerSearchCurrentIndex + 1) % readerSearchMatches.length;
+            goToSearchMatch();
+        };
+
+        function goToSearchMatch() {
+            if (readerSearchCurrentIndex < 0 || readerSearchCurrentIndex >= readerSearchMatches.length) return;
+            const match = readerSearchMatches[readerSearchCurrentIndex];
+            currentPageIndex = match.page;
+            renderPage();
+            document.getElementById('reader-search-info').textContent = 
+                `${readerSearchCurrentIndex + 1} of ${readerSearchMatches.length}`;
+        }
+
+        document.getElementById('reader-search-input').addEventListener('input', (e) => {
+            readerSearchQuery = e.target.value.trim();
+            if (readerSearchQuery.length < 2) {
+                readerSearchMatches = [];
+                readerSearchCurrentIndex = -1;
+                document.getElementById('reader-search-info').textContent = '';
+                renderPage();
+                return;
+            }
+            
+            // Find all matches across pages
+            readerSearchMatches = [];
+            const regex = new RegExp(escapeRegex(readerSearchQuery), 'gi');
+            for (let i = 0; i < currentBookPages.length; i++) {
+                const matches = currentBookPages[i].match(regex);
+                if (matches) {
+                    for (const m of matches) {
+                        readerSearchMatches.push({ page: i, text: m });
+                    }
+                }
+            }
+            
+            readerSearchCurrentIndex = readerSearchMatches.length > 0 ? 0 : -1;
+            document.getElementById('reader-search-info').textContent = 
+                readerSearchMatches.length > 0 ? `1 of ${readerSearchMatches.length}` : 'No matches';
+            
+            if (readerSearchCurrentIndex >= 0) {
+                goToSearchMatch();
+            } else {
+                renderPage();
+            }
+        });
+
+        document.getElementById('reader-search-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (e.shiftKey) {
+                    readerSearchPrev();
+                } else {
+                    readerSearchNext();
+                }
+            } else if (e.key === 'Escape') {
+                closeReaderSearch();
+            }
+        });
+
         window.nextPage = function() {
             if (!readerOpen) return;
             const step = twoPageMode ? 2 : 1;
             if (currentPageIndex < (currentBookPages.length - step)) {
                 currentPageIndex += step;
                 renderPage();
+                playPageTurn();
             }
         };
 
@@ -2097,6 +3010,7 @@
             if (currentPageIndex >= step) {
                 currentPageIndex -= step;
                 renderPage();
+                playPageTurn();
             }
         };
 
@@ -2108,11 +3022,21 @@
 
             document.getElementById('reader-title').textContent = 'Loading...';
             document.getElementById('reader-author').textContent = '';
-            document.getElementById('reader-coords').textContent = `Room ${location.room + 1} · Wall ${location.wall + 1} · Shelf ${location.shelf + 1} · Volume ${location.volume + 1}`;
+            document.getElementById('reader-coords').textContent = `Room ${location.room + 1} · Wall ${location.wall + 1} (${WALL_NAMES[location.wall]}) · Shelf ${location.shelf + 1} · Volume ${location.volume + 1}`;
             document.getElementById('reader-content').textContent = 'Loading book text...';
             document.getElementById('reader-content').classList.add('loading');
             document.getElementById('reader-gutenberg-link').href = `https://www.gutenberg.org/ebooks/${bookId}`;
             document.getElementById('reader').classList.add('visible');
+            
+            // Reset search
+            readerSearchQuery = '';
+            readerSearchMatches = [];
+            readerSearchCurrentIndex = -1;
+            document.getElementById('reader-search-bar').classList.remove('visible');
+            
+            // Reset chapter sidebar
+            document.getElementById('chapter-sidebar').classList.remove('visible');
+            document.getElementById('toc-btn').classList.remove('active');
             
             // Update bookmark button state
             document.getElementById('bookmark-btn').classList.toggle('bookmarked', isBookmarked(bookId));
@@ -2120,6 +3044,12 @@
             // Update two-page button state
             document.getElementById('two-page-btn').classList.toggle('active', twoPageMode);
             document.getElementById('reader-page-left').classList.toggle('two-page-mode', twoPageMode);
+            
+            // Apply saved typography settings
+            document.getElementById('font-select').value = currentFont;
+            document.getElementById('font-size-select').value = currentFontSize;
+            changeFont(currentFont);
+            changeFontSize(currentFontSize);
 
             // Fetch metadata
             const meta = await fetchBookMetadata(bookId);
@@ -2142,8 +3072,11 @@
             }
 
             if (text) {
+                currentBookText = text;
                 const cleanText = text.replace(/\r\n/g, '\n').replace(/\n{4,}/g, '\n\n\n');
                 currentBookPages = paginateText(cleanText);
+                detectedChapters = detectChapters(cleanText);
+                updateChapterList();
                 
                 // Resume from saved progress or specified page
                 if (resumePage !== null) {
@@ -2155,7 +3088,9 @@
                 
                 renderPage();
             } else {
+                currentBookText = '';
                 currentBookPages = ['Unable to load book text. The book may not be available in plain text format.'];
+                detectedChapters = [];
                 currentPageIndex = 0;
                 renderPage();
             }
@@ -2164,15 +3099,31 @@
         window.closeBook = function() {
             document.getElementById('reader').classList.remove('visible');
             document.getElementById('reader-page-right').classList.remove('visible');
+            document.getElementById('chapter-sidebar').classList.remove('visible');
+            document.getElementById('typography-dropdown').classList.remove('visible');
             readerOpen = false;
             currentBookId = null;
+            currentBookText = '';
             currentBookPages = [];
             currentPageIndex = 0;
+            detectedChapters = [];
         };
+
+        // Close typography dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            const dropdown = document.getElementById('typography-dropdown');
+            const btn = document.getElementById('typography-btn');
+            if (!dropdown.contains(e.target) && e.target !== btn) {
+                dropdown.classList.remove('visible');
+            }
+        });
 
         // ============================================
         // SEARCH UI
         // ============================================
+
+        let searchResults = [];
+        let selectedSearchIndex = -1;
 
         window.openSearch = function() {
             document.getElementById('search-panel').classList.add('visible');
@@ -2186,37 +3137,56 @@
         window.closeSearch = function() {
             document.getElementById('search-panel').classList.remove('visible');
             searchOpen = false;
+            searchResults = [];
+            selectedSearchIndex = -1;
         };
 
         window.performSearch = async function() {
             const query = document.getElementById('search-input').value.trim();
             if (!query) return;
 
+            const language = document.getElementById('search-language').value;
+            const topic = document.getElementById('search-topic').value;
+
             const resultsDiv = document.getElementById('search-results');
             resultsDiv.innerHTML = '<div class="loading-spinner"></div> Searching...';
 
-            const results = await searchBooks(query);
+            const results = await searchBooks(query, language, topic);
+            searchResults = results.slice(0, 15);
+            selectedSearchIndex = -1;
 
-            if (results.length === 0) {
-                resultsDiv.innerHTML = '<p style="color:#8b7355;">No books found.</p>';
+            if (searchResults.length === 0) {
+                resultsDiv.innerHTML = '<p style="color:#8b7355;">No books found. Try different keywords or filters.</p>';
+                document.getElementById('search-keyboard-hint').style.display = 'none';
                 return;
             }
 
-            resultsDiv.innerHTML = results.slice(0, 10).map(book => {
+            renderSearchResults();
+            document.getElementById('search-keyboard-hint').style.display = 'block';
+        };
+
+        function renderSearchResults() {
+            const resultsDiv = document.getElementById('search-results');
+            resultsDiv.innerHTML = searchResults.map((book, i) => {
                 const location = bookIdToLocation(book.id);
                 const authors = book.authors?.map(a => a.name).join(', ') || 'Unknown Author';
+                const languages = book.languages?.join(', ') || '';
+                const subjects = book.subjects?.slice(0, 2).join('; ') || '';
                 const progress = getReadingProgress(book.id);
                 const progressText = progress ? `Progress: Page ${progress.page + 1} of ${progress.total}` : '';
                 return `
-                    <div class="search-result-item" onclick="goToBook(${book.id})">
+                    <div class="search-result-item ${i === selectedSearchIndex ? 'selected' : ''}" 
+                         data-index="${i}"
+                         onclick="goToBook(${book.id})">
                         <div class="search-result-title">${escapeHtml(book.title)}</div>
                         <div class="search-result-author">${escapeHtml(authors)}</div>
+                        ${languages || subjects ? `<div class="search-result-meta">${languages ? `📖 ${languages}` : ''} ${subjects ? `· ${subjects}` : ''}</div>` : ''}
                         <div class="search-result-location">Room ${location.room + 1} · Wall ${location.wall + 1} · Shelf ${location.shelf + 1}</div>
                         ${progressText ? `<div class="search-result-progress">${progressText}</div>` : ''}
                     </div>
                 `;
             }).join('');
-        };
+        }
 
         window.jumpToGutenbergId = function() {
             const bookId = parseInt(document.getElementById('search-gutenberg-id').value);
@@ -2507,6 +3477,7 @@
                     hoveredBook = null;
                     document.getElementById('crosshair').style.borderColor = 'rgba(212, 197, 160, 0.5)';
                     document.getElementById('book-tooltip').classList.remove('visible');
+                    hideSpineLabel();
                 }
 
                 raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
@@ -2535,6 +3506,8 @@
                             const tooltip = document.getElementById('book-tooltip');
                             tooltip.querySelector('.title').textContent = `Book #${bookInfo.bookId}`;
                             tooltip.querySelector('.author').textContent = 'Click to read';
+                            tooltip.querySelector('.location-hint').textContent = 
+                                `Wall ${bookInfo.wall + 1} · Shelf ${bookInfo.shelf + 1} · Vol ${bookInfo.vol + 1}`;
                             tooltip.classList.add('visible');
 
                             // Fetch actual metadata with debouncing
@@ -2545,6 +3518,21 @@
                                 }
                             });
                         }
+
+                        // Show spine label at book position (screen-space)
+                        const worldPos = bookInfo.worldPos.clone();
+                        worldPos.y += 0.15; // Above the book
+                        worldPos.add(room.group.position);
+                        const screenPos = worldPos.clone().project(camera);
+                        const x = (screenPos.x * 0.5 + 0.5) * window.innerWidth;
+                        const y = (-screenPos.y * 0.5 + 0.5) * window.innerHeight;
+                        
+                        if (screenPos.z < 1) { // In front of camera
+                            updateSpineLabel(bookInfo, { x, y });
+                        } else {
+                            hideSpineLabel();
+                        }
+
                         break;
                     }
                 }
@@ -2596,61 +3584,92 @@
                 }
             }
 
-            // Light flicker effect
+            // Enhanced light flicker effect with occasional stronger flickers
             for (const [idx, room] of rooms) {
-                if (room.lights) {
+                if (room.lights && room.lamps) {
                     const seed1 = room.roomIndex * 7;
                     const seed2 = room.roomIndex * 11;
 
-                    const flicker1 = Math.sin(elapsedTime * 2.3 + seed1) * 0.08
+                    // Base flicker
+                    let flicker1 = Math.sin(elapsedTime * 2.3 + seed1) * 0.08
                                    + Math.sin(elapsedTime * 4.7 + seed1 * 2) * 0.05;
-                    const flicker2 = Math.sin(elapsedTime * 2.1 + seed2) * 0.08
+                    let flicker2 = Math.sin(elapsedTime * 2.1 + seed2) * 0.08
                                    + Math.sin(elapsedTime * 5.1 + seed2 * 2) * 0.05;
+
+                    // Occasional stronger flicker (every ~5 seconds, random)
+                    const flickerChance = Math.sin(elapsedTime * 0.2 + seed1) * Math.sin(elapsedTime * 0.13 + seed2);
+                    if (flickerChance > 0.95) {
+                        flicker1 += (Math.random() - 0.5) * 0.3;
+                    }
+                    if (Math.sin(elapsedTime * 0.17 + seed2) * Math.sin(elapsedTime * 0.23 + seed1) > 0.95) {
+                        flicker2 += (Math.random() - 0.5) * 0.3;
+                    }
 
                     room.lights[0].intensity = 2.0 + flicker1;
                     room.lights[1].intensity = 2.0 + flicker2;
+                    
+                    // Lamp glow color variation
+                    const warmth1 = 0.95 + flicker1 * 0.3;
+                    const warmth2 = 0.95 + flicker2 * 0.3;
+                    room.lamps[0].material.color.setRGB(1, warmth1 * 0.88, warmth1 * 0.63);
+                    room.lamps[1].material.color.setRGB(1, warmth2 * 0.88, warmth2 * 0.63);
                 }
             }
 
-            updateParticles(delta);
+            updateParticles(delta, elapsedTime);
             renderer.render(scene, camera);
         }
 
         // ============================================
-        // ATMOSPHERIC DUST PARTICLES
+        // ATMOSPHERIC DUST PARTICLES (Enhanced)
         // ============================================
 
-        const PARTICLE_COUNT = 300;
+        const PARTICLE_COUNT = 400;
         const particlePositions = new Float32Array(PARTICLE_COUNT * 3);
+        const particleSizes = new Float32Array(PARTICLE_COUNT);
         const particleVelocities = [];
+        
         for (let i = 0; i < PARTICLE_COUNT; i++) {
             particlePositions[i * 3] = (Math.random() - 0.5) * 24;
             particlePositions[i * 3 + 1] = Math.random() * ROOM_HEIGHT;
             particlePositions[i * 3 + 2] = (Math.random() - 0.5) * 24;
+            particleSizes[i] = 0.008 + Math.random() * 0.012;
             particleVelocities.push(
-                (Math.random() - 0.5) * 0.015,
-                (Math.random() - 0.5) * 0.008,
-                (Math.random() - 0.5) * 0.015
+                (Math.random() - 0.5) * 0.012,
+                (Math.random() - 0.5) * 0.006,
+                (Math.random() - 0.5) * 0.012,
+                Math.random() * Math.PI * 2 // phase for floating motion
             );
         }
+        
         const particleGeom = new THREE.BufferGeometry();
         particleGeom.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+        particleGeom.setAttribute('size', new THREE.BufferAttribute(particleSizes, 1));
+        
         const particleMat = new THREE.PointsMaterial({
             color: 0xFFD280,
             size: 0.015,
             transparent: true,
-            opacity: 0.25,
+            opacity: 0.3,
             sizeAttenuation: true,
         });
         const dustParticles = new THREE.Points(particleGeom, particleMat);
         scene.add(dustParticles);
 
-        function updateParticles(delta) {
+        function updateParticles(delta, elapsedTime) {
             const positions = dustParticles.geometry.attributes.position.array;
+            
             for (let i = 0; i < PARTICLE_COUNT; i++) {
-                positions[i * 3] += particleVelocities[i * 3] * delta * 60;
-                positions[i * 3 + 1] += particleVelocities[i * 3 + 1] * delta * 60;
-                positions[i * 3 + 2] += particleVelocities[i * 3 + 2] * delta * 60;
+                const phase = particleVelocities[i * 4 + 3];
+                
+                // Add gentle floating motion
+                const floatX = Math.sin(elapsedTime * 0.5 + phase) * 0.002;
+                const floatY = Math.sin(elapsedTime * 0.3 + phase * 1.5) * 0.001;
+                const floatZ = Math.cos(elapsedTime * 0.4 + phase * 0.7) * 0.002;
+                
+                positions[i * 3] += (particleVelocities[i * 4] + floatX) * delta * 60;
+                positions[i * 3 + 1] += (particleVelocities[i * 4 + 1] + floatY) * delta * 60;
+                positions[i * 3 + 2] += (particleVelocities[i * 4 + 2] + floatZ) * delta * 60;
 
                 const dx = positions[i * 3] - camera.position.x;
                 const dz = positions[i * 3 + 2] - camera.position.z;
@@ -2660,6 +3679,10 @@
                 if (positions[i * 3 + 1] < 0) positions[i * 3 + 1] = ROOM_HEIGHT;
             }
             dustParticles.geometry.attributes.position.needsUpdate = true;
+            
+            // Subtle opacity variation based on camera position
+            const brightness = 0.25 + Math.sin(elapsedTime * 0.1) * 0.05;
+            particleMat.opacity = brightness;
         }
 
         // ============================================
@@ -2668,19 +3691,47 @@
 
         window.addEventListener('keydown', (e) => {
             if (readerOpen) {
-                if (e.code === 'Escape') { closeBook(); }
+                if (e.code === 'Escape') { 
+                    if (document.getElementById('reader-search-bar').classList.contains('visible')) {
+                        closeReaderSearch();
+                    } else {
+                        closeBook(); 
+                    }
+                }
                 if (e.code === 'ArrowRight' || e.code === 'ArrowDown') { e.preventDefault(); nextPage(); }
                 if (e.code === 'ArrowLeft' || e.code === 'ArrowUp') { e.preventDefault(); prevPage(); }
                 if (e.code === 'KeyB') { toggleBookmark(); }
+                if ((e.ctrlKey || e.metaKey) && e.code === 'KeyF') {
+                    e.preventDefault();
+                    openReaderSearch();
+                }
             } else if (searchOpen) {
                 if (e.code === 'Escape') { closeSearch(); }
-                if (e.code === 'Enter' && (e.target.id === 'search-input' || e.target.id === 'search-gutenberg-id')) {
+                if (e.code === 'Enter') {
                     e.preventDefault();
                     if (e.target.id === 'search-gutenberg-id') {
                         jumpToGutenbergId();
+                    } else if (selectedSearchIndex >= 0 && searchResults[selectedSearchIndex]) {
+                        goToBook(searchResults[selectedSearchIndex].id);
                     } else {
                         performSearch();
                     }
+                }
+                // Arrow key navigation in search results
+                if (e.code === 'ArrowDown' && searchResults.length > 0) {
+                    e.preventDefault();
+                    selectedSearchIndex = Math.min(selectedSearchIndex + 1, searchResults.length - 1);
+                    renderSearchResults();
+                    // Scroll into view
+                    const selected = document.querySelector('.search-result-item.selected');
+                    if (selected) selected.scrollIntoView({ block: 'nearest' });
+                }
+                if (e.code === 'ArrowUp' && searchResults.length > 0) {
+                    e.preventDefault();
+                    selectedSearchIndex = Math.max(selectedSearchIndex - 1, 0);
+                    renderSearchResults();
+                    const selected = document.querySelector('.search-result-item.selected');
+                    if (selected) selected.scrollIntoView({ block: 'nearest' });
                 }
             } else if (navOpen) {
                 if (e.code === 'Escape') { closeNav(); }

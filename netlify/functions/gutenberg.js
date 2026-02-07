@@ -12,10 +12,21 @@ export async function handler(event) {
 
   const params = event.queryStringParameters || {};
 
-  // Search endpoint: proxy to Gutendex
+  // Search endpoint: proxy to Gutendex with optional filters
   if (params.search) {
     try {
-      const url = `https://gutendex.com/books/?search=${encodeURIComponent(params.search)}`;
+      let url = `https://gutendex.com/books/?search=${encodeURIComponent(params.search)}`;
+      
+      // Add language filter if provided
+      if (params.languages) {
+        url += `&languages=${encodeURIComponent(params.languages)}`;
+      }
+      
+      // Add topic/subject filter if provided
+      if (params.topic) {
+        url += `&topic=${encodeURIComponent(params.topic)}`;
+      }
+      
       const response = await fetch(url);
       const data = await response.json();
       return {
@@ -92,7 +103,13 @@ export async function handler(event) {
   if (params.page !== undefined) {
     try {
       const page = parseInt(params.page) || 1;
-      const url = `https://gutendex.com/books/?page=${page}`;
+      let url = `https://gutendex.com/books/?page=${page}`;
+      
+      // Support language filter for browsing
+      if (params.languages) {
+        url += `&languages=${encodeURIComponent(params.languages)}`;
+      }
+      
       const response = await fetch(url);
       const data = await response.json();
       return {
