@@ -900,15 +900,19 @@
         /* Typography settings dropdown */
         .typography-dropdown {
             position: absolute;
-            top: 100%;
             right: 0;
+            bottom: calc(100% + 10px); /* open upward so it won't go outside the reader */
+            top: auto;
             background: rgba(26, 18, 8, 0.98);
             border: 1px solid #4a3520;
             border-radius: 4px;
-            padding: 16px;
+            padding: 14px;
             display: none;
-            min-width: 200px;
-            z-index: 20;
+            min-width: 220px;
+            max-height: 55vh;
+            overflow: auto;
+            z-index: 200;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
         }
 
         .typography-dropdown.visible {
@@ -1764,7 +1768,7 @@
         // ============================================
 
         // Version stamp (helps ensure browser isn't using a cached index.html)
-        const APP_BUILD = 'css-book-v8';
+        const APP_BUILD = 'css-book-v9';
         window.__APP_BUILD = APP_BUILD;
         const buildTagEl = document.getElementById('build-tag');
         if (buildTagEl) buildTagEl.textContent = APP_BUILD;
