@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/src/Style/stPageFlip.css">
     <style>
         * {
             margin: 0;
@@ -520,6 +521,56 @@
 
         .reader-content .search-highlight.current {
             background: rgba(196, 148, 58, 0.8);
+        }
+
+        /* ============================================
+           REAL BOOK MODE (page-flip)
+           ============================================ */
+
+        .reader-book {
+            margin-bottom: 24px;
+            background: rgba(10, 8, 6, 0.25);
+            border: 1px solid rgba(74, 53, 32, 0.6);
+            border-radius: 6px;
+            padding: 14px;
+        }
+
+        .reader-book.hidden { display: none; }
+
+        #flipbook {
+            width: min(920px, calc(100vw - 120px));
+            height: min(640px, calc(100vh - 260px));
+            margin: 0 auto;
+        }
+
+        .flip-page {
+            background: rgba(18, 14, 10, 0.96);
+            color: #c4b590;
+            border: 1px solid rgba(74, 53, 32, 0.8);
+        }
+
+        .flip-page-inner {
+            padding: 18px 18px;
+            font-size: 16px;
+            line-height: 1.8;
+            white-space: pre-wrap;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* typography mappings for flip pages */
+        .flip-typography.font-serif .flip-page-inner { font-family: 'Cormorant Garamond', serif; }
+        .flip-typography.font-baskerville .flip-page-inner { font-family: 'Libre Baskerville', serif; }
+        .flip-typography.font-mono .flip-page-inner { font-family: 'IBM Plex Mono', monospace; font-size: 14px; line-height: 1.6; }
+        .flip-typography.font-size-small .flip-page-inner { font-size: 14px; }
+        .flip-typography.font-size-medium .flip-page-inner { font-size: 16px; }
+        .flip-typography.font-size-large .flip-page-inner { font-size: 18px; }
+        .flip-typography.font-size-xlarge .flip-page-inner { font-size: 20px; }
+
+        .flip-page .search-highlight {
+            background: rgba(196, 148, 58, 0.4);
+            border-radius: 2px;
+            padding: 0 2px;
         }
 
         .reader-footer {
@@ -1375,6 +1426,9 @@
                     </div>
                     <button class="reader-close" onclick="closeBook()">&times;</button>
                 </div>
+                <div class="reader-book" id="reader-book">
+                    <div id="flipbook" class="flip-typography font-serif font-size-medium"></div>
+                </div>
                 <div class="reader-content font-serif font-size-medium" id="reader-content">Loading book text...</div>
                 <div class="reader-footer">
                     <div class="reader-page-num" id="reader-page-num">Page 1</div>
@@ -1400,6 +1454,7 @@
                                 </select>
                             </div>
                         </div>
+                        <button class="reader-action-btn" id="mode-btn" onclick="toggleReaderMode()" title="Reader mode (Real book / Classic)">📕</button>
                         <button class="reader-action-btn" id="two-page-btn" onclick="toggleTwoPage()" title="Two-page view">📖</button>
                     </div>
                     <div class="reader-nav">
@@ -1575,7 +1630,8 @@
     {
         "imports": {
             "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+            "page-flip": "https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.module.js"
         }
     }
     </script>
@@ -1583,6 +1639,7 @@
     <script type="module">
         import * as THREE from 'three';
         import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+        import { PageFlip } from 'page-flip';
 
         // ============================================
         // LIBRARY CONFIGURATION
@@ -2745,7 +2802,13 @@
         let twoPageMode = settings.twoPageMode || false;
         let currentFont = settings.font || 'serif';
         let currentFontSize = settings.fontSize || 'medium';
+        let readerMode = settings.readerMode || 'flip'; // default: realistic book
         const textCache = new Map();
+
+        // page-flip state
+        let pageFlip = null;
+        let flipPageEls = [];
+        const MAX_FLIP_PAGES = 1200;
 
         // In-book search state
         let readerSearchQuery = '';
@@ -2820,7 +2883,178 @@
             document.getElementById('toc-btn').classList.toggle('active', sidebar.classList.contains('visible'));
         };
 
+        function isFlipMode() {
+            return readerMode === 'flip';
+        }
+
+        function setReaderModeUI() {
+            const bookEl = document.getElementById('reader-book');
+            const contentEl = document.getElementById('reader-content');
+            const rightPage = document.getElementById('reader-page-right');
+            const twoPageBtn = document.getElementById('two-page-btn');
+            const modeBtn = document.getElementById('mode-btn');
+
+            if (isFlipMode()) {
+                bookEl.classList.remove('hidden');
+                contentEl.style.display = 'none';
+                rightPage.classList.remove('visible');
+                rightPage.style.display = 'none';
+                twoPageBtn.style.display = 'none';
+                modeBtn.classList.add('active');
+            } else {
+                bookEl.classList.add('hidden');
+                contentEl.style.display = '';
+                rightPage.style.display = '';
+                twoPageBtn.style.display = '';
+                modeBtn.classList.remove('active');
+            }
+        }
+
+        function destroyFlipBook() {
+            try {
+                if (pageFlip) {
+                    pageFlip.destroy();
+                }
+            } catch (e) {
+                // ignore
+            }
+            pageFlip = null;
+            flipPageEls = [];
+            const flipEl = document.getElementById('flipbook');
+            if (flipEl) flipEl.innerHTML = '';
+        }
+
+        function applyTypographyToFlip() {
+            const flipEl = document.getElementById('flipbook');
+            if (!flipEl) return;
+            flipEl.classList.remove('font-serif', 'font-baskerville', 'font-mono', 'font-size-small', 'font-size-medium', 'font-size-large', 'font-size-xlarge');
+            flipEl.classList.add(`font-${currentFont}`);
+            flipEl.classList.add(`font-size-${currentFontSize}`);
+        }
+
+        function formatPageHtml(pageText, withHighlights = true) {
+            let html = pageText || '';
+            if (withHighlights && readerSearchQuery && readerSearchMatches.length > 0) {
+                html = highlightSearchInText(html, readerSearchQuery);
+            } else {
+                html = escapeHtml(html);
+            }
+            html = html.replace(/\n/g, '<br>');
+            return `<div class="flip-page-inner">${html}</div>`;
+        }
+
+        function renderFlipPageContent(idx) {
+            if (!flipPageEls[idx]) return;
+            // update only the current page to keep it cheap
+            flipPageEls[idx].innerHTML = formatPageHtml(currentBookPages[idx] || '', true);
+        }
+
+        function initFlipBook() {
+            destroyFlipBook();
+            const flipEl = document.getElementById('flipbook');
+            if (!flipEl) return;
+
+            // Build pages (cap for performance)
+            const total = currentBookPages.length || 1;
+            const capped = Math.min(total, MAX_FLIP_PAGES);
+
+            flipPageEls = [];
+            const frag = document.createDocumentFragment();
+            for (let i = 0; i < capped; i++) {
+                const page = document.createElement('div');
+                page.className = 'flip-page';
+                page.innerHTML = formatPageHtml(currentBookPages[i] || '', false);
+                frag.appendChild(page);
+                flipPageEls.push(page);
+            }
+            flipEl.appendChild(frag);
+
+            applyTypographyToFlip();
+
+            pageFlip = new PageFlip(flipEl, {
+                width: 460,
+                height: 640,
+                size: 'stretch',
+                minWidth: 320,
+                maxWidth: 1000,
+                minHeight: 420,
+                maxHeight: 800,
+                maxShadowOpacity: 0.45,
+                showCover: false,
+                mobileScrollSupport: false,
+                useMouseEvents: true
+            });
+
+            pageFlip.loadFromHTML(flipPageEls);
+
+            pageFlip.on('flip', (e) => {
+                currentPageIndex = e.data;
+                updateReaderChrome();
+                renderFlipPageContent(currentPageIndex);
+                playPageTurn();
+            });
+
+            // initial content refresh (highlights, etc)
+            renderFlipPageContent(currentPageIndex);
+            updateReaderChrome();
+        }
+
+        function updateReaderChrome() {
+            const pageNumEl = document.getElementById('reader-page-num');
+            const prevBtn = document.getElementById('prev-page-btn');
+            const nextBtn = document.getElementById('next-page-btn');
+            const pageJumpInput = document.getElementById('page-jump-input');
+
+            const total = (isFlipMode() ? Math.min(currentBookPages.length || 1, MAX_FLIP_PAGES) : (currentBookPages.length || 1));
+            const idx = Math.max(0, Math.min(currentPageIndex, total - 1));
+            currentPageIndex = idx;
+
+            pageJumpInput.value = idx + 1;
+            pageJumpInput.max = total;
+
+            if (isFlipMode()) {
+                pageNumEl.textContent = `Page ${idx + 1} of ${total}`;
+                prevBtn.disabled = idx === 0;
+                nextBtn.disabled = idx >= total - 1;
+            }
+
+            if (currentBookId) {
+                saveReadingProgress(currentBookId, idx, total);
+            }
+
+            updateChapterList();
+        }
+
+        window.toggleReaderMode = function() {
+            readerMode = isFlipMode() ? 'classic' : 'flip';
+            settings.readerMode = readerMode;
+            saveToStorage(STORAGE_KEYS.SETTINGS, settings);
+
+            // When leaving flip mode, ensure two-page UI reflects saved state
+            setReaderModeUI();
+
+            if (isFlipMode()) {
+                // flip mode doesn't use two-page toggle
+                initFlipBook();
+            } else {
+                destroyFlipBook();
+                renderPage();
+            }
+        };
+
         function renderPage() {
+            if (isFlipMode()) {
+                // In flip mode, navigation is driven by PageFlip; we just sync chrome.
+                if (pageFlip) {
+                    try { pageFlip.flip(currentPageIndex); } catch (e) {}
+                    renderFlipPageContent(currentPageIndex);
+                } else {
+                    initFlipBook();
+                }
+                updateReaderChrome();
+                return;
+            }
+
             const contentEl = document.getElementById('reader-content');
             const pageNumEl = document.getElementById('reader-page-num');
             const prevBtn = document.getElementById('prev-page-btn');
@@ -2895,14 +3129,22 @@
         window.jumpToPage = function() {
             const input = document.getElementById('page-jump-input');
             const page = parseInt(input.value) - 1;
-            if (page >= 0 && page < currentBookPages.length) {
+            const max = isFlipMode() ? Math.min(currentBookPages.length, MAX_FLIP_PAGES) : currentBookPages.length;
+            if (page >= 0 && page < max) {
                 currentPageIndex = page;
-                renderPage();
-                playPageTurn();
+                if (isFlipMode() && pageFlip) {
+                    try { pageFlip.flip(page); } catch (e) {}
+                    updateReaderChrome();
+                    renderFlipPageContent(page);
+                } else {
+                    renderPage();
+                    playPageTurn();
+                }
             }
         };
 
         window.toggleTwoPage = function() {
+            if (isFlipMode()) return;
             twoPageMode = !twoPageMode;
             settings.twoPageMode = twoPageMode;
             saveToStorage(STORAGE_KEYS.SETTINGS, settings);
@@ -2942,6 +3184,8 @@
                 el.classList.remove('font-serif', 'font-baskerville', 'font-mono');
                 el.classList.add(`font-${font}`);
             });
+
+            applyTypographyToFlip();
         };
 
         window.changeFontSize = function(size) {
@@ -2954,6 +3198,8 @@
                 el.classList.remove('font-size-small', 'font-size-medium', 'font-size-large', 'font-size-xlarge');
                 el.classList.add(`font-size-${size}`);
             });
+
+            applyTypographyToFlip();
         };
 
         // In-book search
@@ -3042,6 +3288,10 @@
 
         window.nextPage = function() {
             if (!readerOpen) return;
+            if (isFlipMode()) {
+                if (pageFlip) pageFlip.flipNext();
+                return;
+            }
             const step = twoPageMode ? 2 : 1;
             if (currentPageIndex < (currentBookPages.length - step)) {
                 currentPageIndex += step;
@@ -3052,6 +3302,10 @@
 
         window.prevPage = function() {
             if (!readerOpen) return;
+            if (isFlipMode()) {
+                if (pageFlip) pageFlip.flipPrev();
+                return;
+            }
             const step = twoPageMode ? 2 : 1;
             if (currentPageIndex >= step) {
                 currentPageIndex -= step;
@@ -3069,6 +3323,11 @@
             document.getElementById('reader-title').textContent = 'Loading...';
             document.getElementById('reader-author').textContent = '';
             document.getElementById('reader-coords').textContent = `Room ${location.room + 1} · Wall ${location.wall + 1} (${WALL_NAMES[location.wall]}) · Shelf ${location.shelf + 1} · Volume ${location.volume + 1}`;
+            setReaderModeUI();
+            destroyFlipBook();
+            const flipEl = document.getElementById('flipbook');
+            if (flipEl) flipEl.innerHTML = '<div class="flip-page"><div class="flip-page-inner" style="text-align:center;color:#8b7355;font-style:italic;padding-top:120px;">Loading book text...</div></div>';
+
             document.getElementById('reader-content').textContent = 'Loading book text...';
             document.getElementById('reader-content').classList.add('loading');
             document.getElementById('reader-gutenberg-link').href = `https://www.gutenberg.org/ebooks/${bookId}`;
@@ -3131,6 +3390,15 @@
                     const progress = getReadingProgress(bookId);
                     currentPageIndex = progress ? progress.page : 0;
                 }
+
+                // Safety: if the book is huge, fall back to Classic mode
+                if (isFlipMode() && currentBookPages.length > MAX_FLIP_PAGES) {
+                    readerMode = 'classic';
+                    settings.readerMode = readerMode;
+                    saveToStorage(STORAGE_KEYS.SETTINGS, settings);
+                    showToast('This book is very large — using Classic reader for performance.');
+                    setReaderModeUI();
+                }
                 
                 renderPage();
             } else {
@@ -3147,6 +3415,7 @@
             document.getElementById('reader-page-right').classList.remove('visible');
             document.getElementById('chapter-sidebar').classList.remove('visible');
             document.getElementById('typography-dropdown').classList.remove('visible');
+            destroyFlipBook();
             readerOpen = false;
             currentBookId = null;
             currentBookText = '';
