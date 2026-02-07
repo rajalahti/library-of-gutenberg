@@ -1785,7 +1785,7 @@
         // ============================================
 
         // Version stamp (helps ensure browser isn't using a cached index.html)
-        const APP_BUILD = 'css-book-v10';
+        const APP_BUILD = 'css-book-v11';
         window.__APP_BUILD = APP_BUILD;
         const buildTagEl = document.getElementById('build-tag');
         if (buildTagEl) buildTagEl.textContent = APP_BUILD;
@@ -2437,7 +2437,8 @@
                 backgroundColor = 'rgba(26, 18, 8, 0.9)',
                 padding = 20,
                 width = 256,
-                height = 64
+                height = 64,
+                lineGap = 6
             } = options;
 
             const canvas = document.createElement('canvas');
@@ -2454,12 +2455,21 @@
             ctx.lineWidth = 2;
             ctx.strokeRect(2, 2, width - 4, height - 4);
 
-            // Text
+            // Text (supports multi-line with \n)
+            const lines = String(text || '').split('\n').map(s => s.trim()).filter(Boolean);
             ctx.fillStyle = color;
             ctx.font = `${fontSize}px ${fontFamily}`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(text, width / 2, height / 2);
+
+            const usableH = height - padding * 2;
+            const lineH = fontSize + lineGap;
+            const blockH = lines.length * lineH - lineGap;
+            const startY = padding + (usableH - blockH) / 2 + fontSize / 2;
+
+            lines.forEach((ln, i) => {
+                ctx.fillText(ln, width / 2, startY + i * lineH);
+            });
 
             const texture = new THREE.CanvasTexture(canvas);
             texture.needsUpdate = true;
@@ -2580,14 +2590,21 @@
                 beamMesh.rotation.y = passAngle;
                 group.add(beamMesh);
 
-                // Room number sign on beam
+                // Room number sign on beam (also show section/theme in layout v2)
                 const roomNum = roomIndex + 1;
-                const signTexture = createTextTexture(`ROOM ${roomNum}`, {
-                    fontSize: 36,
-                    width: 200,
-                    height: 48
+                let signText = `ROOM ${roomNum}`;
+                if (settings.layoutVersion === 2) {
+                    const t = themeForRoomV2(roomIndex);
+                    const themeLabel = THEMES_V2[t]?.label || 'SECTION';
+                    signText = `ROOM ${roomNum}\n${themeLabel}`;
+                }
+                const signTexture = createTextTexture(signText, {
+                    fontSize: settings.layoutVersion === 2 ? 22 : 36,
+                    width: settings.layoutVersion === 2 ? 240 : 200,
+                    height: settings.layoutVersion === 2 ? 72 : 48,
+                    lineGap: 4,
                 });
-                const signGeom = new THREE.PlaneGeometry(0.6, 0.15);
+                const signGeom = new THREE.PlaneGeometry(0.72, 0.20);
                 const signMatInstance = new THREE.MeshBasicMaterial({ map: signTexture, transparent: true });
                 const signMesh = new THREE.Mesh(signGeom, signMatInstance);
                 signMesh.position.set(center.x, ROOM_HEIGHT - 0.2, center.z);
