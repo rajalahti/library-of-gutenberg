@@ -1745,6 +1745,17 @@
             <strong>ESC</strong> — Release mouse / Close panels<br>
             <strong>Ctrl+F</strong> — Search within book</p>
         </div>
+
+        <div class="about-section-title">LAYOUT</div>
+        <div class="about-content">
+            <p style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+                    <input type="checkbox" id="themed-layout-toggle" />
+                    <span>Enable themed layout (one-time reshelving)</span>
+                </label>
+                <span style="color:#8b7355;font-size:12px;">Switching layouts changes where books are shelved. It stays stable afterwards.</span>
+            </p>
+        </div>
         <div class="about-section-title">CREDITS</div>
         <div class="about-content">
             <p>
@@ -1824,6 +1835,7 @@
         let readingProgress = loadFromStorage(STORAGE_KEYS.READING_PROGRESS, {});
         let metadataCache = loadFromStorage(STORAGE_KEYS.METADATA_CACHE, {});
         let settings = loadFromStorage(STORAGE_KEYS.SETTINGS, { 
+            layoutVersion: 1, // 1 = classic, 2 = themed (one-time reshelving)
             singlePageMode: false, 
             font: 'serif', 
             fontSize: 'medium',
@@ -2160,10 +2172,137 @@
         }
 
         // ============================================
-        // DETERMINISTIC BOOK LOCATION MAPPING
+        // DETERMINISTIC BOOK LOCATION MAPPING (layout v1/v2)
         // ============================================
 
-        function bookIdToLocation(bookId) {
+        const THEMES_V2 = [
+            { id: 'fiction', label: 'FICTION' },
+            { id: 'history', label: 'HISTORY & WAR' },
+            { id: 'science', label: 'SCIENCE & TECH' },
+            { id: 'philosophy', label: 'PHILOSOPHY & RELIGION' },
+            { id: 'poetry', label: 'POETRY & DRAMA' },
+            { id: 'mystery', label: 'MYSTERY & HORROR' },
+            { id: 'children', label: 'CHILDREN' },
+            { id: 'general', label: 'GENERAL WORKS' },
+        ];
+
+        // Allocate rooms per theme so total stays exactly TOTAL_ROOMS
+        const ROOMS_PER_THEME_V2 = (() => {
+            const n = THEMES_V2.length;
+            const base = Math.floor(TOTAL_ROOMS / n);
+            const rem = TOTAL_ROOMS % n;
+            return Array.from({ length: n }, (_, i) => base + (i < rem ? 1 : 0));
+        })();
+
+        const THEME_ROOM_BASE_V2 = (() => {
+            const bases = [];
+            let acc = 0;
+            for (const r of ROOMS_PER_THEME_V2) {
+                bases.push(acc);
+                acc += r;
+            }
+            return bases;
+        })();
+
+        const THEME_CAPACITY_V2 = ROOMS_PER_THEME_V2.map(r => r * BOOKS_PER_ROOM);
+        const THEME_CAP_PREFIX_V2 = (() => {
+            const pref = [];
+            let acc = 0;
+            for (const cap of THEME_CAPACITY_V2) {
+                acc += cap;
+                pref.push(acc);
+            }
+            return pref;
+        })();
+
+        // Feistel permutation over 17-bit space with cycle-walking to [0, TOTAL_BOOKS)
+        const FEISTEL_BITS = 17;
+        const FEISTEL_MASK = (1 << FEISTEL_BITS) - 1; // 131071
+        const FEISTEL_LBITS = 8;
+        const FEISTEL_RBITS = FEISTEL_BITS - FEISTEL_LBITS; // 9
+        const FEISTEL_LMASK = (1 << FEISTEL_LBITS) - 1;
+        const FEISTEL_RMASK = (1 << FEISTEL_RBITS) - 1;
+        const FEISTEL_ROUNDS = 6;
+        const FEISTEL_KEY = 0xC0DEF00D;
+
+        function feistelF(r, k) {
+            // r: 9-bit
+            let x = (r ^ k) >>> 0;
+            x ^= (x << 13) >>> 0;
+            x ^= (x >>> 17) >>> 0;
+            x ^= (x << 5) >>> 0;
+            return (x >>> 0) & FEISTEL_LMASK; // 8-bit output
+        }
+
+        function feistelPermute17(x) {
+            x &= FEISTEL_MASK;
+            let L = x & FEISTEL_LMASK;
+            let R = (x >>> FEISTEL_LBITS) & FEISTEL_RMASK;
+            for (let i = 0; i < FEISTEL_ROUNDS; i++) {
+                const k = (FEISTEL_KEY + i * 0x9E3779B9) >>> 0;
+                const newL = R & FEISTEL_LMASK; // truncate to 8 bits
+                const f = feistelF(R, k);
+                const newR = (L ^ f) & FEISTEL_RMASK;
+                L = newL;
+                R = newR;
+            }
+            return ((R << FEISTEL_LBITS) | L) & FEISTEL_MASK;
+        }
+
+        function feistelUnpermute17(x) {
+            x &= FEISTEL_MASK;
+            let L = x & FEISTEL_LMASK;
+            let R = (x >>> FEISTEL_LBITS) & FEISTEL_RMASK;
+            for (let i = FEISTEL_ROUNDS - 1; i >= 0; i--) {
+                const k = (FEISTEL_KEY + i * 0x9E3779B9) >>> 0;
+                const prevR = L & FEISTEL_RMASK;
+                const f = feistelF(prevR, k);
+                const prevL = (R ^ f) & FEISTEL_LMASK;
+                R = prevR;
+                L = prevL;
+            }
+            return ((R << FEISTEL_LBITS) | L) & FEISTEL_MASK;
+        }
+
+        function permuteIndex(i) {
+            // cycle-walk inside 17-bit space until < TOTAL_BOOKS
+            let x = i & FEISTEL_MASK;
+            do {
+                x = feistelPermute17(x);
+            } while (x >= TOTAL_BOOKS);
+            return x;
+        }
+
+        function unpermuteIndex(j) {
+            let x = j & FEISTEL_MASK;
+            do {
+                x = feistelUnpermute17(x);
+            } while (x >= TOTAL_BOOKS);
+            return x;
+        }
+
+        function themeForPermutedIndex(j) {
+            // Find theme block by capacity prefix; j < TOTAL_BOOKS <= total capacity
+            for (let t = 0; t < THEME_CAP_PREFIX_V2.length; t++) {
+                if (j < THEME_CAP_PREFIX_V2[t]) {
+                    const prev = t === 0 ? 0 : THEME_CAP_PREFIX_V2[t - 1];
+                    return { themeIndex: t, slotInTheme: j - prev };
+                }
+            }
+            // fallback
+            return { themeIndex: THEME_CAP_PREFIX_V2.length - 1, slotInTheme: 0 };
+        }
+
+        function themeForRoomV2(room) {
+            for (let t = 0; t < THEMES_V2.length; t++) {
+                const base = THEME_ROOM_BASE_V2[t];
+                const len = ROOMS_PER_THEME_V2[t];
+                if (room >= base && room < base + len) return t;
+            }
+            return 0;
+        }
+
+        function bookIdToLocation_v1(bookId) {
             const index = bookId - 1;
             const room = Math.floor(index / BOOKS_PER_ROOM);
             const inRoom = index % BOOKS_PER_ROOM;
@@ -2171,15 +2310,53 @@
             const inWall = inRoom % (BOOKS_PER_SHELF * SHELVES_PER_WALL);
             const shelf = Math.floor(inWall / BOOKS_PER_SHELF);
             const volume = inWall % BOOKS_PER_SHELF;
-            return { room, wall, shelf, volume, bookId };
+            return { room, wall, shelf, volume, bookId, layout: 1 };
         }
 
-        function locationToBookId(room, wall, shelf, volume) {
+        function bookIdToLocation_v2(bookId) {
+            const i = bookId - 1;
+            const j = permuteIndex(i);
+            const { themeIndex, slotInTheme } = themeForPermutedIndex(j);
+            const roomBase = THEME_ROOM_BASE_V2[themeIndex];
+            const room = roomBase + Math.floor(slotInTheme / BOOKS_PER_ROOM);
+            const inRoom = slotInTheme % BOOKS_PER_ROOM;
+            const wall = Math.floor(inRoom / (BOOKS_PER_SHELF * SHELVES_PER_WALL));
+            const inWall = inRoom % (BOOKS_PER_SHELF * SHELVES_PER_WALL);
+            const shelf = Math.floor(inWall / BOOKS_PER_SHELF);
+            const volume = inWall % BOOKS_PER_SHELF;
+            return { room, wall, shelf, volume, bookId, layout: 2, themeIndex };
+        }
+
+        function bookIdToLocation(bookId) {
+            return (settings.layoutVersion === 2) ? bookIdToLocation_v2(bookId) : bookIdToLocation_v1(bookId);
+        }
+
+        function locationToBookId_v1(room, wall, shelf, volume) {
             const index = room * BOOKS_PER_ROOM +
                           wall * BOOKS_PER_SHELF * SHELVES_PER_WALL +
                           shelf * BOOKS_PER_SHELF +
                           volume;
             return index + 1;
+        }
+
+        function locationToBookId_v2(room, wall, shelf, volume) {
+            const themeIndex = themeForRoomV2(room);
+            const roomBase = THEME_ROOM_BASE_V2[themeIndex];
+            const roomInTheme = room - roomBase;
+            const slotInTheme = roomInTheme * BOOKS_PER_ROOM +
+                                wall * BOOKS_PER_SHELF * SHELVES_PER_WALL +
+                                shelf * BOOKS_PER_SHELF +
+                                volume;
+
+            const prev = themeIndex === 0 ? 0 : THEME_CAP_PREFIX_V2[themeIndex - 1];
+            const j = prev + slotInTheme;
+            if (j < 0 || j >= TOTAL_BOOKS) return null;
+            const i = unpermuteIndex(j);
+            return i + 1;
+        }
+
+        function locationToBookId(room, wall, shelf, volume) {
+            return (settings.layoutVersion === 2) ? locationToBookId_v2(room, wall, shelf, volume) : locationToBookId_v1(room, wall, shelf, volume);
         }
 
         // ============================================
@@ -3842,6 +4019,21 @@
             document.getElementById('about-modal').classList.add('visible');
             aboutOpen = true;
             controls.unlock();
+
+            // Sync themed layout toggle
+            const toggle = document.getElementById('themed-layout-toggle');
+            if (toggle) {
+                toggle.checked = settings.layoutVersion === 2;
+                toggle.onchange = () => {
+                    const wantV2 = !!toggle.checked;
+                    settings.layoutVersion = wantV2 ? 2 : 1;
+                    saveToStorage(STORAGE_KEYS.SETTINGS, settings);
+                    showToast(wantV2 ? 'Themed layout enabled (reshelved).' : 'Classic layout restored.');
+                    // Refresh HUD + force room re-render
+                    updateHUD();
+                    teleportTo(currentRoomIndex);
+                };
+            }
         };
 
         window.closeAbout = function() {
@@ -3855,6 +4047,18 @@
         // ============================================
 
         function updateHUD() {
+            if (settings.layoutVersion === 2) {
+                const themeIndex = themeForRoomV2(currentRoomIndex);
+                const themeLabel = THEMES_V2[themeIndex]?.label || 'SECTION';
+                const base = THEME_ROOM_BASE_V2[themeIndex];
+                const roomInTheme = currentRoomIndex - base;
+                const startSlot = roomInTheme * BOOKS_PER_ROOM;
+                const endSlot = Math.min(startSlot + BOOKS_PER_ROOM - 1, THEME_CAPACITY_V2[themeIndex] - 1);
+                document.getElementById('hud-coords').textContent = `${themeLabel} · Room ${roomInTheme + 1}/${ROOMS_PER_THEME_V2[themeIndex]} (Global ${currentRoomIndex + 1}/${TOTAL_ROOMS})`;
+                document.getElementById('hud-info').textContent = `Section slots ${startSlot + 1}–${endSlot + 1} · ${BOOKS_PER_ROOM} per room`;
+                return;
+            }
+
             const startBook = currentRoomIndex * BOOKS_PER_ROOM + 1;
             const endBook = Math.min((currentRoomIndex + 1) * BOOKS_PER_ROOM, TOTAL_BOOKS);
             document.getElementById('hud-coords').textContent = `Room ${currentRoomIndex + 1} of ${TOTAL_ROOMS}`;
