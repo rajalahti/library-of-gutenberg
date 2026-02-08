@@ -1327,6 +1327,23 @@
             transform: translateY(-1px);
         }
 
+        .panel-header .panel-close {
+            width: auto;
+            min-width: 36px;
+            height: 36px;
+            margin: 0;
+            padding: 0 8px;
+            background: none;
+            border: none;
+            border-radius: 6px;
+        }
+
+        .panel-header .panel-close:hover {
+            transform: none;
+            background: rgba(74, 53, 30, 0.35);
+            border: none;
+        }
+
         .search-philosophy {
             font-style: italic;
             font-size: 15px;
@@ -1472,6 +1489,14 @@
             letter-spacing: 2px;
             text-transform: uppercase;
             margin-bottom: 16px;
+        }
+
+        .panel-note {
+            margin: -8px 0 16px;
+            color: #9f8860;
+            font-size: 12px;
+            line-height: 1.45;
+            letter-spacing: 0.2px;
         }
 
         .empty-state {
@@ -2057,6 +2082,23 @@
         <div class="panel-header">
             <div class="panel-title">Navigate</div>
             <button class="panel-close" onclick="closeNav()">&times;</button>
+        </div>
+        <div class="section-divider" style="margin-top:0; padding-top:0; border-top:none;">
+            <div class="section-title">By Floor & Section</div>
+        </div>
+        <div class="nav-field">
+            <label>Floor:</label>
+            <select id="nav-floor"></select>
+        </div>
+        <div class="nav-field">
+            <label>Section:</label>
+            <select id="nav-section"></select>
+        </div>
+        <div class="panel-note" id="nav-floor-meta">Loading floor catalog...</div>
+        <button onclick="navigateToSection()">Go to Section</button>
+
+        <div class="section-divider">
+            <div class="section-title">Exact Coordinates</div>
         </div>
         <div class="nav-field">
             <label>Room Number:</label>
@@ -5101,10 +5143,20 @@
         // SEARCH UI
         // ============================================
 
+        function closeAllPanels(except) {
+            const keep = except || '';
+            if (keep !== 'search' && searchOpen) closeSearch();
+            if (keep !== 'nav' && navOpen) closeNav();
+            if (keep !== 'elevator' && elevatorOpen) closeElevator();
+            if (keep !== 'library' && libraryOpen) closeLibrary();
+            if (keep !== 'about' && aboutOpen) closeAbout();
+        }
+
         let searchResults = [];
         let selectedSearchIndex = -1;
 
         window.openSearch = function() {
+            closeAllPanels('search');
             document.getElementById('search-panel').classList.add('visible');
             searchOpen = true;
             controls.unlock();
@@ -5204,7 +5256,190 @@
         // NAVIGATION UI
         // ============================================
 
-        window.openNav = function() {
+        let navCatalog = {
+            floors: [],
+            sectionsByFloorId: new Map(),
+            byFloorId: new Map(),
+        };
+
+        function currentFloorForRoom(room) {
+            const floors = (LAYOUT && Array.isArray(LAYOUT.floors)) ? LAYOUT.floors : [];
+            for (const floor of floors) {
+                if (room >= floor.roomStart && room < (floor.roomStart + floor.roomCount)) return floor;
+            }
+            return floors[0] || null;
+        }
+
+        function syncRoomInputBoundsForFloor(floor) {
+            const roomInput = document.getElementById('nav-room');
+            if (!roomInput) return;
+            roomInput.min = '1';
+            roomInput.max = String(TOTAL_ROOMS);
+
+            if (!floor) return;
+            const floorMin = floor.roomStart + 1;
+            const floorMax = floor.roomStart + floor.roomCount;
+            const current = parseInt(roomInput.value || '1', 10);
+            if (!Number.isInteger(current) || current < floorMin || current > floorMax) {
+                roomInput.value = String(floorMin);
+            }
+        }
+
+        function updateNavFloorMeta(floor, section) {
+            const meta = document.getElementById('nav-floor-meta');
+            if (!meta) return;
+            if (!floor) {
+                meta.textContent = 'Floor catalog unavailable.';
+                return;
+            }
+            const start = floor.roomStart + 1;
+            const end = floor.roomStart + floor.roomCount;
+            const sectionText = section ? ` · Section: ${section.label}` : '';
+            meta.textContent = `Rooms ${start}-${end}${sectionText}`;
+        }
+
+        function populateNavSectionOptions(floorId, selectedSectionId) {
+            const sectionSelect = document.getElementById('nav-section');
+            if (!sectionSelect) return;
+
+            const sections = navCatalog.sectionsByFloorId.get(floorId) || [];
+            sectionSelect.innerHTML = '';
+
+            const allOption = document.createElement('option');
+            allOption.value = '';
+            allOption.textContent = 'All sections (floor start)';
+            sectionSelect.appendChild(allOption);
+
+            for (const section of sections) {
+                const opt = document.createElement('option');
+                opt.value = section.id;
+                const countText = Number.isInteger(section.count) ? ` (${section.count.toLocaleString()})` : '';
+                opt.textContent = `${section.label}${countText}`;
+                sectionSelect.appendChild(opt);
+            }
+
+            if (selectedSectionId && sections.some(s => s.id === selectedSectionId)) {
+                sectionSelect.value = selectedSectionId;
+            } else {
+                sectionSelect.value = '';
+            }
+            const active = sections.find(s => s.id === sectionSelect.value) || null;
+            updateNavFloorMeta(navCatalog.byFloorId.get(floorId), active);
+        }
+
+        function buildSectionsForFloor(floor, floorSlots) {
+            const sections = [];
+            const byId = new Map();
+            const bookIdBySlot = Array.isArray(floorSlots?.bookIdBySlot) ? floorSlots.bookIdBySlot : [];
+            const subIdBySlot = Array.isArray(floorSlots?.subIdBySlot) ? floorSlots.subIdBySlot : [];
+
+            const counts = new Map();
+            const firstLocBySub = new Map();
+            const limit = Math.min(bookIdBySlot.length, subIdBySlot.length);
+            for (let i = 0; i < limit; i++) {
+                const subId = subIdBySlot[i];
+                if (!subId) continue;
+                const bookId = bookIdBySlot[i];
+                const validBook = Number.isInteger(bookId) && bookId >= 1 && bookId <= TOTAL_BOOKS;
+                if (!validBook) continue;
+
+                counts.set(subId, (counts.get(subId) || 0) + 1);
+                if (!firstLocBySub.has(subId)) {
+                    const roomOff = Math.floor(i / BOOKS_PER_ROOM);
+                    const inRoom = i % BOOKS_PER_ROOM;
+                    const room = floor.roomStart + roomOff;
+                    const { wall, shelf, volume } = slotOffsetToWallShelfVolume(inRoom);
+                    firstLocBySub.set(subId, { room, wall, shelf, volume, bookId });
+                }
+            }
+
+            const orderedSubs = Array.isArray(floor?.subcategories) ? floor.subcategories : [];
+            for (const sub of orderedSubs) {
+                const id = sub?.id;
+                if (!id) continue;
+                const entry = {
+                    id,
+                    label: sub.label || id,
+                    count: Number.isInteger(sub.count) ? sub.count : (counts.get(id) || 0),
+                    firstLoc: firstLocBySub.get(id) || null,
+                };
+                byId.set(id, entry);
+                sections.push(entry);
+            }
+
+            for (const [id, loc] of firstLocBySub.entries()) {
+                if (byId.has(id)) continue;
+                sections.push({
+                    id,
+                    label: id,
+                    count: counts.get(id) || 0,
+                    firstLoc: loc,
+                });
+            }
+
+            return sections;
+        }
+
+        async function ensureNavCatalog() {
+            await loadFloorsLayout();
+            await loadSlotsLayout();
+
+            const floors = Array.isArray(LAYOUT.floors) ? LAYOUT.floors : [];
+            navCatalog = {
+                floors,
+                sectionsByFloorId: new Map(),
+                byFloorId: new Map(floors.map(f => [f.id, f])),
+            };
+
+            for (const floor of floors) {
+                const floorSlots = LAYOUT.slotsByFloor?.[floor.id];
+                navCatalog.sectionsByFloorId.set(floor.id, buildSectionsForFloor(floor, floorSlots));
+            }
+        }
+
+        async function initializeNavPanelOptions() {
+            const floorSelect = document.getElementById('nav-floor');
+            const sectionSelect = document.getElementById('nav-section');
+            if (!floorSelect || !sectionSelect) return;
+
+            await ensureNavCatalog();
+            floorSelect.innerHTML = '';
+
+            for (const floor of navCatalog.floors) {
+                const start = floor.roomStart + 1;
+                const end = floor.roomStart + floor.roomCount;
+                const option = document.createElement('option');
+                option.value = floor.id;
+                option.textContent = `${floor.label} (Rooms ${start}-${end})`;
+                floorSelect.appendChild(option);
+            }
+
+            const activeFloor = currentFloorForRoom(currentRoomIndex);
+            if (activeFloor) floorSelect.value = activeFloor.id;
+            populateNavSectionOptions(floorSelect.value, '');
+            syncRoomInputBoundsForFloor(activeFloor);
+        }
+
+        document.getElementById('nav-floor').addEventListener('change', (e) => {
+            const floor = navCatalog.byFloorId.get(e.target.value) || null;
+            populateNavSectionOptions(e.target.value, '');
+            syncRoomInputBoundsForFloor(floor);
+        });
+
+        document.getElementById('nav-section').addEventListener('change', (e) => {
+            const floorId = document.getElementById('nav-floor').value;
+            const section = (navCatalog.sectionsByFloorId.get(floorId) || []).find(s => s.id === e.target.value) || null;
+            updateNavFloorMeta(navCatalog.byFloorId.get(floorId), section);
+        });
+
+        window.openNav = async function() {
+            closeAllPanels('nav');
+            try {
+                await initializeNavPanelOptions();
+            } catch (e) {
+                console.warn('failed to initialize nav panel', e);
+                document.getElementById('nav-floor-meta').textContent = 'Could not load latest floor catalog.';
+            }
             document.getElementById('nav-panel').classList.add('visible');
             navOpen = true;
             controls.unlock();
@@ -5220,6 +5455,7 @@
         // ============================================
 
         window.openElevator = function() {
+            closeAllPanels('elevator');
             ensureElevatorButtons();
             updateElevatorPanelState();
             document.getElementById('elevator-panel').classList.add('visible');
@@ -5323,6 +5559,28 @@
             }, bookId);
         };
 
+        window.navigateToSection = function() {
+            const floorId = document.getElementById('nav-floor').value;
+            if (!floorId) return;
+
+            const floor = navCatalog.byFloorId.get(floorId);
+            if (!floor) return;
+
+            const sectionId = document.getElementById('nav-section').value;
+            const section = (navCatalog.sectionsByFloorId.get(floorId) || []).find(s => s.id === sectionId) || null;
+
+            const fallback = { room: floor.roomStart, wall: 0, shelf: 0, volume: 0, bookId: null };
+            const target = section?.firstLoc || fallback;
+
+            document.getElementById('nav-room').value = String(target.room + 1);
+            document.getElementById('nav-wall').value = String(target.wall + 1);
+            document.getElementById('nav-shelf').value = String(target.shelf + 1);
+            document.getElementById('nav-vol').value = String(target.volume + 1);
+
+            closeNav();
+            teleportTo(target.room, null, target.bookId || null);
+        };
+
         window.navigateToGutenbergId = async function() {
             const bookId = parseInt(document.getElementById('nav-gutenberg-id').value);
             if (!bookId || bookId < 1 || bookId > TOTAL_BOOKS) return;
@@ -5341,6 +5599,7 @@
         // ============================================
 
         window.openLibrary = function() {
+            closeAllPanels('library');
             document.getElementById('library-panel').classList.add('visible');
             libraryOpen = true;
             controls.unlock();
@@ -5465,6 +5724,7 @@
         // ============================================
 
         window.openAbout = function() {
+            closeAllPanels('about');
             document.getElementById('about-overlay').classList.add('visible');
             document.getElementById('about-modal').classList.add('visible');
             aboutOpen = true;
