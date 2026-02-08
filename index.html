@@ -2288,8 +2288,7 @@
             { id: 'general', label: 'GENERAL WORKS' },
         ];
 
-        // Build elevator UI buttons once
-        setTimeout(() => { try { ensureElevatorButtons(); } catch(e){} }, 0);
+        // Elevator buttons are built after /api/layout/floors has loaded (server-driven)
 
         // Allocate rooms per theme so total stays exactly TOTAL_ROOMS
         const ROOMS_PER_THEME_V2 = (() => {
