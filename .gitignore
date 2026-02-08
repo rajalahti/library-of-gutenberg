@@ -2,6 +2,7 @@ node_modules/
 .DS_Store
 .netlify/
 .env
+.dist/
 
 # Local Codex environment snapshots
 .codex/environments/
