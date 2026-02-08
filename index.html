@@ -3027,6 +3027,23 @@ return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1,
         // SHELF SECTION TAGS (server-driven, per-room)
         // ============================================
 
+        function prettifyTagLabel(label) {
+            if (!label) return 'SECTION';
+            const s = String(label);
+            if (s.startsWith('RELATED:')) {
+                const id = s.slice('RELATED:'.length);
+                const f = (LAYOUT && LAYOUT.floorsById) ? LAYOUT.floorsById.get(id) : null;
+                return `Related: ${f?.label || id}`;
+            }
+            return s;
+        }
+
+        function shortenLabel(s, maxLen = 24) {
+            const str = String(s);
+            if (str.length <= maxLen) return str;
+            return str.slice(0, maxLen - 1) + '…';
+        }
+
         function attachShelfTagsToRoom(roomData, tagsJson) {
             if (!roomData || !roomData.group || !tagsJson || !Array.isArray(tagsJson.tags)) return;
             if (roomData.shelfTagsGroup) {
@@ -3043,7 +3060,8 @@ return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1,
                 const w = tag.wall;
                 const s = tag.shelf;
                 const v = tag.volStart;
-                const label = (tag.label || tag.subId || 'SECTION').toString();
+                const rawLabel = (tag.label || tag.subId || 'SECTION');
+                const label = shortenLabel(prettifyTagLabel(rawLabel), 24);
 
                 if (w < 0 || w >= BOOKSHELF_WALLS.length) continue;
                 if (s < 0 || s >= SHELF_HEIGHTS.length) continue;
@@ -3068,13 +3086,38 @@ return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1,
                     .add(inwardDir.clone().multiplyScalar(TAG_INSET));
                 tagPos.y = SHELF_HEIGHTS[s] + SHELF_THICKNESS + 0.04;
 
-                const tex = createShelfLabel(label, { fontSize: 16, width: 180, height: 28 });
-                const plateGeom = new THREE.PlaneGeometry(0.36, 0.06);
+                // Backing plate
+                const backGeom = new THREE.PlaneGeometry(0.40, 0.072);
+                const backMat = new THREE.MeshStandardMaterial({
+                    color: 0x120c07,
+                    roughness: 0.95,
+                    metalness: 0.05,
+                    transparent: true,
+                    opacity: 0.92
+                });
+                const back = new THREE.Mesh(backGeom, backMat);
+                back.position.copy(tagPos);
+                back.position.y -= 0.002;
+                back.rotation.y = wallAngle;
+                g.add(back);
+
+                // Text plate
+                const tex = createShelfLabel(label, { fontSize: 16, width: 200, height: 30 });
+                const plateGeom = new THREE.PlaneGeometry(0.38, 0.064);
                 const plateMat = new THREE.MeshBasicMaterial({ map: tex, transparent: true });
                 const plate = new THREE.Mesh(plateGeom, plateMat);
                 plate.position.copy(tagPos);
                 plate.rotation.y = wallAngle;
                 g.add(plate);
+
+                // Subtle glow strip
+                const glowGeom = new THREE.PlaneGeometry(0.40, 0.01);
+                const glowMat = new THREE.MeshBasicMaterial({ color: 0xc4943a, transparent: true, opacity: 0.18 });
+                const glow = new THREE.Mesh(glowGeom, glowMat);
+                glow.position.copy(tagPos);
+                glow.position.y += 0.028;
+                glow.rotation.y = wallAngle;
+                g.add(glow);
             }
 
             roomData.shelfTagsGroup = g;
