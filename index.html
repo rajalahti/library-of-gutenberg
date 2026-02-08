@@ -16,6 +16,16 @@
             box-sizing: border-box;
         }
 
+        :root {
+            --deco-bg: rgba(15, 11, 8, 0.92);
+            --deco-bg-soft: rgba(25, 18, 12, 0.82);
+            --deco-brass: #c6a15a;
+            --deco-brass-dim: #8d7141;
+            --deco-ivory: #e6d8b8;
+            --deco-line: rgba(198, 161, 90, 0.35);
+            --deco-shadow: rgba(0, 0, 0, 0.55);
+        }
+
         body {
             font-family: 'Cormorant Garamond', serif;
             background: #0a0806;
@@ -67,12 +77,21 @@
             top: 0;
             left: 0;
             width: 100%;
-            padding: 12px 20px;
+            padding: 11px 22px;
             font-size: 13px;
             letter-spacing: 4px;
-            color: rgba(139, 115, 85, 0.5);
+            color: rgba(198, 161, 90, 0.74);
             z-index: 3;
-            background: linear-gradient(to bottom, rgba(10,8,6,0.5) 0%, transparent 100%);
+            background:
+                linear-gradient(to bottom, rgba(7, 5, 3, 0.94) 0%, rgba(7, 5, 3, 0.45) 65%, transparent 100%),
+                repeating-linear-gradient(
+                    90deg,
+                    rgba(198, 161, 90, 0.06) 0px,
+                    rgba(198, 161, 90, 0.06) 2px,
+                    transparent 2px,
+                    transparent 10px
+                );
+            border-bottom: 1px solid rgba(198, 161, 90, 0.24);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -239,12 +258,14 @@
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(26, 18, 8, 0.85);
-            padding: 12px 24px;
-            border-radius: 6px;
-            border: 1px solid #4a3520;
-            color: #d4c5a0;
-            font-size: 15px;
+            background: linear-gradient(180deg, rgba(20, 14, 10, 0.92), rgba(12, 9, 6, 0.88));
+            padding: 10px 22px;
+            border-radius: 10px;
+            border: 1px solid var(--deco-line);
+            color: var(--deco-ivory);
+            font-size: 14px;
+            letter-spacing: 0.5px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(198, 161, 90, 0.22);
             z-index: 5;
             transition: opacity 0.3s;
         }
@@ -305,20 +326,23 @@
             bottom: 0;
             left: 0;
             width: 100%;
-            background: rgba(10, 8, 6, 0.85);
-            padding: 8px 16px;
+            background:
+                linear-gradient(to top, rgba(5, 4, 3, 0.94) 0%, rgba(10, 8, 6, 0.82) 60%, rgba(10, 8, 6, 0.2) 100%);
+            padding: 10px 16px;
             font-family: 'IBM Plex Mono', monospace;
             font-size: 12px;
-            color: #5a4a32;
+            color: rgba(212, 197, 160, 0.78);
             z-index: 5;
-            border-top: 1px solid rgba(74, 53, 32, 0.4);
+            border-top: 1px solid rgba(198, 161, 90, 0.32);
             display: flex;
             justify-content: space-between;
+            align-items: center;
+            gap: 14px;
         }
 
         #hud-info {
             font-size: 11px;
-            color: #3a2e1f;
+            color: rgba(198, 161, 90, 0.72);
         }
 
         #toolbar {
@@ -327,27 +351,34 @@
             left: 50%;
             transform: translateX(-50%);
             display: flex;
-            gap: 12px;
+            gap: 10px;
             z-index: 5;
+            background: linear-gradient(180deg, rgba(14, 10, 7, 0.87), rgba(9, 7, 5, 0.82));
+            border: 1px solid rgba(198, 161, 90, 0.26);
+            border-radius: 12px;
+            padding: 8px 10px;
+            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(198, 161, 90, 0.18);
         }
 
         .toolbar-btn {
-            background: rgba(74, 37, 16, 0.85);
-            border: 1px solid #8b7355;
-            color: #d4c5a0;
+            background: linear-gradient(180deg, rgba(66, 45, 25, 0.75), rgba(36, 25, 15, 0.88));
+            border: 1px solid rgba(198, 161, 90, 0.35);
+            color: #e3cfaa;
             font-family: 'Cormorant Garamond', serif;
-            font-size: 16px;
-            padding: 10px 20px;
+            font-size: 17px;
+            letter-spacing: 0.4px;
+            padding: 8px 17px;
             cursor: pointer;
             transition: all 0.2s;
-            border-radius: 4px;
+            border-radius: 8px;
+            box-shadow: inset 0 1px 0 rgba(230, 216, 184, 0.08), 0 2px 8px rgba(0, 0, 0, 0.26);
         }
 
         .toolbar-btn:hover {
-            background: rgba(94, 47, 20, 0.95);
-            border-color: #c4943a;
-            color: #fff;
-            transform: translateY(-1px);
+            background: linear-gradient(180deg, rgba(89, 61, 33, 0.85), rgba(46, 30, 18, 0.95));
+            border-color: rgba(198, 161, 90, 0.64);
+            color: #fff0d0;
+            transform: translateY(-1px) scale(1.01);
         }
 
         .toolbar-btn.has-indicator {
@@ -960,13 +991,22 @@
             top: 0;
             width: 420px;
             height: 100vh;
-            background: #12100a;
-            border-left: 1px solid #4a3520;
+            background:
+                linear-gradient(180deg, rgba(19, 14, 10, 0.99), rgba(14, 10, 8, 0.98)),
+                repeating-linear-gradient(
+                    0deg,
+                    rgba(198, 161, 90, 0.05) 0px,
+                    rgba(198, 161, 90, 0.05) 1px,
+                    transparent 1px,
+                    transparent 9px
+                );
+            border-left: 1px solid rgba(198, 161, 90, 0.35);
             z-index: 90;
             transform: translateX(100%);
             transition: transform 0.3s ease-out;
             overflow-y: auto;
             padding: 32px;
+            box-shadow: -18px 0 35px rgba(0, 0, 0, 0.42), inset 1px 0 0 rgba(230, 216, 184, 0.09);
         }
 
         .panel.visible {
@@ -977,13 +1017,17 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(198, 161, 90, 0.28);
         }
 
         .panel-title {
-            font-size: 24px;
+            font-size: 25px;
             font-weight: 600;
-            color: #c4943a;
+            color: var(--deco-brass);
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
         }
 
         .panel-close {
@@ -1003,21 +1047,23 @@
         .panel label {
             display: block;
             margin-bottom: 8px;
-            color: #8b7355;
+            color: #b99967;
             font-size: 14px;
+            letter-spacing: 0.4px;
         }
 
         .panel input, .panel select {
             width: 100%;
-            background: #1a1208;
-            border: 1px solid #4a3520;
-            color: #d4c5a0;
+            background: rgba(10, 7, 5, 0.8);
+            border: 1px solid rgba(198, 161, 90, 0.28);
+            color: #e2d0ad;
             font-family: 'IBM Plex Mono', monospace;
             font-size: 13px;
             padding: 10px;
-            border-radius: 4px;
+            border-radius: 7px;
             margin-bottom: 12px;
             transition: border-color 0.2s;
+            box-shadow: inset 0 1px 0 rgba(230, 216, 184, 0.05);
         }
 
         .panel input:focus, .panel select:focus {
@@ -1031,21 +1077,23 @@
 
         .panel button {
             width: 100%;
-            background: rgba(74, 37, 16, 0.85);
-            border: 1px solid #8b7355;
-            color: #d4c5a0;
+            background: linear-gradient(180deg, rgba(70, 47, 27, 0.78), rgba(40, 28, 17, 0.92));
+            border: 1px solid rgba(198, 161, 90, 0.42);
+            color: #e3d3b3;
             font-family: 'Cormorant Garamond', serif;
-            font-size: 16px;
+            font-size: 17px;
+            letter-spacing: 0.5px;
             padding: 12px;
             cursor: pointer;
-            border-radius: 4px;
+            border-radius: 8px;
             transition: all 0.2s;
             margin-bottom: 12px;
         }
 
         .panel button:hover {
-            background: rgba(94, 47, 20, 0.95);
-            border-color: #c4943a;
+            background: linear-gradient(180deg, rgba(94, 63, 35, 0.92), rgba(52, 34, 20, 0.98));
+            border-color: rgba(198, 161, 90, 0.75);
+            transform: translateY(-1px);
         }
 
         .search-philosophy {
@@ -1482,16 +1530,107 @@
             left: 50%;
             bottom: 18px;
             transform: translateX(-50%);
-            background: rgba(10, 8, 6, 0.88);
-            border: 1px solid rgba(196, 148, 58, 0.35);
-            padding: 8px 12px;
-            border-radius: 8px;
-            color: #d4c5a0;
+            background: linear-gradient(180deg, rgba(18, 13, 9, 0.92), rgba(10, 8, 6, 0.9));
+            border: 1px solid rgba(198, 161, 90, 0.45);
+            padding: 9px 14px;
+            border-radius: 10px;
+            color: #efdfbf;
             font-family: "IBM Plex Mono", monospace;
             font-size: 13px;
+            letter-spacing: 0.4px;
             z-index: 9999;
             pointer-events: none;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(230,216,184,0.12);
+        }
+
+        #elevator-current-floor {
+            margin: 0 0 14px;
+            padding: 8px 10px;
+            border: 1px solid rgba(198, 161, 90, 0.22);
+            border-radius: 8px;
+            color: #ccbc9a;
+            font-size: 12px;
+            letter-spacing: 0.35px;
+            background: rgba(11, 8, 6, 0.7);
+        }
+
+        .elevator-subtitle {
+            margin: 6px 0 10px;
+            color: #c8b18a;
+            font-size: 13px;
+            line-height: 1.4;
+            letter-spacing: 0.35px;
+        }
+
+        #elevator-buttons {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        .floor-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 2px;
+            text-align: left;
+            padding: 10px 12px;
+            border-radius: 9px;
+        }
+
+        .floor-btn .floor-name {
+            font-size: 16px;
+            font-family: 'Cormorant Garamond', serif;
+            letter-spacing: 0.4px;
+            color: #ead8b0;
+        }
+
+        .floor-btn .floor-meta {
+            font-size: 11px;
+            font-family: "IBM Plex Mono", monospace;
+            color: #ae9a74;
+            letter-spacing: 0.35px;
+        }
+
+        .floor-btn.active {
+            border-color: rgba(198, 161, 90, 0.78);
+            box-shadow: inset 0 0 0 1px rgba(198, 161, 90, 0.35);
+        }
+
+        @media (max-width: 900px) {
+            #toolbar {
+                bottom: 62px;
+                width: calc(100vw - 16px);
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .toolbar-btn {
+                flex: 1 1 calc(33.333% - 8px);
+                min-width: 94px;
+                padding: 7px 10px;
+                font-size: 15px;
+            }
+
+            .panel {
+                width: 100vw;
+                padding: 20px 16px 24px;
+            }
+
+            #instructions {
+                width: calc(100vw - 20px);
+                text-align: center;
+                top: 60px;
+            }
+
+            #hud {
+                font-size: 11px;
+                padding: 9px 10px;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 3px;
+            }
         }
 </style>
 </head>
@@ -1687,7 +1826,7 @@
         </div>
         <div class="nav-field">
             <label>Room Number:</label>
-            <input type="number" id="nav-room" min="1" max="110" value="1">
+            <input type="number" id="nav-room" min="1" max="111" value="1">
         </div>
         <div class="nav-field">
             <label>Wall (1-4):</label>
@@ -1709,17 +1848,18 @@
         <button onclick="navigateToGutenbergId()">Go to Book</button>
     </div>
 
-    <div id="elevator-hint" style="display:none;">Press <strong>E</strong> — Elevator</div>
+    <div id="elevator-hint" style="display:none;">Press <strong>E</strong> to call elevator</div>
 
     <div id="elevator-panel" class="panel">
         <div class="panel-header">
             <div class="panel-title">Elevator</div>
             <button class="panel-close" onclick="closeElevator()">&times;</button>
         </div>
-        <p style="margin: 6px 0 10px; color: #b7a98a; font-size: 13px; line-height: 1.3;">
-            Choose a theme section to teleport to.
+        <p class="elevator-subtitle">
+            Select a floor to travel by section.
         </p>
-        <div id="elevator-buttons" style="display:grid; grid-template-columns: 1fr; gap: 8px;"></div>
+        <div id="elevator-current-floor">Current Floor: --</div>
+        <div id="elevator-buttons"></div>
     </div>
 
     <div id="library-panel" class="panel">
@@ -1778,12 +1918,8 @@
 
         <div class="about-section-title">LAYOUT</div>
         <div class="about-content">
-            <p style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
-                    <input type="checkbox" id="themed-layout-toggle" />
-                    <span>Enable themed layout (one-time reshelving)</span>
-                </label>
-                <span style="color:#8b7355;font-size:12px;">Switching layouts changes where books are shelved. It stays stable afterwards.</span>
+            <p style="color:#8b7355;font-size:12px;line-height:1.4;">
+                The layout is now server-driven (floors/tags/loc). The old “themed reshelving” toggle has been removed.
             </p>
         </div>
         <div class="about-section-title">CREDITS</div>
@@ -1815,8 +1951,145 @@
         // ============================================
 
         // Version stamp (helps ensure browser isn't using a cached index.html)
-        const APP_BUILD = 'css-book-v11';
+        const APP_BUILD = 'css-book-v16';
         window.__APP_BUILD = APP_BUILD;
+
+        // ============================================
+        // SERVER-DRIVEN LAYOUT (floors + tags + loc)
+        // ============================================
+        let LAYOUT = {
+            floors: null,
+            floorsById: null,
+            roomsTotal: null,
+            slotsByFloor: null,
+            slotBookIdsByRoom: null, // roomIndex -> [bookId x 640]
+            primaryLocByBookId: null, // bookId -> {room,wall,shelf,volume,floorId,subId}
+            tagsCache: new Map(), // roomIndex -> tags json
+            tagsLoading: new Map(),
+        };
+
+        async function loadFloorsLayout() {
+            if (LAYOUT.floors) return LAYOUT.floors;
+            const res = await fetch('/api/layout/floors');
+            if (!res.ok) throw new Error('Failed to load /api/layout/floors');
+            const data = await res.json();
+            LAYOUT.floors = data.floors || [];
+            LAYOUT.roomsTotal = data.roomsTotal;
+            LAYOUT.floorsById = new Map(LAYOUT.floors.map(f => [f.id, f]));
+            if (typeof LAYOUT.roomsTotal === 'number') {
+                TOTAL_ROOMS = LAYOUT.roomsTotal;
+                const navRoom = document.getElementById('nav-room');
+                if (navRoom) navRoom.max = String(TOTAL_ROOMS);
+            }
+            return LAYOUT.floors;
+        }
+
+        async function getRoomTags(roomIndex) {
+            if (LAYOUT.tagsCache.has(roomIndex)) return LAYOUT.tagsCache.get(roomIndex);
+            if (LAYOUT.tagsLoading.has(roomIndex)) return await LAYOUT.tagsLoading.get(roomIndex);
+            const pr = (async () => {
+                const res = await fetch(`/api/layout/tags/room/${String(roomIndex).padStart(3,'0')}`);
+                if (!res.ok) throw new Error('Failed to load room tags');
+                const data = await res.json();
+                LAYOUT.tagsCache.set(roomIndex, data);
+                LAYOUT.tagsLoading.delete(roomIndex);
+                return data;
+            })();
+            LAYOUT.tagsLoading.set(roomIndex, pr);
+            return await pr;
+        }
+
+        async function getBookPrimaryLocation(bookId) {
+            const res = await fetch(`/api/layout/loc?bookId=${encodeURIComponent(bookId)}`);
+            if (!res.ok) throw new Error('Failed to resolve book location');
+            return await res.json();
+        }
+
+        function slotOffsetInRoom(wall, shelf, volume) {
+            return wall * BOOKS_PER_SHELF * SHELVES_PER_WALL + shelf * BOOKS_PER_SHELF + volume;
+        }
+
+        function slotOffsetToWallShelfVolume(slotOffset) {
+            const wall = Math.floor(slotOffset / (BOOKS_PER_SHELF * SHELVES_PER_WALL));
+            const inWall = slotOffset % (BOOKS_PER_SHELF * SHELVES_PER_WALL);
+            const shelf = Math.floor(inWall / BOOKS_PER_SHELF);
+            const volume = inWall % BOOKS_PER_SHELF;
+            return { wall, shelf, volume };
+        }
+
+        async function loadSlotsLayout() {
+            if (LAYOUT.slotsByFloor && LAYOUT.slotBookIdsByRoom && LAYOUT.primaryLocByBookId) return LAYOUT.slotsByFloor;
+            await loadFloorsLayout();
+
+            const res = await fetch('/data/layout/slots7.v1.json');
+            if (!res.ok) throw new Error('Failed to load /data/layout/slots7.v1.json');
+            const slotsJson = await res.json();
+
+            const slotBookIdsByRoom = new Map();
+            const primaryLocByBookId = new Map();
+
+            for (const floor of (LAYOUT.floors || [])) {
+                const floorSlots = slotsJson?.[floor.id];
+                const bookIdBySlot = floorSlots?.bookIdBySlot;
+                const subIdBySlot = floorSlots?.subIdBySlot;
+                if (!Array.isArray(bookIdBySlot)) continue;
+
+                for (let roomOff = 0; roomOff < floor.roomCount; roomOff++) {
+                    const room = floor.roomStart + roomOff;
+                    const roomSlotStart = roomOff * BOOKS_PER_ROOM;
+                    const roomBookIds = bookIdBySlot.slice(roomSlotStart, roomSlotStart + BOOKS_PER_ROOM);
+                    slotBookIdsByRoom.set(room, roomBookIds);
+
+                    for (let i = 0; i < roomBookIds.length; i++) {
+                        const bookId = roomBookIds[i];
+                        if (!Number.isInteger(bookId) || bookId < 1 || bookId > TOTAL_BOOKS) continue;
+                        if (primaryLocByBookId.has(bookId)) continue;
+
+                        const sub = Array.isArray(subIdBySlot) ? subIdBySlot[roomSlotStart + i] : null;
+                        const { wall, shelf, volume } = slotOffsetToWallShelfVolume(i);
+                        primaryLocByBookId.set(bookId, {
+                            room,
+                            wall,
+                            shelf,
+                            volume,
+                            floorId: floor.id,
+                            subId: sub || null,
+                        });
+                    }
+                }
+            }
+
+            LAYOUT.slotsByFloor = slotsJson;
+            LAYOUT.slotBookIdsByRoom = slotBookIdsByRoom;
+            LAYOUT.primaryLocByBookId = primaryLocByBookId;
+            return slotsJson;
+        }
+
+        function bookIdToLocationCanonical(bookId) {
+            const id = Number(bookId);
+            if (!Number.isInteger(id) || id < 1) return null;
+            const loc = LAYOUT.primaryLocByBookId?.get(id);
+            if (!loc) return null;
+            return {
+                room: loc.room,
+                wall: loc.wall,
+                shelf: loc.shelf,
+                volume: loc.volume,
+                floorId: loc.floorId,
+                subId: loc.subId,
+                bookId: id,
+                layout: 'slots7',
+            };
+        }
+
+        function locationToBookIdCanonical(room, wall, shelf, volume) {
+            const slotOffset = slotOffsetInRoom(wall, shelf, volume);
+            const roomBookIds = LAYOUT.slotBookIdsByRoom?.get(room);
+            if (!roomBookIds || slotOffset < 0 || slotOffset >= roomBookIds.length) return null;
+            const id = roomBookIds[slotOffset];
+            return Number.isInteger(id) && id >= 1 ? id : null;
+        }
+
         const buildTagEl = document.getElementById('build-tag');
         if (buildTagEl) buildTagEl.textContent = APP_BUILD;
 
@@ -1825,7 +2098,7 @@
         const WALLS_PER_ROOM = 4;
         const BOOKS_PER_ROOM = BOOKS_PER_SHELF * SHELVES_PER_WALL * WALLS_PER_ROOM; // 640
         const TOTAL_BOOKS = 70000;
-        const TOTAL_ROOMS = Math.ceil(TOTAL_BOOKS / BOOKS_PER_ROOM); // ~110 rooms
+        let TOTAL_ROOMS = 113; // overridden by /api/layout/floors (roomsTotal)
 
         const WALL_NAMES = ['North', 'East', 'South', 'West'];
 
@@ -1865,13 +2138,18 @@
         let readingProgress = loadFromStorage(STORAGE_KEYS.READING_PROGRESS, {});
         let metadataCache = loadFromStorage(STORAGE_KEYS.METADATA_CACHE, {});
         let settings = loadFromStorage(STORAGE_KEYS.SETTINGS, { 
-            layoutVersion: 1, // 1 = classic, 2 = themed (one-time reshelving)
+            layoutVersion: 1, // deprecated (kept for backward compat)
             singlePageMode: false, 
             font: 'serif', 
             fontSize: 'medium',
             audioEnabled: false,
             volume: 30
         });
+        // Force layoutVersion off: layout is now server-driven
+        if (settings.layoutVersion !== 1) {
+            settings.layoutVersion = 1;
+            saveToStorage(STORAGE_KEYS.SETTINGS, settings);
+        }
 
         // Book catalog cache (in-memory + persisted)
         const bookCache = new Map(Object.entries(metadataCache));
@@ -2123,13 +2401,35 @@
                 return bookCache.get(bookId);
             }
             try {
+                // Prefer local snapshot to avoid Gutendex rate limits
+                try {
+                    const localRes = await fetch(`/api/local/meta?bookId=${bookId}`);
+                    if (localRes.ok) {
+                        const data = await localRes.json();
+                        const book = {
+                            id: data.id,
+                            title: data.title || 'Unknown Title',
+                            authors: (Array.isArray(data.authors)
+                                ? data.authors.map(a => (typeof a === 'string' ? a : a?.name)).filter(Boolean).join(', ')
+                                : '') || 'Unknown Author',
+                            subjects: data.subjects || [],
+                            languages: data.languages || [],
+                        };
+                        bookCache.set(bookId, book);
+                        if (bookCache.size % 10 === 0) persistMetadataCache();
+                        return book;
+                    }
+                } catch (e) {}
+
                 const response = await fetch(`/.netlify/functions/gutenberg?meta=${bookId}`);
                 if (!response.ok) return null;
                 const data = await response.json();
                 const book = {
                     id: data.id,
                     title: data.title || 'Unknown Title',
-                    authors: data.authors?.map(a => a.name).join(', ') || 'Unknown Author',
+                    authors: (Array.isArray(data.authors)
+                        ? data.authors.map(a => (typeof a === 'string' ? a : a?.name)).filter(Boolean).join(', ')
+                        : '') || 'Unknown Author',
                     subjects: data.subjects || [],
                     languages: data.languages || [],
                 };
@@ -2216,8 +2516,7 @@
             { id: 'general', label: 'GENERAL WORKS' },
         ];
 
-        // Build elevator UI buttons once
-        setTimeout(() => { try { ensureElevatorButtons(); } catch(e){} }, 0);
+        // Elevator buttons are built after /api/layout/floors has loaded (server-driven)
 
         // Allocate rooms per theme so total stays exactly TOTAL_ROOMS
         const ROOMS_PER_THEME_V2 = (() => {
@@ -2236,6 +2535,48 @@
             }
             return bases;
         })();
+
+        function themeRange(themeIndex) {
+            if (LAYOUT && Array.isArray(LAYOUT.floors) && LAYOUT.floors.length) {
+                const f = LAYOUT.floors[themeIndex];
+                if (f) {
+                    const start = f.roomStart;
+                    const count = f.roomCount;
+                    const end = Math.max(start, start + count - 1);
+                    return { start, end, count };
+                }
+            }
+            const start = THEME_ROOM_BASE_V2[themeIndex] ?? 0;
+            const count = ROOMS_PER_THEME_V2[themeIndex] ?? 0;
+            const end = Math.max(start, start + count - 1);
+            return { start, end, count };
+        }
+
+        function themeIndexForRoom(roomIndex) {
+            if (LAYOUT && Array.isArray(LAYOUT.floors) && LAYOUT.floors.length) {
+                for (let i = 0; i < LAYOUT.floors.length; i++) {
+                    const { start, end } = themeRange(i);
+                    if (roomIndex >= start && roomIndex <= end) return i;
+                }
+                return 0;
+            }
+            for (let i = 0; i < THEMES_V2.length; i++) {
+                const { start, end } = themeRange(i);
+                if (roomIndex >= start && roomIndex <= end) return i;
+            }
+            return 0;
+        }
+
+        // "Floor" state: one theme section at a time
+        let currentThemeIndex = 0;
+
+        function setThemeFloor(themeIndex, localRoom = 0) {
+            currentThemeIndex = Math.max(0, Math.min(THEMES_V2.length - 1, themeIndex));
+            const { start, end } = themeRange(currentThemeIndex);
+            const clampedLocal = Math.max(0, Math.min(end - start, localRoom));
+            currentRoomIndex = start + clampedLocal;
+        }
+
 
         const THEME_CAPACITY_V2 = ROOMS_PER_THEME_V2.map(r => r * BOOKS_PER_ROOM);
         const THEME_CAP_PREFIX_V2 = (() => {
@@ -2360,7 +2701,7 @@
             return { room, wall, shelf, volume, bookId, layout: 2, themeIndex };
         }
 
-        function bookIdToLocation(bookId) {
+        function bookIdToLocation_legacy(bookId) {
             return (settings.layoutVersion === 2) ? bookIdToLocation_v2(bookId) : bookIdToLocation_v1(bookId);
         }
 
@@ -2388,8 +2729,16 @@
             return i + 1;
         }
 
-        function locationToBookId(room, wall, shelf, volume) {
+        function locationToBookId_legacy(room, wall, shelf, volume) {
             return (settings.layoutVersion === 2) ? locationToBookId_v2(room, wall, shelf, volume) : locationToBookId_v1(room, wall, shelf, volume);
+        }
+
+        function bookIdToLocation(bookId) {
+            return bookIdToLocationCanonical(bookId) || bookIdToLocation_legacy(bookId);
+        }
+
+        function locationToBookId(room, wall, shelf, volume) {
+            return locationToBookIdCanonical(room, wall, shelf, volume) || locationToBookId_legacy(room, wall, shelf, volume);
         }
 
         // ============================================
@@ -2509,6 +2858,72 @@
             return texture;
         }
 
+        function createArtDecoPlaqueTexture(title, subtitle = '', options = {}) {
+            const {
+                width = 320,
+                height = 114,
+                titleSize = 54,
+                subtitleSize = 22,
+            } = options;
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+
+            const grad = ctx.createLinearGradient(0, 0, 0, height);
+            grad.addColorStop(0, '#2c2218');
+            grad.addColorStop(0.5, '#1b140d');
+            grad.addColorStop(1, '#120d08');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, width, height);
+
+            ctx.strokeStyle = 'rgba(198,161,90,0.92)';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(2, 2, width - 4, height - 4);
+            ctx.strokeStyle = 'rgba(198,161,90,0.35)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(8, 8, width - 16, height - 16);
+
+            ctx.fillStyle = 'rgba(198,161,90,0.55)';
+            const motifW = 18;
+            const motifY = 10;
+            for (const x of [width * 0.5 - 34, width * 0.5 - 8, width * 0.5 + 18]) {
+                ctx.beginPath();
+                ctx.moveTo(x, motifY);
+                ctx.lineTo(x + motifW, motifY);
+                ctx.lineTo(x + motifW * 0.5, motifY + 11);
+                ctx.closePath();
+                ctx.fill();
+            }
+
+            ctx.fillStyle = '#dbc494';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = `700 ${titleSize}px "Cormorant Garamond", serif`;
+            ctx.fillText(String(title || '').toUpperCase(), width / 2, subtitle ? height * 0.42 : height * 0.52);
+
+            if (subtitle) {
+                ctx.strokeStyle = 'rgba(198,161,90,0.45)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(width * 0.2, height * 0.59);
+                ctx.lineTo(width * 0.8, height * 0.59);
+                ctx.stroke();
+
+                ctx.fillStyle = 'rgba(198,161,90,0.95)';
+                ctx.font = `600 ${subtitleSize}px "IBM Plex Mono", monospace`;
+                ctx.fillText(String(subtitle), width / 2, height * 0.77);
+            }
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.generateMipmaps = false;
+            texture.minFilter = THREE.LinearFilter;
+            texture.magFilter = THREE.LinearFilter;
+            texture.needsUpdate = true;
+            return texture;
+        }
+
         function createShelfLabel(text, options = {}) {
             const {
                 fontSize = 24,
@@ -2538,6 +2953,9 @@
             ctx.fillText(text, width / 2, height / 2);
 
             const texture = new THREE.CanvasTexture(canvas);
+            texture.generateMipmaps = false;
+            texture.minFilter = THREE.LinearFilter;
+            texture.magFilter = THREE.LinearFilter;
             texture.needsUpdate = true;
             return texture;
         }
@@ -2623,27 +3041,32 @@
                 beamMesh.rotation.y = passAngle;
                 group.add(beamMesh);
 
-                // Room number sign on beam (also show section/theme in layout v2)
+                // Art Deco marquee sign above passage
                 const roomNum = roomIndex + 1;
-                let signText = `ROOM ${roomNum}`;
-                if (settings.layoutVersion === 2) {
-                    const t = themeForRoomV2(roomIndex);
-                    const themeLabel = THEMES_V2[t]?.label || 'SECTION';
-                    signText = `ROOM ${roomNum}\n${themeLabel}`;
-                }
-                const signTexture = createTextTexture(signText, {
-                    fontSize: settings.layoutVersion === 2 ? 22 : 36,
-                    width: settings.layoutVersion === 2 ? 240 : 200,
-                    height: settings.layoutVersion === 2 ? 72 : 48,
-                    lineGap: 4,
+                const floorInfo = (LAYOUT && Array.isArray(LAYOUT.floors))
+                    ? LAYOUT.floors.find(f => roomIndex >= f.roomStart && roomIndex < (f.roomStart + f.roomCount))
+                    : null;
+                const sectionLabel = floorInfo?.label || (THEMES_V2[themeIndexForRoom(roomIndex)]?.label || 'SECTION');
+                const signTexture = createArtDecoPlaqueTexture(`Room ${roomNum}`, sectionLabel.toUpperCase(), {
+                    width: 360,
+                    height: 126,
+                    titleSize: 50,
+                    subtitleSize: 18,
                 });
-                const signGeom = new THREE.PlaneGeometry(0.72, 0.20);
-                const signMatInstance = new THREE.MeshBasicMaterial({ map: signTexture, transparent: true });
-                const signMesh = new THREE.Mesh(signGeom, signMatInstance);
-                signMesh.position.set(center.x, ROOM_HEIGHT - 0.2, center.z);
-                signMesh.position.add(new THREE.Vector3(-center.x, 0, -center.z).normalize().multiplyScalar(0.12));
+                const plaqueMat = new THREE.MeshBasicMaterial({ map: signTexture, transparent: true });
+                const signMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.98, 0.34), plaqueMat);
+                const signOffsetDir = new THREE.Vector3(-center.x, 0, -center.z).normalize();
+                signMesh.position.set(center.x, ROOM_HEIGHT - 0.24, center.z);
+                signMesh.position.add(signOffsetDir.clone().multiplyScalar(0.14));
                 signMesh.rotation.y = passAngle;
                 group.add(signMesh);
+
+                const capMat = new THREE.MeshStandardMaterial({ color: 0x7b6034, roughness: 0.45, metalness: 0.65 });
+                const signCap = new THREE.Mesh(new THREE.BoxGeometry(1.04, 0.03, 0.04), capMat);
+                signCap.position.copy(signMesh.position).add(signOffsetDir.clone().multiplyScalar(0.02));
+                signCap.position.y += 0.19;
+                signCap.rotation.y = passAngle;
+                group.add(signCap);
 
                 // Side columns
                 const colGeom = new THREE.BoxGeometry(0.15, ROOM_HEIGHT, 0.2);
@@ -2738,15 +3161,16 @@
             group.add(light2);
 
             // Add bookshelves with books and wall/shelf signs
-            const { bookMesh, bookMap, originalColors, shelfLabels } = addBookshelves(group, roomIndex);
+            const { bookMesh, bookMap, originalColors } = addBookshelves(group, roomIndex);
 
             
 
             // Elevator at pipe ends (visual + interaction point)
             let elevatorLocal = null;
-            if (roomIndex === 0 || roomIndex === TOTAL_ROOMS - 1) {
+            const tr = themeRange(themeIndexForRoom(roomIndex));
+            if (roomIndex === tr.start || roomIndex === tr.end) {
                 // Use one of the passage corridors as the elevator bay
-                const elevatorPassIdx = (roomIndex === 0) ? 4 : 1;
+                const elevatorPassIdx = (roomIndex === tr.start) ? 4 : 1;
                 const vaE = HEX_VERTICES[elevatorPassIdx];
                 const vbE = HEX_VERTICES[(elevatorPassIdx + 1) % 6];
                 const cE = new THREE.Vector3((vaE.x + vbE.x) / 2, 0, (vaE.z + vbE.z) / 2);
@@ -2764,45 +3188,83 @@
                 elev.position.y = 0;
                 elev.rotation.y = passAngleE;
 
-                const cabinMat = new THREE.MeshStandardMaterial({ color: 0x1a1510, roughness: 0.85, metalness: 0.1 });
-                const frameMat = new THREE.MeshStandardMaterial({ color: 0x3a2a1a, roughness: 0.6, metalness: 0.25 });
-                const glowMat = new THREE.MeshBasicMaterial({ color: 0xc4943a, transparent: true, opacity: 0.25 });
+                const trimMat = new THREE.MeshStandardMaterial({ color: 0x8d6d3b, roughness: 0.38, metalness: 0.72 });
+                const frameMat = new THREE.MeshStandardMaterial({ color: 0x2a2016, roughness: 0.72, metalness: 0.25 });
+                const doorMat = new THREE.MeshStandardMaterial({ color: 0x15110d, roughness: 0.56, metalness: 0.52 });
+                const indicatorMat = new THREE.MeshBasicMaterial({ color: 0xc6a15a, transparent: true, opacity: 0.35 });
 
-                const frame = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.6, 0.25), frameMat);
-                frame.position.set(0, 1.3, -0.15);
-                elev.add(frame);
+                const backPanel = new THREE.Mesh(new THREE.BoxGeometry(1.18, 2.58, 0.1), frameMat);
+                backPanel.position.set(0, 1.3, -0.24);
+                elev.add(backPanel);
 
-                const door = new THREE.Mesh(new THREE.BoxGeometry(1.0, 2.2, 0.12), cabinMat);
-                door.position.set(0, 1.1, -0.26);
-                elev.add(door);
+                const outerFrame = new THREE.Mesh(new THREE.BoxGeometry(1.3, 2.72, 0.12), trimMat);
+                outerFrame.position.set(0, 1.36, -0.18);
+                elev.add(outerFrame);
 
-                const panel = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.5, 0.06), frameMat);
-                panel.position.set(0.55, 1.15, -0.22);
-                elev.add(panel);
+                const doorLeft = new THREE.Mesh(new THREE.BoxGeometry(0.49, 2.18, 0.07), doorMat);
+                doorLeft.position.set(-0.255, 1.1, -0.26);
+                elev.add(doorLeft);
 
-                const panelGlow = new THREE.Mesh(new THREE.PlaneGeometry(0.18, 0.46), glowMat);
-                panelGlow.position.set(0.55, 1.15, -0.19);
-                elev.add(panelGlow);
+                const doorRight = new THREE.Mesh(new THREE.BoxGeometry(0.49, 2.18, 0.07), doorMat);
+                doorRight.position.set(0.255, 1.1, -0.26);
+                elev.add(doorRight);
 
-                const signTex = createTextTexture('ELEVATOR', { fontSize: 26, width: 220, height: 48, lineGap: 4 });
-                const sign = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.18), new THREE.MeshBasicMaterial({ map: signTex, transparent: true }));
-                sign.position.set(0, 2.35, -0.12);
+                const seam = new THREE.Mesh(new THREE.BoxGeometry(0.03, 2.2, 0.03), trimMat);
+                seam.position.set(0, 1.1, -0.245);
+                elev.add(seam);
+
+                for (const x of [-0.34, -0.16, 0.16, 0.34]) {
+                    const rib = new THREE.Mesh(new THREE.BoxGeometry(0.024, 2.0, 0.024), trimMat);
+                    rib.position.set(x, 1.1, -0.235);
+                    elev.add(rib);
+                }
+
+                const callPanel = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.56, 0.05), trimMat);
+                callPanel.position.set(0.72, 1.18, -0.2);
+                elev.add(callPanel);
+
+                const callFace = new THREE.Mesh(new THREE.PlaneGeometry(0.12, 0.5), new THREE.MeshBasicMaterial({ color: 0x1a130c }));
+                callFace.position.set(0.72, 1.18, -0.172);
+                elev.add(callFace);
+
+                const upLight = new THREE.Mesh(new THREE.CircleGeometry(0.026, 20), indicatorMat.clone());
+                upLight.position.set(0.72, 1.30, -0.168);
+                elev.add(upLight);
+
+                const downLight = new THREE.Mesh(new THREE.CircleGeometry(0.026, 20), indicatorMat.clone());
+                downLight.position.set(0.72, 1.04, -0.168);
+                elev.add(downLight);
+
+                const dirLabel = roomIndex === tr.start ? 'UP' : 'DOWN';
+                const signTex = createArtDecoPlaqueTexture('Lift', dirLabel, {
+                    width: 280,
+                    height: 92,
+                    titleSize: 38,
+                    subtitleSize: 18,
+                });
+                const sign = new THREE.Mesh(
+                    new THREE.PlaneGeometry(0.9, 0.27),
+                    new THREE.MeshBasicMaterial({ map: signTex, transparent: true })
+                );
+                sign.position.set(0, 2.33, -0.11);
                 elev.add(sign);
 
-                // Soft light
-                const elevLight = new THREE.PointLight(0xffe0b0, 0.8, 4.0, 1.5);
-                elevLight.position.set(0, 2.0, 0.4);
+                const transomBar = new THREE.Mesh(new THREE.BoxGeometry(1.22, 0.06, 0.05), trimMat);
+                transomBar.position.set(0, 2.46, -0.17);
+                elev.add(transomBar);
+
+                const elevLight = new THREE.PointLight(0xffd79c, 1.05, 4.5, 1.4);
+                elevLight.position.set(0, 2.02, 0.38);
                 elev.add(elevLight);
 
                 group.add(elev);
             }
-return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1, light2], lamps: [lamp1, lamp2], roomIndex, elevatorLocal };
+return { group, bookMesh, bookMap, originalColors, lights: [light1, light2], lamps: [lamp1, lamp2], roomIndex, elevatorLocal };
         }
 
         function addBookshelves(group, roomIndex) {
             const SHELF_DEPTH = 0.25;
             const SHELF_THICKNESS = 0.02;
-            const shelfLabels = [];
 
             // Shelf planks and wall/shelf labels
             for (let w = 0; w < BOOKSHELF_WALLS.length; w++) {
@@ -2813,19 +3275,18 @@ return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1,
                 const inwardDir = new THREE.Vector3(-wallCenter.x, 0, -wallCenter.z).normalize();
                 const wallAngle = Math.atan2(-wallCenter.x, -wallCenter.z);
 
-                // Wall label (top of wall)
-                const wallLabelTexture = createTextTexture(`WALL ${w + 1} · ${WALL_NAMES[w]}`, {
-                    fontSize: 28,
-                    width: 220,
-                    height: 40,
-                    color: '#8b7355',
-                    backgroundColor: 'rgba(26, 18, 8, 0.7)'
+                // Wall marker (deco mini plaque)
+                const wallLabelTexture = createArtDecoPlaqueTexture(`Wall ${w + 1}`, WALL_NAMES[w].toUpperCase(), {
+                    width: 228,
+                    height: 84,
+                    titleSize: 28,
+                    subtitleSize: 14,
                 });
-                const wallLabelGeom = new THREE.PlaneGeometry(0.5, 0.1);
+                const wallLabelGeom = new THREE.PlaneGeometry(0.58, 0.15);
                 const wallLabelMat = new THREE.MeshBasicMaterial({ map: wallLabelTexture, transparent: true });
                 const wallLabelMesh = new THREE.Mesh(wallLabelGeom, wallLabelMat);
                 const wallLabelPos = wallCenter.clone().add(inwardDir.clone().multiplyScalar(0.3));
-                wallLabelPos.y = ROOM_HEIGHT - 0.15;
+                wallLabelPos.y = ROOM_HEIGHT - 0.18;
                 wallLabelMesh.position.copy(wallLabelPos);
                 wallLabelMesh.rotation.y = wallAngle;
                 group.add(wallLabelMesh);
@@ -2840,29 +3301,6 @@ return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1,
                     shelfMesh.rotation.y = wallAngle;
                     group.add(shelfMesh);
 
-                    // Shelf label (small tag on side)
-                    const startBookId = locationToBookId(roomIndex, w, s, 0);
-                    const endBookId = locationToBookId(roomIndex, w, s, BOOKS_PER_SHELF - 1);
-                    const shelfLabelTexture = createShelfLabel(`S${s + 1} · #${startBookId}-${endBookId}`, {
-                        fontSize: 16,
-                        width: 140,
-                        height: 24
-                    });
-                    const shelfLabelGeom = new THREE.PlaneGeometry(0.28, 0.05);
-                    const shelfLabelMat = new THREE.MeshBasicMaterial({ map: shelfLabelTexture, transparent: true });
-                    const shelfLabelMesh = new THREE.Mesh(shelfLabelGeom, shelfLabelMat);
-                    
-                    // Position at right edge of shelf
-                    const wallDir = new THREE.Vector3().subVectors(vb, va).normalize();
-                    const labelPos = shelfPos.clone()
-                        .add(wallDir.clone().multiplyScalar((R - 0.1) / 2 - 0.15))
-                        .add(inwardDir.clone().multiplyScalar(0.08));
-                    labelPos.y = SHELF_HEIGHTS[s] + 0.03;
-                    shelfLabelMesh.position.copy(labelPos);
-                    shelfLabelMesh.rotation.y = wallAngle;
-                    group.add(shelfLabelMesh);
-                    
-                    shelfLabels.push({ mesh: shelfLabelMesh, wall: w, shelf: s });
                 }
             }
 
@@ -2926,14 +3364,222 @@ return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1,
             bookMesh.instanceColor.needsUpdate = true;
             group.add(bookMesh);
 
-            return { bookMesh, bookMap, originalColors, shelfLabels };
+            return { bookMesh, bookMap, originalColors };
         }
 
+        
+
         // ============================================
+        // SHELF SECTION TAGS (server-driven, per-room)
+        // ============================================
+
+        function prettifyTagLabel(label) {
+            if (!label) return 'SECTION';
+            const s = String(label);
+            if (s.startsWith('RELATED:')) {
+                const id = s.slice('RELATED:'.length);
+                const f = (LAYOUT && LAYOUT.floorsById) ? LAYOUT.floorsById.get(id) : null;
+                return `Related: ${f?.label || id}`;
+            }
+            return s;
+        }
+
+        function shortenLabel(s, maxLen = 24) {
+            const str = String(s);
+            if (str.length <= maxLen) return str;
+            return str.slice(0, maxLen - 1) + '…';
+        }
+
+        function isRelatedTagLabel(label) {
+            return String(label || '').startsWith('RELATED:');
+        }
+
+        function buildRenderableShelfTags(rawTags) {
+            const EDGE_PAD_VOLS = 3;
+            const MIN_GAP_VOLS = 5;
+            const MAX_TAGS_PER_SHELF = 4;
+            const byShelf = new Map();
+
+            for (const tag of rawTags) {
+                const w = Number(tag.wall);
+                const s = Number(tag.shelf);
+                const v = Number(tag.volStart);
+                if (!Number.isInteger(w) || !Number.isInteger(s) || !Number.isInteger(v)) continue;
+                if (w < 0 || w >= BOOKSHELF_WALLS.length) continue;
+                if (s < 0 || s >= SHELF_HEIGHTS.length) continue;
+                if (v < 0 || v >= BOOKS_PER_SHELF) continue;
+                const key = `${w}:${s}`;
+                if (!byShelf.has(key)) byShelf.set(key, []);
+                byShelf.get(key).push(tag);
+            }
+
+            const out = [];
+            for (const [key, shelfTags] of byShelf) {
+                const [wStr, sStr] = key.split(':');
+                const w = Number(wStr);
+                const s = Number(sStr);
+                shelfTags.sort((a, b) => a.volStart - b.volStart);
+
+                const hasPrimaryTags = shelfTags.some(t => !isRelatedTagLabel(t.label || t.subId));
+                const filtered = hasPrimaryTags
+                    ? shelfTags.filter(t => !isRelatedTagLabel(t.label || t.subId))
+                    : shelfTags;
+
+                const kept = [];
+                for (const tag of filtered) {
+                    const rawLabel = (tag.label || tag.subId || 'SECTION');
+                    const label = shortenLabel(prettifyTagLabel(rawLabel), 24);
+                    const clampedVol = Math.max(EDGE_PAD_VOLS, Math.min(BOOKS_PER_SHELF - 1 - EDGE_PAD_VOLS, tag.volStart));
+
+                    const prev = kept[kept.length - 1];
+                    if (prev && prev.label === label) continue;
+                    if (prev && Math.abs(clampedVol - prev.volStart) < MIN_GAP_VOLS) continue;
+
+                    kept.push({ wall: w, shelf: s, volStart: clampedVol, label });
+                    if (kept.length >= MAX_TAGS_PER_SHELF) break;
+                }
+
+                if (kept.length === 0 && filtered.length > 0) {
+                    const fallback = filtered[0];
+                    const rawLabel = (fallback.label || fallback.subId || 'SECTION');
+                    kept.push({
+                        wall: w,
+                        shelf: s,
+                        volStart: Math.max(EDGE_PAD_VOLS, Math.min(BOOKS_PER_SHELF - 1 - EDGE_PAD_VOLS, fallback.volStart)),
+                        label: shortenLabel(prettifyTagLabel(rawLabel), 24),
+                    });
+                }
+
+                out.push(...kept);
+            }
+
+            return out;
+        }
+
+        function attachShelfTagsToRoom(roomData, tagsJson) {
+            if (!roomData || !roomData.group || !tagsJson || !Array.isArray(tagsJson.tags)) return;
+            if (roomData.shelfTagsGroup) {
+                roomData.group.remove(roomData.shelfTagsGroup);
+            }
+            const g = new THREE.Group();
+            g.name = 'shelf-tags';
+
+            const SHELF_DEPTH = 0.25;
+            const SHELF_THICKNESS = 0.02;
+            const TAG_INSET = 0.18;
+
+            const tagsToRender = buildRenderableShelfTags(tagsJson.tags);
+            for (const tag of tagsToRender) {
+                const w = tag.wall;
+                const s = tag.shelf;
+                const v = tag.volStart;
+                const label = tag.label || 'SECTION';
+
+                if (w < 0 || w >= BOOKSHELF_WALLS.length) continue;
+                if (s < 0 || s >= SHELF_HEIGHTS.length) continue;
+                if (v < 0 || v >= BOOKS_PER_SHELF) continue;
+
+                const wallIdx = BOOKSHELF_WALLS[w];
+                const va = HEX_VERTICES[wallIdx];
+                const vb = HEX_VERTICES[(wallIdx + 1) % 6];
+                const wallCenter = new THREE.Vector3((va.x + vb.x) / 2, 0, (va.z + vb.z) / 2);
+                const wallDir = new THREE.Vector3().subVectors(vb, va).normalize();
+                const inwardDir = new THREE.Vector3(-wallCenter.x, 0, -wallCenter.z).normalize();
+                const wallAngle = Math.atan2(-wallCenter.x, -wallCenter.z);
+
+                const slot = v - BOOKS_PER_SHELF / 2;
+                const slotWidth = (R - 0.2) / BOOKS_PER_SHELF;
+
+                const shelfPos = wallCenter.clone().add(inwardDir.clone().multiplyScalar(SHELF_DEPTH / 2 + 0.02));
+                shelfPos.y = SHELF_HEIGHTS[s];
+
+                const tagPos = shelfPos.clone()
+                    .add(wallDir.clone().multiplyScalar(slot * slotWidth))
+                    .add(inwardDir.clone().multiplyScalar(TAG_INSET));
+                tagPos.y = SHELF_HEIGHTS[s] + SHELF_THICKNESS + 0.04;
+
+                // Backing plate
+                const backGeom = new THREE.PlaneGeometry(0.40, 0.072);
+                const backMat = new THREE.MeshStandardMaterial({
+                    color: 0x120c07,
+                    roughness: 0.95,
+                    metalness: 0.05,
+                    transparent: true,
+                    opacity: 0.92,
+                    depthWrite: false
+                });
+                const back = new THREE.Mesh(backGeom, backMat);
+                back.position.copy(tagPos);
+                back.position.y -= 0.002;
+                back.rotation.y = wallAngle;
+                back.renderOrder = 20;
+                g.add(back);
+
+                // Text plate
+                const tex = createShelfLabel(label, { fontSize: 16, width: 200, height: 30 });
+                const plateGeom = new THREE.PlaneGeometry(0.38, 0.064);
+                const plateMat = new THREE.MeshBasicMaterial({
+                    map: tex,
+                    transparent: true,
+                    alphaTest: 0.08,
+                    depthWrite: false
+                });
+                const plate = new THREE.Mesh(plateGeom, plateMat);
+                plate.position.copy(tagPos);
+                plate.rotation.y = wallAngle;
+                plate.renderOrder = 21;
+                g.add(plate);
+
+                // Subtle glow strip
+                const glowGeom = new THREE.PlaneGeometry(0.40, 0.01);
+                const glowMat = new THREE.MeshBasicMaterial({
+                    color: 0xc4943a,
+                    transparent: true,
+                    opacity: 0.18,
+                    depthWrite: false
+                });
+                const glow = new THREE.Mesh(glowGeom, glowMat);
+                glow.position.copy(tagPos);
+                glow.position.y += 0.028;
+                glow.rotation.y = wallAngle;
+                glow.renderOrder = 22;
+                g.add(glow);
+            }
+
+            roomData.shelfTagsGroup = g;
+            roomData.group.add(g);
+        }
+
+        async function ensureRoomTagsApplied(roomIndex) {
+            try {
+                const tagsJson = await getRoomTags(roomIndex);
+                const roomData = rooms.get(roomIndex);
+                if (roomData) attachShelfTagsToRoom(roomData, tagsJson);
+            } catch (e) {
+                // ignore
+            }
+        }
+// ============================================
         // ROOM MANAGEMENT
         // ============================================
 
         let currentRoomIndex = 0;
+        // Initialize to first theme floor
+        setTimeout(async () => {
+            try {
+                await loadFloorsLayout();
+                await loadSlotsLayout();
+                ensureElevatorButtons();
+                setThemeFloor(0, 0);
+                updateRooms();
+                updateHUD();
+            } catch (e) {
+                console.warn('layout init failed', e);
+                setThemeFloor(0, 0);
+                updateRooms();
+                updateHUD();
+            }
+        }, 0);
         const rooms = new Map();
 
         function disposeRoom(room) {
@@ -2963,6 +3609,7 @@ return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1,
             fade.classList.add('active');
             setTimeout(() => {
                 currentRoomIndex = roomIndex;
+                currentThemeIndex = themeIndexForRoom(currentRoomIndex);
                 camera.position.set(0, 1.6, 0);
                 clearAllRooms();
                 updateRooms();
@@ -2981,15 +3628,16 @@ return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1,
         }
 
         function updateRooms() {
+            const { start, end } = themeRange(currentThemeIndex);
+
             const needed = new Set();
             for (let offset = -2; offset <= 2; offset++) {
                 const idx = currentRoomIndex + offset;
-                if (idx >= 0 && idx < TOTAL_ROOMS) {
-                    needed.add(idx);
-                }
+                if (idx < start || idx > end) continue;
+                needed.add(idx);
             }
 
-            // Remove unneeded rooms
+            // Remove rooms outside the active window
             for (const [idx, room] of rooms) {
                 if (!needed.has(idx)) {
                     disposeRoom(room);
@@ -2997,13 +3645,19 @@ return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1,
                 }
             }
 
-            // Add needed rooms
+            // Realign remaining rooms to the new currentRoomIndex so the world stays continuous
+            for (const [idx, room] of rooms) {
+                room.group.position.z = (idx - currentRoomIndex) * ROOM_DEPTH;
+            }
+
+            // Add missing rooms
             for (const idx of needed) {
                 if (!rooms.has(idx)) {
                     const offsetZ = (idx - currentRoomIndex) * ROOM_DEPTH;
                     const roomData = createFullRoom(idx, offsetZ);
                     scene.add(roomData.group);
                     rooms.set(idx, roomData);
+                    ensureRoomTagsApplied(idx);
                 }
             }
         }
@@ -3011,21 +3665,26 @@ return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1,
         function checkRoomTransition() {
             const localZ = camera.position.z;
             const halfDepth = ROOM_DEPTH / 2;
+            const { start, end } = themeRange(currentThemeIndex);
 
-            if (localZ > halfDepth && currentRoomIndex < TOTAL_ROOMS - 1) {
+            if (localZ > halfDepth) {
+                if (currentRoomIndex >= end) {
+                    camera.position.z = halfDepth - 0.05;
+                    showToast('End of floor — use the elevator');
+                    return;
+                }
                 currentRoomIndex++;
                 camera.position.z -= ROOM_DEPTH;
-                for (const [idx, room] of rooms) {
-                    room.group.position.z -= ROOM_DEPTH;
-                }
                 updateRooms();
                 updateHUD();
-            } else if (localZ < -halfDepth && currentRoomIndex > 0) {
+            } else if (localZ < -halfDepth) {
+                if (currentRoomIndex <= start) {
+                    camera.position.z = -halfDepth + 0.05;
+                    showToast('Start of floor — use the elevator');
+                    return;
+                }
                 currentRoomIndex--;
                 camera.position.z += ROOM_DEPTH;
-                for (const [idx, room] of rooms) {
-                    room.group.position.z += ROOM_DEPTH;
-                }
                 updateRooms();
                 updateHUD();
             }
@@ -3177,6 +3836,7 @@ return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1,
                 if (intersects.length > 0) {
                     const instanceId = intersects[0].instanceId;
                     const bookInfo = room.bookMap[instanceId];
+                    if (!bookInfo || !Number.isInteger(bookInfo.bookId) || bookInfo.bookId < 1) return;
                     openBook(bookInfo.bookId);
                     controls.unlock();
                     return;
@@ -3762,11 +4422,19 @@ return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1,
                 currentBookId = bookId;
                 readerOpen = true;
 
-                const location = bookIdToLocation(bookId);
+                const legacyLoc = bookIdToLocation_legacy(bookId);
+                const slotsLoc = bookIdToLocationCanonical(bookId);
+                let apiLoc = null;
+                try {
+                    apiLoc = await getBookPrimaryLocation(bookId);
+                } catch (e) {
+                    // ignore
+                }
+                const location = apiLoc || slotsLoc || legacyLoc;
 
-            document.getElementById('reader-title').textContent = 'Loading...';
-            document.getElementById('reader-author').textContent = '';
-            document.getElementById('reader-coords').textContent = `Room ${location.room + 1} · Wall ${location.wall + 1} (${WALL_NAMES[location.wall]}) · Shelf ${location.shelf + 1} · Volume ${location.volume + 1}`;
+                document.getElementById('reader-title').textContent = 'Loading...';
+                document.getElementById('reader-author').textContent = '';
+                document.getElementById('reader-coords').textContent = `Room ${location.room + 1} · Wall ${location.wall + 1} (${WALL_NAMES[location.wall]}) · Shelf ${location.shelf + 1} · Volume ${location.volume + 1}`;
             
             // Reset book pages to loading state
             document.getElementById('book-content-left').innerHTML = '<div style="text-align:center;color:#8b7355;font-style:italic;padding-top:60px;">Loading book text...</div>';
@@ -3941,25 +4609,31 @@ return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1,
             }).join('');
         }
 
-        window.jumpToGutenbergId = function() {
+        window.jumpToGutenbergId = async function() {
             const bookId = parseInt(document.getElementById('search-gutenberg-id').value);
             if (!bookId || bookId < 1 || bookId > TOTAL_BOOKS) {
                 showToast('Please enter a valid Gutenberg ID (1-70000)');
                 return;
             }
             closeSearch();
-            const location = bookIdToLocation(bookId);
-            teleportTo(location.room, () => {
-                openBook(bookId);
-            }, bookId);
+            try {
+                const loc = await getBookPrimaryLocation(bookId);
+                teleportTo(loc.room, () => { openBook(bookId); }, bookId);
+            } catch (e) {
+                console.error(e);
+                showToast('Failed to locate book');
+            }
         };
 
-        window.goToBook = function(bookId) {
-            const location = bookIdToLocation(bookId);
+        window.goToBook = async function(bookId) {
             closeSearch();
-            teleportTo(location.room, () => {
-                openBook(bookId);
-            }, bookId);
+            try {
+                const loc = await getBookPrimaryLocation(bookId);
+                teleportTo(loc.room, () => { openBook(bookId); }, bookId);
+            } catch (e) {
+                console.error(e);
+                showToast('Failed to locate book');
+            }
         };
 
         function escapeHtml(text) {
@@ -3988,6 +4662,8 @@ return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1,
         // ============================================
 
         window.openElevator = function() {
+            ensureElevatorButtons();
+            updateElevatorPanelState();
             document.getElementById('elevator-panel').classList.add('visible');
             elevatorOpen = true;
             controls.unlock();
@@ -4003,32 +4679,71 @@ return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1,
         }
 
         window.teleportToTheme = function(themeIndex) {
-            const room = themeBaseRoom(themeIndex);
+            setThemeFloor(themeIndex, 0);
             closeElevator();
-            teleportTo(room, null, null);
-            showToast(`Teleporting to ${THEMES_V2[themeIndex]?.label || 'theme'}`);
+            teleportTo(currentRoomIndex, null, null);
+            const floors = (LAYOUT && Array.isArray(LAYOUT.floors) && LAYOUT.floors.length) ? LAYOUT.floors : null;
+            const label = floors ? (floors[themeIndex]?.label) : (THEMES_V2[themeIndex]?.label);
+            showToast(`Teleporting to ${label || 'floor'}`);
         };
+
+        function updateElevatorPanelState() {
+            const floors = (LAYOUT && Array.isArray(LAYOUT.floors) && LAYOUT.floors.length)
+                ? LAYOUT.floors
+                : THEMES_V2.map((t, i) => ({ id: t.id, label: t.label, roomStart: THEME_ROOM_BASE_V2[i], roomCount: ROOMS_PER_THEME_V2[i] }));
+
+            const currentFloorIndex = themeIndexForRoom(currentRoomIndex);
+            const currentFloor = floors[currentFloorIndex];
+            const status = document.getElementById('elevator-current-floor');
+            if (status && currentFloor) {
+                const start = currentFloor.roomStart + 1;
+                const end = currentFloor.roomStart + currentFloor.roomCount;
+                status.textContent = `Current Floor: ${currentFloor.label || currentFloor.id} (Rooms ${start}-${end})`;
+            }
+
+            document.querySelectorAll('#elevator-buttons .floor-btn').forEach((btn) => {
+                const idx = parseInt(btn.dataset.floorIndex || '', 10);
+                btn.classList.toggle('active', idx === currentFloorIndex);
+            });
+        }
 
         function ensureElevatorButtons() {
             const host = document.getElementById('elevator-buttons');
-            if (!host || host.dataset.built === '1') return;
-            host.dataset.built = '1';
+            if (!host) return;
+
+            const floors = (LAYOUT && Array.isArray(LAYOUT.floors) && LAYOUT.floors.length)
+                ? LAYOUT.floors
+                : THEMES_V2.map((t, i) => ({ id: t.id, label: t.label, roomStart: THEME_ROOM_BASE_V2[i], roomCount: ROOMS_PER_THEME_V2[i] }));
+            const signature = floors.map(f => `${f.id}:${f.roomStart}:${f.roomCount}`).join('|');
+            if (host.dataset.signature === signature) {
+                updateElevatorPanelState();
+                return;
+            }
+            host.dataset.signature = signature;
             host.innerHTML = '';
-            for (let i = 0; i < THEMES_V2.length; i++) {
+
+            for (let i = 0; i < floors.length; i++) {
+                const f = floors[i];
                 const btn = document.createElement('button');
-                btn.textContent = THEMES_V2[i].label;
+                btn.className = 'floor-btn';
+                btn.dataset.floorIndex = String(i);
                 btn.onclick = () => teleportToTheme(i);
-                btn.style.background = 'linear-gradient(135deg, rgba(196,148,58,0.25), rgba(196,148,58,0.08))';
-                btn.style.border = '1px solid rgba(196,148,58,0.35)';
-                btn.style.padding = '10px 10px';
-                btn.style.borderRadius = '8px';
-                btn.style.color = '#d4c5a0';
-                btn.style.cursor = 'pointer';
-                btn.style.textAlign = 'left';
-                btn.style.fontFamily = '"IBM Plex Mono", monospace';
-                btn.style.letterSpacing = '0.5px';
+
+                const title = document.createElement('span');
+                title.className = 'floor-name';
+                title.textContent = f.label || f.id || `Floor ${i + 1}`;
+                btn.appendChild(title);
+
+                const meta = document.createElement('span');
+                meta.className = 'floor-meta';
+                const start = (f.roomStart ?? 0) + 1;
+                const end = (f.roomStart ?? 0) + (f.roomCount ?? 0);
+                meta.textContent = `Rooms ${start}-${end}`;
+                btn.appendChild(meta);
+
                 host.appendChild(btn);
             }
+            updateElevatorPanelState();
         }
 
 
@@ -4050,15 +4765,17 @@ return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1,
             }, bookId);
         };
 
-        window.navigateToGutenbergId = function() {
+        window.navigateToGutenbergId = async function() {
             const bookId = parseInt(document.getElementById('nav-gutenberg-id').value);
             if (!bookId || bookId < 1 || bookId > TOTAL_BOOKS) return;
-
-            const location = bookIdToLocation(bookId);
             closeNav();
-            teleportTo(location.room, () => {
-                openBook(bookId);
-            }, bookId);
+            try {
+                const loc = await getBookPrimaryLocation(bookId);
+                teleportTo(loc.room, () => { openBook(bookId); }, bookId);
+            } catch (e) {
+                console.error(e);
+                showToast('Failed to locate book');
+            }
         };
 
         // ============================================
@@ -4195,20 +4912,7 @@ return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1,
             aboutOpen = true;
             controls.unlock();
 
-            // Sync themed layout toggle
-            const toggle = document.getElementById('themed-layout-toggle');
-            if (toggle) {
-                toggle.checked = settings.layoutVersion === 2;
-                toggle.onchange = () => {
-                    const wantV2 = !!toggle.checked;
-                    settings.layoutVersion = wantV2 ? 2 : 1;
-                    saveToStorage(STORAGE_KEYS.SETTINGS, settings);
-                    showToast(wantV2 ? 'Themed layout enabled (reshelved).' : 'Classic layout restored.');
-                    // Refresh HUD + force room re-render
-                    updateHUD();
-                    teleportTo(currentRoomIndex);
-                };
-            }
+            // Layout is server-driven now; no client-side reshelving toggle
         };
 
         window.closeAbout = function() {
@@ -4222,22 +4926,11 @@ return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1,
         // ============================================
 
         function updateHUD() {
-            if (settings.layoutVersion === 2) {
-                const themeIndex = themeForRoomV2(currentRoomIndex);
-                const themeLabel = THEMES_V2[themeIndex]?.label || 'SECTION';
-                const base = THEME_ROOM_BASE_V2[themeIndex];
-                const roomInTheme = currentRoomIndex - base;
-                const startSlot = roomInTheme * BOOKS_PER_ROOM;
-                const endSlot = Math.min(startSlot + BOOKS_PER_ROOM - 1, THEME_CAPACITY_V2[themeIndex] - 1);
-                document.getElementById('hud-coords').textContent = `${themeLabel} · Room ${roomInTheme + 1}/${ROOMS_PER_THEME_V2[themeIndex]} (Global ${currentRoomIndex + 1}/${TOTAL_ROOMS})`;
-                document.getElementById('hud-info').textContent = `Section slots ${startSlot + 1}–${endSlot + 1} · ${BOOKS_PER_ROOM} per room`;
-                return;
-            }
-
             const startBook = currentRoomIndex * BOOKS_PER_ROOM + 1;
             const endBook = Math.min((currentRoomIndex + 1) * BOOKS_PER_ROOM, TOTAL_BOOKS);
             document.getElementById('hud-coords').textContent = `Room ${currentRoomIndex + 1} of ${TOTAL_ROOMS}`;
             document.getElementById('hud-info').textContent = `Books #${startBook.toLocaleString()} – #${endBook.toLocaleString()} · ${BOOKS_PER_ROOM} books per room`;
+            if (elevatorOpen) updateElevatorPanelState();
         }
 
         // ============================================
@@ -4296,9 +4989,11 @@ return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1,
                     camera.position.add(moveDir.multiplyScalar(moveSpeed * delta));
 
                     applyCollision();
-            updateElevatorHint();
                     checkRoomTransition();
                 }
+
+                // Update elevator hint even when standing still
+                updateElevatorHint();
 
                 // Book hover highlight
                 if (hoveredBook) {
