@@ -19,6 +19,32 @@ const MIME_TYPES = {
   '.ico': 'image/x-icon',
 };
 
+// Very small in-memory cache to avoid hammering Gutendex (prevents 429s)
+const GUTENDEX_CACHE_TTL_MS = 5 * 60 * 1000;
+const gutendexCache = new Map();
+
+async function fetchCachedJson(url) {
+  const now = Date.now();
+  const hit = gutendexCache.get(url);
+  if (hit && (now - hit.t) < GUTENDEX_CACHE_TTL_MS) return hit;
+
+  const response = await fetch(url);
+  const contentType = response.headers.get('content-type') || '';
+
+  if (!response.ok) {
+    const text = await response.text().catch(() => '');
+    const out = { t: now, ok: false, status: response.status, bodyText: text, contentType };
+    // Cache errors briefly too (esp. 429) to reduce repeated hits
+    gutendexCache.set(url, out);
+    return out;
+  }
+
+  const data = await response.json();
+  const out = { t: now, ok: true, status: 200, data, contentType };
+  gutendexCache.set(url, out);
+  return out;
+}
+
 // Proxy handler for Gutenberg API
 async function handleGutenbergProxy(query, res) {
   const params = new URLSearchParams(query);
@@ -32,32 +58,28 @@ async function handleGutenbergProxy(query, res) {
     // Search endpoint
     if (params.has('search')) {
       const url = `https://gutendex.com/books/?search=${encodeURIComponent(params.get('search'))}`;
-      const response = await fetch(url);
-      if (!response.ok) {
-        const text = await response.text().catch(() => '');
-        res.writeHead(response.status, { ...headers, 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Gutendex search failed', status: response.status, body: text.slice(0, 500) }));
+      const out = await fetchCachedJson(url);
+      if (!out.ok) {
+        res.writeHead(out.status, { ...headers, 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Gutendex search failed', status: out.status, body: String(out.bodyText || '').slice(0, 500) }));
         return;
       }
-      const data = await response.json();
       res.writeHead(200, { ...headers, 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(data));
+      res.end(JSON.stringify(out.data));
       return;
     }
 
     // Book metadata endpoint
     if (params.has('meta')) {
       const url = `https://gutendex.com/books/${params.get('meta')}`;
-      const response = await fetch(url);
-      if (!response.ok) {
-        const text = await response.text().catch(() => '');
-        res.writeHead(response.status, { ...headers, 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Gutendex meta failed', status: response.status, body: text.slice(0, 500) }));
+      const out = await fetchCachedJson(url);
+      if (!out.ok) {
+        res.writeHead(out.status, { ...headers, 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Gutendex meta failed', status: out.status, body: String(out.bodyText || '').slice(0, 500) }));
         return;
       }
-      const data = await response.json();
       res.writeHead(200, { ...headers, 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(data));
+      res.end(JSON.stringify(out.data));
       return;
     }
 
@@ -95,16 +117,14 @@ async function handleGutenbergProxy(query, res) {
     if (params.has('page')) {
       const page = parseInt(params.get('page')) || 1;
       const url = `https://gutendex.com/books/?page=${page}`;
-      const response = await fetch(url);
-      if (!response.ok) {
-        const text = await response.text().catch(() => '');
-        res.writeHead(response.status, { ...headers, 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Gutendex page failed', status: response.status, body: text.slice(0, 500) }));
+      const out = await fetchCachedJson(url);
+      if (!out.ok) {
+        res.writeHead(out.status, { ...headers, 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Gutendex page failed', status: out.status, body: String(out.bodyText || '').slice(0, 500) }));
         return;
       }
-      const data = await response.json();
       res.writeHead(200, { ...headers, 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(data));
+      res.end(JSON.stringify(out.data));
       return;
     }
 
