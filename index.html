@@ -2172,6 +2172,24 @@
                 return bookCache.get(bookId);
             }
             try {
+                // Prefer local snapshot to avoid Gutendex rate limits
+                try {
+                    const localRes = await fetch(`/api/local/meta?bookId=${bookId}`);
+                    if (localRes.ok) {
+                        const data = await localRes.json();
+                        const book = {
+                            id: data.id,
+                            title: data.title || 'Unknown Title',
+                            authors: data.authors?.map(a => a.name).join(', ') || 'Unknown Author',
+                            subjects: data.subjects || [],
+                            languages: data.languages || [],
+                        };
+                        bookCache.set(bookId, book);
+                        if (bookCache.size % 10 === 0) persistMetadataCache();
+                        return book;
+                    }
+                } catch (e) {}
+
                 const response = await fetch(`/.netlify/functions/gutenberg?meta=${bookId}`);
                 if (!response.ok) return null;
                 const data = await response.json();

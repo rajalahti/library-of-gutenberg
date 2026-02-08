@@ -186,6 +186,36 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // Local snapshot metadata (avoids Gutendex rate limits)
+  if (pathname === '/api/local/meta') {
+    const bookId = parseInt(parsedUrl.searchParams.get('bookId') || '', 10);
+    if (!bookId) {
+      sendJson(res, 400, { error: 'missing bookId' });
+      return;
+    }
+    try {
+      const jsonlPath = path.join(__dirname, 'data', 'book-meta', 'bookMetaById.v1.jsonl');
+      const text = fs.readFileSync(jsonlPath, 'utf-8');
+      const lines = text.split('\n');
+      // Simple linear scan (OK for dev; can index later)
+      for (const line of lines) {
+        if (!line) continue;
+        try {
+          const obj = JSON.parse(line);
+          if (obj && obj.id === bookId) {
+            sendJson(res, 200, obj);
+            return;
+          }
+        } catch (e) {}
+      }
+      sendJson(res, 404, { error: 'bookId not found in local snapshot' });
+    } catch (e) {
+      console.error('local meta error:', e);
+      sendJson(res, 500, { error: 'local meta error' });
+    }
+    return;
+  }
+
   // Layout API
   if (pathname === '/api/layout/floors') {
     try {
