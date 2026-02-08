@@ -1687,7 +1687,7 @@
         </div>
         <div class="nav-field">
             <label>Room Number:</label>
-            <input type="number" id="nav-room" min="1" max="110" value="1">
+            <input type="number" id="nav-room" min="1" max="111" value="1">
         </div>
         <div class="nav-field">
             <label>Wall (1-4):</label>
@@ -1825,7 +1825,7 @@
         const WALLS_PER_ROOM = 4;
         const BOOKS_PER_ROOM = BOOKS_PER_SHELF * SHELVES_PER_WALL * WALLS_PER_ROOM; // 640
         const TOTAL_BOOKS = 70000;
-        const TOTAL_ROOMS = Math.ceil(TOTAL_BOOKS / BOOKS_PER_ROOM); // ~110 rooms
+        const TOTAL_ROOMS = 111; // data-driven floors v3: 7 floors total rooms
 
         const WALL_NAMES = ['North', 'East', 'South', 'West'];
 
