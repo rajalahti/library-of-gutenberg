@@ -2,3 +2,18 @@ node_modules/
 .DS_Store
 .netlify/
 .env
+
+# Local Codex environment snapshots
+.codex/environments/
+
+# Generated pipeline artifacts (not required at runtime)
+data/book-meta/*.log
+data/book-meta/checkpoint.json
+data/book-meta/missing_ids_*.json
+data/book-meta/seen_ids.json
+data/book-meta/stats.v1.json
+data/book-meta/*.nohup.out
+data/theme-map/*.log
+data/theme-map/checkpoint.json
+data/theme-map/stats.v1.json
+data/theme-map/*.nohup.out
