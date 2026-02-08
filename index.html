@@ -2180,7 +2180,9 @@
                         const book = {
                             id: data.id,
                             title: data.title || 'Unknown Title',
-                            authors: data.authors?.map(a => a.name).join(', ') || 'Unknown Author',
+                            authors: (Array.isArray(data.authors)
+                                ? data.authors.map(a => (typeof a === 'string' ? a : a?.name)).filter(Boolean).join(', ')
+                                : '') || 'Unknown Author',
                             subjects: data.subjects || [],
                             languages: data.languages || [],
                         };
@@ -2196,7 +2198,9 @@
                 const book = {
                     id: data.id,
                     title: data.title || 'Unknown Title',
-                    authors: data.authors?.map(a => a.name).join(', ') || 'Unknown Author',
+                    authors: (Array.isArray(data.authors)
+                        ? data.authors.map(a => (typeof a === 'string' ? a : a?.name)).filter(Boolean).join(', ')
+                        : '') || 'Unknown Author',
                     subjects: data.subjects || [],
                     languages: data.languages || [],
                 };
