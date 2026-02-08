@@ -18,6 +18,10 @@ Outputs (default out dir: data/layout):
     - bookId -> { room, wall, shelf, vol, floorId, subId }
       (first occurrence in slots7)
 
+  tags/room-<NNN>.v1.json
+    - shelf section tags per room for fast frontend loading
+      { room, tags:[{wall,shelf,volStart,label,subId}] }
+
 Notes:
 - Because total capacity (rooms*640) exceeds total books, we must fill slack.
   We do this by repeating books from related floors (fillFrom chain),
@@ -357,6 +361,49 @@ def main() -> int:
                 "floorId": fid,
                 "subId": subIdBySlot[slot],
             }
+
+    
+
+    # 5) Generate per-room shelf section tags for frontend (small files)
+    tags_dir = os.path.join(args.out, "tags")
+    os.makedirs(tags_dir, exist_ok=True)
+
+    # Build tags: for each room (global room index), for each (wall,shelf), place tags at volStart where subId changes.
+    # We only create tags for walls 0..3 and shelves 0..4 that exist in room mapping.
+    room_tags: Dict[int, List[Dict[str, Any]]] = defaultdict(list)
+
+    for fl in FLOORS:
+        fid = fl["id"]
+        floor_room_start = floor_stats[fid]["roomStart"]
+        rooms = floor_stats[fid]["roomCount"]
+        sub_ids = slots_out[fid]["subIdBySlot"]
+
+        for room_off in range(rooms):
+            global_room = floor_room_start + room_off
+            room_base_slot = room_off * BOOKS_PER_ROOM
+
+            # For each wall and shelf, scan vols 0..31
+            for wall in range(WALLS_PER_ROOM):
+                for shelf in range(SHELVES_PER_WALL):
+                    prev_sub: Optional[str] = None
+                    for vol in range(BOOKS_PER_SHELF):
+                        slot = room_base_slot + wall * (BOOKS_PER_SHELF * SHELVES_PER_WALL) + shelf * BOOKS_PER_SHELF + vol
+                        sub = sub_ids[slot]
+                        if vol == 0 or sub != prev_sub:
+                            room_tags[global_room].append({
+                                "wall": wall,
+                                "shelf": shelf,
+                                "volStart": vol,
+                                "subId": sub,
+                                "label": sub,
+                            })
+                        prev_sub = sub
+
+    # Write tags per room
+    for room_idx, tags in room_tags.items():
+        out_path = os.path.join(tags_dir, f"room-{room_idx:03d}.v1.json")
+        with open(out_path, "w", encoding="utf-8") as f:
+            json.dump({"room": room_idx, "tags": tags}, f, ensure_ascii=False)
 
     floors_path = os.path.join(args.out, "floors7.v1.json")
     slots_path = os.path.join(args.out, "slots7.v1.json")

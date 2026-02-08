@@ -100,6 +100,39 @@ async function handleGutenbergProxy(query, res) {
   }
 }
 
+function sendJson(res, status, obj) {
+  res.writeHead(status, {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Content-Type': 'application/json; charset=utf-8',
+  });
+  res.end(JSON.stringify(obj));
+}
+
+function tryReadJson(filePath) {
+  const data = fs.readFileSync(filePath, 'utf-8');
+  return JSON.parse(data);
+}
+
+// Layout cache (loaded lazily)
+let layoutCache = {
+  floors: null,
+  primaryLoc: null,
+  tagsIndex: new Set(),
+};
+
+function loadLayoutIfNeeded() {
+  if (!layoutCache.floors) {
+    const floorsPath = path.join(__dirname, 'data', 'layout', 'floors7.v1.json');
+    layoutCache.floors = tryReadJson(floorsPath);
+  }
+  if (!layoutCache.primaryLoc) {
+    const locPath = path.join(__dirname, 'data', 'layout', 'primaryLocationByBookId.v1.json');
+    layoutCache.primaryLoc = tryReadJson(locPath);
+  }
+}
+
 const server = http.createServer(async (req, res) => {
   const parsedUrl = new URL(req.url, `http://localhost:${PORT}`);
   let pathname = parsedUrl.pathname;
@@ -112,6 +145,61 @@ const server = http.createServer(async (req, res) => {
       'Access-Control-Allow-Methods': 'GET, OPTIONS',
     });
     res.end();
+    return;
+  }
+
+  // Layout API
+  if (pathname === '/api/layout/floors') {
+    try {
+      loadLayoutIfNeeded();
+      sendJson(res, 200, layoutCache.floors);
+    } catch (e) {
+      console.error('layout floors error:', e);
+      sendJson(res, 500, { error: 'layout floors error' });
+    }
+    return;
+  }
+
+  if (pathname.startsWith('/api/layout/tags/room/')) {
+    const roomStr = pathname.split('/').pop();
+    const room = parseInt(roomStr, 10);
+    if (Number.isNaN(room)) {
+      sendJson(res, 400, { error: 'invalid room' });
+      return;
+    }
+    try {
+      const tagPath = path.join(__dirname, 'data', 'layout', 'tags', `room-${String(room).padStart(3, '0')}.v1.json`);
+      const obj = tryReadJson(tagPath);
+      sendJson(res, 200, obj);
+    } catch (e) {
+      if (e && e.code === 'ENOENT') {
+        sendJson(res, 404, { error: 'room tags not found' });
+      } else {
+        console.error('room tags error:', e);
+        sendJson(res, 500, { error: 'room tags error' });
+      }
+    }
+    return;
+  }
+
+  if (pathname === '/api/layout/loc') {
+    const bookId = parseInt(parsedUrl.searchParams.get('bookId') || '', 10);
+    if (!bookId) {
+      sendJson(res, 400, { error: 'missing bookId' });
+      return;
+    }
+    try {
+      loadLayoutIfNeeded();
+      const loc = layoutCache.primaryLoc[String(bookId)];
+      if (!loc) {
+        sendJson(res, 404, { error: 'bookId not found' });
+        return;
+      }
+      sendJson(res, 200, loc);
+    } catch (e) {
+      console.error('loc error:', e);
+      sendJson(res, 500, { error: 'loc error' });
+    }
     return;
   }
 
