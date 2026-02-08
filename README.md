@@ -1,154 +1,151 @@
-# The Library of Gutenberg
+# Library of Gutenberg (Library of Babel + Gutendex)
 
-A 3D immersive virtual library containing **70,000 real books** from Project Gutenberg. Walk through hexagonal rooms inspired by Borges's "Library of Babel" and read classic literature in a beautiful, atmospheric setting.
+A local Three.js “infinite-library” style experience filled with real Project Gutenberg books.
 
-![The Library of Gutenberg](images/hero.png)
+This repo is being migrated from a legacy deterministic layout to a **server-driven, data-generated layout** based on Gutendex metadata.
 
-## ✨ Features
-
-### 3D Exploration
-- **First-person navigation** through hexagonal galleries connected by corridors
-- **WASD movement** with smooth collision detection
-- **Atmospheric lighting** with flickering lamps and floating dust particles
-- **In-world signage**: Room numbers, wall labels, and shelf indicators
-
-### Reading Experience
-- **Click any book** to open and read the full text
-- **Paginated reader** with page turn animations
-- **Two-page spread mode** for wider screens
-- **Typography settings**: Choose from 3 fonts and 4 sizes
-- **In-book search** (Ctrl+F) with highlighting and navigation
-- **Chapter detection** with table of contents sidebar
-- **Reading progress** saved automatically
-
-### Search & Navigation
-- **Full-text search** of the Gutenberg catalog
-- **Filters**: Language (10+ languages) and subject/topic
-- **Keyboard navigation** in search results (↑↓ to navigate, Enter to open)
-- **Direct coordinates**: Jump to any room/wall/shelf/volume
-- **Gutenberg ID lookup**: Enter a book ID to teleport directly to it
-- **Random room** button for serendipitous discovery
-
-### Personal Library
-- **Bookmarks** saved to localStorage
-- **Reading history** with recent books
-- **Continue Reading** — resume where you left off
-- **Progress tracking** across all books
-
-### Atmosphere
-- **Optional ambient audio** with volume control
-- **Page turn sounds** (subtle paper rustle)
-- **Enhanced dust particles** with gentle floating motion
-- **Dynamic lamp flicker** with occasional stronger flickers
-- **Warm color temperature shifts** on lamps
-
-## 🎮 Controls
-
-| Key/Action | Function |
-|------------|----------|
-| **Click** | Enter exploration mode / Select book |
-| **WASD** | Walk around |
-| **Mouse** | Look around (when locked) |
-| **ESC** | Exit reader / Release mouse / Close panels |
-| **←/→** | Turn pages in reader |
-| **Ctrl+F** | Search within book |
-| **B** | Toggle bookmark (in reader) |
-
-## 🏗️ Architecture
-
-```
-library-of-babel-gutenberg/
-├── index.html          # Main application (self-contained)
-├── server.js           # Local development server
-├── netlify/
-│   └── functions/
-│       └── gutenberg.js # Serverless API proxy for Gutenberg
-├── images/
-│   └── hero.png        # Background image
-└── package.json
-```
-
-The library contains **110 hexagonal rooms**, each with:
-- 4 bookshelf walls
-- 5 shelves per wall
-- 32 books per shelf
-- = **640 books per room**
-
-Books are mapped deterministically: Book #N is always at the same location.
-
-## 🚀 Development
-
-### Local Development (with Netlify Functions)
+## Run (local)
 
 ```bash
-# Install dependencies
 npm install
-
-# Start Netlify dev server (recommended)
-npx netlify dev
-
-# Or use the simple Node.js server (no API proxy)
-node server.js
+npm run dev
+# open http://localhost:8888
 ```
 
-Open http://localhost:8888 (Netlify) or http://localhost:8888 (Node).
+If port `8888` is busy:
 
-### Without Netlify
+```bash
+lsof -nP -iTCP:8888 -sTCP:LISTEN
+kill <PID>
+```
 
-The app will work without the Netlify function, but book searches and text loading will fail due to CORS. For local testing without API:
-- Search panel will show errors
-- Pre-cached book metadata still works
-- You can navigate rooms and see the 3D environment
+### Dev server survival
 
-## 📦 Deployment
+When started via OpenClaw exec sessions, the dev server may get SIGKILL’d. Recommended:
 
-### Netlify (Recommended)
+```bash
+nohup npm run dev --silent > .devserver.log 2>&1 &
+echo $! > .devserver.pid
+```
 
-1. **Connect your repository** to Netlify
-2. **Build settings**:
-   - Build command: (leave empty)
-   - Publish directory: `.`
-3. **Deploy!**
+Stop:
 
-The Netlify function at `/.netlify/functions/gutenberg` proxies:
-- `/gutenberg?search=<query>&languages=<lang>&topic=<topic>` — Search books
-- `/gutenberg?meta=<id>` — Get book metadata
-- `/gutenberg?id=<id>` — Get book text
-- `/gutenberg?page=<n>` — List books (paginated)
+```bash
+kill $(cat .devserver.pid)
+```
 
-### Other Platforms
+## Layout (server-driven)
 
-For Vercel, Cloudflare Workers, or similar:
-- Adapt the `netlify/functions/gutenberg.js` to the platform's serverless format
-- The function is just a CORS proxy for `gutendex.com` and `gutenberg.org`
+The canonical layout is generated offline and served via API endpoints.
 
-### Static Hosting (Limited)
+### Generated assets
 
-Deploy to GitHub Pages, S3, etc.:
-- The 3D environment works
-- Search/reading requires an external API proxy (set up separately)
+- `data/layout/floors7.v1.json`
+  - 7 “floors” (theme sections)
+  - contains `roomsTotal` and per-floor `roomStart` / `roomCount`
+- `data/layout/tags/room-XYZ.v1.json`
+  - shelf tags for each room (only at real section boundaries)
+- `data/layout/primaryLocationByBookId.v1.json`
+  - bookId → primary location (`room/wall/shelf/volume/floorId/subId`)
+- `data/layout/slots7.v1.json`
+  - (next step) the physical slot assignment for instanced book meshes
 
-## 🔧 Configuration
+Generator:
 
-The app uses localStorage for:
-- `gutenberg-library-bookmarks` — Saved bookmarks
-- `gutenberg-library-recents` — Reading history
-- `gutenberg-library-progress` — Page positions per book
-- `gutenberg-library-meta-cache` — Cached book metadata (last 500)
-- `gutenberg-library-settings` — User preferences
+```bash
+python3 scripts/generate_layout_floors7.py
+```
 
-## 🙏 Credits
+### Server endpoints
 
-- **Fork base**: Forked from [emollick/library-of-babel](https://github.com/emollick/library-of-babel) (MIT) — original concept + UI foundation
-- **Book data**: [Project Gutenberg](https://www.gutenberg.org) via [Gutendex API](https://gutendex.com)
-- **3D engine**: [Three.js](https://threejs.org)
-- **Visual design**: Inspired by Jorge Luis Borges's "The Library of Babel" and Ethan Mollick’s digital recreation
-- **Fonts**: Cormorant Garamond, Libre Baskerville, IBM Plex Mono (Google Fonts)
+- `GET /api/layout/floors`
+- `GET /api/layout/tags/room/:room` (room is 0-indexed, padded to 3 digits)
+- `GET /api/layout/loc?bookId=<id>`
 
-## 📄 License
+Local metadata snapshot endpoint (avoids Gutendex 429s):
 
-MIT
+- `GET /api/local/meta?bookId=<id>`
 
----
+## Navigation concepts
 
-*"A library is not a luxury but one of the necessities of life."* — Henry Ward Beecher
+- **Room index** in code is **0-indexed**.
+- UI generally displays rooms as **1-indexed** (“Room 1 of 113”).
+- Location fields:
+  - `wall` 0..3 (UI shows 1..4)
+  - `shelf` 0..4 (UI shows 1..5)
+  - `volume` 0..31 (UI shows 1..32)
+
+## Debugging: verify book locations
+
+### Why this exists
+
+We are currently in a transition period:
+- Teleport/navigation uses **API layout** (`/api/layout/loc`).
+- Some UI text and/or instanced placement may still use legacy deterministic mapping.
+
+Goal:
+> The **only source of truth** for book locations should be the generated layout (loc + slots).
+
+### Debug overlay (in-app)
+
+A debug overlay is available to compare **apiLoc vs legacyLoc**.
+
+- Toggle: press **`P`**
+- When opening a book, it shows:
+  - `bookId`
+  - `apiLoc` (from `/api/layout/loc`)
+  - `legacyLoc` (from old deterministic mapper)
+  - `currentRoomIndex`
+
+If `apiLoc` and `legacyLoc` differ, the legacy path is still affecting something.
+
+### Example 1: check a bookId against the API
+
+Pick a Gutenberg ID, e.g. `32082`.
+
+```bash
+curl -sS "http://localhost:8888/api/layout/loc?bookId=32082"
+```
+Expected fields:
+
+```json
+{"room":31,"wall":2,"shelf":3,"volume":30,"floorId":"literature_fiction","subId":"British Literature"}
+```
+
+Interpretation (UI 1-indexed):
+- Room **32**
+- Wall **3**
+- Shelf **4**
+- Volume **31**
+
+Now in-app:
+1) Search → “Jump by Gutenberg ID” → 32082 → “Go to Book”
+2) Open the book
+3) Debug overlay should show `apiLoc` matching the API response.
+
+If reader header shows a different room/wall/shelf/volume than `apiLoc`, that is a bug (legacy mapping still used somewhere).
+
+### Example 2: elevator floor sanity checks
+
+Floor ranges (from `data/layout/floors7.v1.json`) are:
+
+- History & War: Rooms 1–30
+- Literature & Fiction: Rooms 31–58
+- Crime, Mystery & Gothic: Rooms 59–62
+- Sci‑Fi & Fantasy: Rooms 63–71
+- Children & YA: Rooms 72–86
+- Poetry & Drama: Rooms 87–97
+- Non‑fiction & Thought: Rooms 98–113
+
+So if you teleport to **History & War**, the HUD should land in **Room 1–30**.
+If it lands in **Room 31**, you actually landed in **Literature & Fiction** → elevator mapping bug.
+
+## Known issues / next steps
+
+- **Slots integration**: books are not yet physically placed using `slots7.v1.json`.
+  - Risk: API location resolves, but the book meshes are still laid out using legacy deterministic placement.
+- After slots integration, the 3D placement, UI coords, and API loc must all match.
+
+## Notes
+
+- Work stays local; do not push to origin.
