@@ -55,6 +55,61 @@
             z-index: 2;
         }
 
+        #deco-frame {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 2;
+            opacity: 0.72;
+        }
+
+        #deco-frame::before,
+        #deco-frame::after {
+            content: '';
+            position: absolute;
+            inset: 16px;
+            border: 1px solid rgba(198, 161, 90, 0.22);
+            box-shadow: inset 0 0 0 1px rgba(198, 161, 90, 0.08);
+        }
+
+        #deco-frame::after {
+            inset: 28px;
+            border: none;
+            background:
+                linear-gradient(90deg, rgba(198, 161, 90, 0.55), transparent 52%) top left / 180px 2px no-repeat,
+                linear-gradient(0deg, rgba(198, 161, 90, 0.55), transparent 52%) top left / 2px 180px no-repeat,
+                linear-gradient(270deg, rgba(198, 161, 90, 0.55), transparent 52%) top right / 180px 2px no-repeat,
+                linear-gradient(180deg, rgba(198, 161, 90, 0.55), transparent 52%) top right / 2px 180px no-repeat,
+                linear-gradient(90deg, rgba(198, 161, 90, 0.55), transparent 52%) bottom left / 180px 2px no-repeat,
+                linear-gradient(0deg, rgba(198, 161, 90, 0.55), transparent 52%) bottom left / 2px 180px no-repeat,
+                linear-gradient(270deg, rgba(198, 161, 90, 0.55), transparent 52%) bottom right / 180px 2px no-repeat,
+                linear-gradient(180deg, rgba(198, 161, 90, 0.55), transparent 52%) bottom right / 2px 180px no-repeat;
+            filter: drop-shadow(0 0 12px rgba(198, 161, 90, 0.14));
+        }
+
+        #film-grain {
+            position: fixed;
+            inset: -120px;
+            pointer-events: none;
+            z-index: 2;
+            opacity: 0.12;
+            mix-blend-mode: soft-light;
+            background-image:
+                radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.11) 0 1px, transparent 2px),
+                radial-gradient(circle at 70% 60%, rgba(255, 255, 255, 0.08) 0 1px, transparent 2px),
+                radial-gradient(circle at 45% 80%, rgba(255, 255, 255, 0.09) 0 1px, transparent 2px);
+            background-size: 180px 180px, 220px 220px, 200px 200px;
+            animation: grainShift 9s steps(8) infinite;
+        }
+
+        @keyframes grainShift {
+            0% { transform: translate3d(0, 0, 0); }
+            25% { transform: translate3d(-24px, 18px, 0); }
+            50% { transform: translate3d(16px, -22px, 0); }
+            75% { transform: translate3d(-10px, -12px, 0); }
+            100% { transform: translate3d(0, 0, 0); }
+        }
+
         #transition-fade {
             position: fixed;
             top: 0;
@@ -1638,6 +1693,8 @@
     <canvas id="scene"></canvas>
     <div id="transition-fade"></div>
     <div id="vignette"></div>
+    <div id="deco-frame"></div>
+    <div id="film-grain"></div>
     <div id="spine-label-container"></div>
     <div id="title-bar">
         <span>THE LIBRARY OF GUTENBERG <span id="build-tag" style="opacity:0.35;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1px;">—</span></span>
@@ -2749,6 +2806,7 @@
         const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = 0.8;
 
@@ -2761,6 +2819,8 @@
 
         const ambientLight = new THREE.AmbientLight(0x201510, 0.4);
         scene.add(ambientLight);
+        const decoSkyFill = new THREE.HemisphereLight(0x4d3920, 0x070504, 0.13);
+        scene.add(decoSkyFill);
 
         // Materials
         const wallMaterial = new THREE.MeshStandardMaterial({ color: 0x2a1f15, roughness: 0.9, metalness: 0.0 });
@@ -2777,7 +2837,34 @@
 
         const columnMaterial = new THREE.MeshStandardMaterial({ color: 0x2a1f15, roughness: 0.85 });
         const signMaterial = new THREE.MeshStandardMaterial({ color: 0x1a1208, roughness: 0.8 });
-        const sharedMaterials = new Set([wallMaterial, floorMaterial, ceilingMaterial, shelfMaterial, columnMaterial, signMaterial]);
+        const decoBrassMaterial = new THREE.MeshStandardMaterial({ color: 0xa78347, roughness: 0.36, metalness: 0.76 });
+        const decoInlayMaterial = new THREE.MeshBasicMaterial({
+            color: 0xc6a15a,
+            transparent: true,
+            opacity: 0.28,
+            side: THREE.DoubleSide,
+            depthWrite: false
+        });
+        const decoGlassMaterial = new THREE.MeshStandardMaterial({
+            color: 0xf2d8aa,
+            emissive: 0x6f5230,
+            emissiveIntensity: 0.5,
+            roughness: 0.24,
+            metalness: 0.05,
+            transparent: true,
+            opacity: 0.72
+        });
+        const sharedMaterials = new Set([
+            wallMaterial,
+            floorMaterial,
+            ceilingMaterial,
+            shelfMaterial,
+            columnMaterial,
+            signMaterial,
+            decoBrassMaterial,
+            decoInlayMaterial,
+            decoGlassMaterial
+        ]);
 
         // Sign texture loader
         const textureLoader = new THREE.TextureLoader();
@@ -2960,6 +3047,40 @@
             return texture;
         }
 
+        function createLightShaftTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+
+            const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            grad.addColorStop(0, 'rgba(255, 232, 185, 0.66)');
+            grad.addColorStop(0.35, 'rgba(240, 192, 128, 0.26)');
+            grad.addColorStop(1, 'rgba(160, 110, 70, 0)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.globalCompositeOperation = 'destination-in';
+            const radial = ctx.createRadialGradient(
+                canvas.width / 2,
+                canvas.height * 0.15,
+                6,
+                canvas.width / 2,
+                canvas.height * 0.7,
+                canvas.width * 0.46
+            );
+            radial.addColorStop(0, 'rgba(255,255,255,1)');
+            radial.addColorStop(1, 'rgba(255,255,255,0)');
+            ctx.fillStyle = radial;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+            texture.minFilter = THREE.LinearFilter;
+            texture.magFilter = THREE.LinearFilter;
+            return texture;
+        }
+
         // ============================================
         // HEXAGONAL ROOM GEOMETRY
         // ============================================
@@ -2981,6 +3102,119 @@
         function seededRandom(seed) {
             const x = Math.sin(seed) * 10000;
             return x - Math.floor(x);
+        }
+
+        const lightShaftTexture = createLightShaftTexture();
+
+        function addArtDecoCenterpiece(group, roomIndex) {
+            const inlayGroup = new THREE.Group();
+            inlayGroup.position.y = 0.003;
+            group.add(inlayGroup);
+
+            const ringBands = [
+                [0.38, 0.46],
+                [0.92, 1.02],
+                [1.34, 1.46],
+            ];
+            for (const [innerR, outerR] of ringBands) {
+                const ring = new THREE.Mesh(new THREE.RingGeometry(innerR, outerR, 6, 1), decoInlayMaterial);
+                ring.rotation.x = -Math.PI / 2;
+                inlayGroup.add(ring);
+            }
+
+            for (let i = 0; i < 12; i++) {
+                const ang = (Math.PI * 2 * i) / 12;
+                const ray = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.003, 1.45), decoInlayMaterial);
+                ray.position.set(Math.sin(ang) * 0.76, 0, Math.cos(ang) * 0.76);
+                ray.rotation.y = ang;
+                inlayGroup.add(ray);
+            }
+
+            const medallion = new THREE.Group();
+            medallion.position.y = ROOM_HEIGHT - 0.08;
+            group.add(medallion);
+
+            const medallionBase = new THREE.Mesh(new THREE.CylinderGeometry(0.92, 1.0, 0.04, 28), decoBrassMaterial);
+            medallionBase.position.y = -0.02;
+            medallion.add(medallionBase);
+
+            const medallionInner = new THREE.Mesh(new THREE.TorusGeometry(0.44, 0.03, 10, 28), decoBrassMaterial);
+            medallionInner.rotation.x = Math.PI / 2;
+            medallion.add(medallionInner);
+
+            const chandelierPivot = new THREE.Group();
+            chandelierPivot.position.set(0, ROOM_HEIGHT - 0.11, 0);
+            group.add(chandelierPivot);
+
+            const chain = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.62, 10), decoBrassMaterial);
+            chain.position.y = -0.31;
+            chandelierPivot.add(chain);
+
+            const chandelier = new THREE.Group();
+            chandelier.position.y = -0.62;
+            chandelierPivot.add(chandelier);
+
+            const chandelierRing = new THREE.Mesh(new THREE.TorusGeometry(0.54, 0.05, 10, 32), decoBrassMaterial);
+            chandelierRing.rotation.x = Math.PI / 2;
+            chandelier.add(chandelierRing);
+
+            const innerRing = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.023, 10, 28), decoBrassMaterial);
+            innerRing.rotation.x = Math.PI / 2;
+            innerRing.position.y = -0.045;
+            chandelier.add(innerRing);
+
+            for (let i = 0; i < 12; i++) {
+                const glass = new THREE.Mesh(new THREE.BoxGeometry(0.028, 0.24, 0.028), decoGlassMaterial);
+                const ang = (Math.PI * 2 * i) / 12;
+                glass.position.set(Math.cos(ang) * 0.5, -0.08, Math.sin(ang) * 0.5);
+                chandelier.add(glass);
+            }
+
+            const core = new THREE.Mesh(
+                new THREE.SphereGeometry(0.095, 16, 16),
+                new THREE.MeshStandardMaterial({
+                    color: 0xf3d7a4,
+                    emissive: 0x8d6536,
+                    emissiveIntensity: 0.9,
+                    roughness: 0.34,
+                    metalness: 0.08
+                })
+            );
+            core.position.y = -0.06;
+            chandelier.add(core);
+
+            const chandelierLight = new THREE.PointLight(0xffddae, 1.35, 8.2, 1.45);
+            chandelierLight.position.set(0, ROOM_HEIGHT - 0.74, 0);
+            group.add(chandelierLight);
+
+            const shaftGeom = new THREE.ConeGeometry(0.36, 1.68, 20, 1, true);
+            const lightShafts = [];
+            for (const lampX of [-0.8, 0.8]) {
+                const shaft = new THREE.Mesh(
+                    shaftGeom,
+                    new THREE.MeshBasicMaterial({
+                        map: lightShaftTexture,
+                        color: 0xffd9a4,
+                        transparent: true,
+                        opacity: 0.13,
+                        side: THREE.DoubleSide,
+                        blending: THREE.AdditiveBlending,
+                        depthWrite: false
+                    })
+                );
+                shaft.position.set(lampX, ROOM_HEIGHT - 1.02, 0);
+                shaft.renderOrder = 8;
+                group.add(shaft);
+                lightShafts.push(shaft);
+            }
+
+            return {
+                inlayGroup,
+                chandelierPivot,
+                chandelierLight,
+                lightShafts,
+                motionSeed: roomIndex * 0.41,
+            };
         }
 
         function createFullRoom(roomIndex, offsetZ) {
@@ -3007,6 +3241,7 @@
             ceilMesh.position.y = ROOM_HEIGHT;
             ceilMesh.rotation.x = Math.PI;
             group.add(ceilMesh);
+            const decoCenterpiece = addArtDecoCenterpiece(group, roomIndex);
 
             // Bookshelf walls
             for (const wallIdx of BOOKSHELF_WALLS) {
@@ -3067,6 +3302,20 @@
                 signCap.position.y += 0.19;
                 signCap.rotation.y = passAngle;
                 group.add(signCap);
+
+                // Sunburst brass ribs to accent each passage marquee
+                for (let rib = -3; rib <= 3; rib++) {
+                    const ribMesh = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.24, 0.018), decoBrassMaterial);
+                    ribMesh.position.copy(signMesh.position);
+                    ribMesh.position.y += 0.29 + Math.abs(rib) * 0.012;
+                    ribMesh.position.add(signOffsetDir.clone().multiplyScalar(0.028 + Math.abs(rib) * 0.004));
+                    const spread = rib * 0.09;
+                    const sideDir = new THREE.Vector3(Math.cos(passAngle), 0, -Math.sin(passAngle));
+                    ribMesh.position.add(sideDir.multiplyScalar(spread));
+                    ribMesh.rotation.y = passAngle;
+                    ribMesh.rotation.z = rib * -0.07;
+                    group.add(ribMesh);
+                }
 
                 // Side columns
                 const colGeom = new THREE.BoxGeometry(0.15, ROOM_HEIGHT, 0.2);
@@ -3259,7 +3508,22 @@
 
                 group.add(elev);
             }
-return { group, bookMesh, bookMap, originalColors, lights: [light1, light2], lamps: [lamp1, lamp2], roomIndex, elevatorLocal };
+
+            return {
+                group,
+                bookMesh,
+                bookMap,
+                originalColors,
+                lights: [light1, light2],
+                lamps: [lamp1, lamp2],
+                roomIndex,
+                elevatorLocal,
+                inlayGroup: decoCenterpiece.inlayGroup,
+                chandelierPivot: decoCenterpiece.chandelierPivot,
+                chandelierLight: decoCenterpiece.chandelierLight,
+                lightShafts: decoCenterpiece.lightShafts,
+                decoMotionSeed: decoCenterpiece.motionSeed,
+            };
         }
 
         function addBookshelves(group, roomIndex) {
@@ -5138,6 +5402,28 @@ return { group, bookMesh, bookMap, originalColors, lights: [light1, light2], lam
                     const warmth2 = 0.95 + flicker2 * 0.3;
                     room.lamps[0].material.color.setRGB(1, warmth1 * 0.88, warmth1 * 0.63);
                     room.lamps[1].material.color.setRGB(1, warmth2 * 0.88, warmth2 * 0.63);
+
+                    if (room.inlayGroup) {
+                        room.inlayGroup.rotation.y = elapsedTime * 0.08 + (room.decoMotionSeed || 0);
+                    }
+
+                    if (room.chandelierPivot) {
+                        room.chandelierPivot.rotation.x = Math.sin(elapsedTime * 0.55 + room.roomIndex * 0.3) * 0.016;
+                        room.chandelierPivot.rotation.z = Math.cos(elapsedTime * 0.62 + room.roomIndex * 0.19) * 0.013;
+                    }
+
+                    if (room.chandelierLight) {
+                        room.chandelierLight.intensity = 1.35 + Math.sin(elapsedTime * 1.7 + room.roomIndex) * 0.09;
+                    }
+
+                    if (room.lightShafts) {
+                        const shaftPulse = 0.12 + (Math.max(flicker1, flicker2) + 0.15) * 0.2;
+                        for (let i = 0; i < room.lightShafts.length; i++) {
+                            const shaft = room.lightShafts[i];
+                            shaft.material.opacity = Math.max(0.06, shaftPulse + Math.sin(elapsedTime * 0.9 + i + room.roomIndex) * 0.02);
+                            shaft.rotation.y = elapsedTime * 0.1 + i * 0.6;
+                        }
+                    }
                 }
             }
 
