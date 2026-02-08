@@ -1778,12 +1778,8 @@
 
         <div class="about-section-title">LAYOUT</div>
         <div class="about-content">
-            <p style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
-                    <input type="checkbox" id="themed-layout-toggle" />
-                    <span>Enable themed layout (one-time reshelving)</span>
-                </label>
-                <span style="color:#8b7355;font-size:12px;">Switching layouts changes where books are shelved. It stays stable afterwards.</span>
+            <p style="color:#8b7355;font-size:12px;line-height:1.4;">
+                The layout is now server-driven (floors/tags/loc). The old “themed reshelving” toggle has been removed.
             </p>
         </div>
         <div class="about-section-title">CREDITS</div>
@@ -1914,13 +1910,18 @@
         let readingProgress = loadFromStorage(STORAGE_KEYS.READING_PROGRESS, {});
         let metadataCache = loadFromStorage(STORAGE_KEYS.METADATA_CACHE, {});
         let settings = loadFromStorage(STORAGE_KEYS.SETTINGS, { 
-            layoutVersion: 1, // 1 = classic, 2 = themed (one-time reshelving)
+            layoutVersion: 1, // deprecated (kept for backward compat)
             singlePageMode: false, 
             font: 'serif', 
             fontSize: 'medium',
             audioEnabled: false,
             volume: 30
         });
+        // Force layoutVersion off: layout is now server-driven
+        if (settings.layoutVersion !== 1) {
+            settings.layoutVersion = 1;
+            saveToStorage(STORAGE_KEYS.SETTINGS, settings);
+        }
 
         // Book catalog cache (in-memory + persisted)
         const bookCache = new Map(Object.entries(metadataCache));
@@ -4465,20 +4466,7 @@ return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1,
             aboutOpen = true;
             controls.unlock();
 
-            // Sync themed layout toggle
-            const toggle = document.getElementById('themed-layout-toggle');
-            if (toggle) {
-                toggle.checked = settings.layoutVersion === 2;
-                toggle.onchange = () => {
-                    const wantV2 = !!toggle.checked;
-                    settings.layoutVersion = wantV2 ? 2 : 1;
-                    saveToStorage(STORAGE_KEYS.SETTINGS, settings);
-                    showToast(wantV2 ? 'Themed layout enabled (reshelved).' : 'Classic layout restored.');
-                    // Refresh HUD + force room re-render
-                    updateHUD();
-                    teleportTo(currentRoomIndex);
-                };
-            }
+            // Layout is server-driven now; no client-side reshelving toggle
         };
 
         window.closeAbout = function() {
@@ -4492,18 +4480,6 @@ return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1,
         // ============================================
 
         function updateHUD() {
-            if (settings.layoutVersion === 2) {
-                const themeIndex = themeForRoomV2(currentRoomIndex);
-                const themeLabel = THEMES_V2[themeIndex]?.label || 'SECTION';
-                const base = THEME_ROOM_BASE_V2[themeIndex];
-                const roomInTheme = currentRoomIndex - base;
-                const startSlot = roomInTheme * BOOKS_PER_ROOM;
-                const endSlot = Math.min(startSlot + BOOKS_PER_ROOM - 1, THEME_CAPACITY_V2[themeIndex] - 1);
-                document.getElementById('hud-coords').textContent = `${themeLabel} · Room ${roomInTheme + 1}/${ROOMS_PER_THEME_V2[themeIndex]} (Global ${currentRoomIndex + 1}/${TOTAL_ROOMS})`;
-                document.getElementById('hud-info').textContent = `Section slots ${startSlot + 1}–${endSlot + 1} · ${BOOKS_PER_ROOM} per room`;
-                return;
-            }
-
             const startBook = currentRoomIndex * BOOKS_PER_ROOM + 1;
             const endBook = Math.min((currentRoomIndex + 1) * BOOKS_PER_ROOM, TOTAL_BOOKS);
             document.getElementById('hud-coords').textContent = `Room ${currentRoomIndex + 1} of ${TOTAL_ROOMS}`;
