@@ -1,0 +1,369 @@
+{
+  "booksPerRoom": 640,
+  "roomsTotal": 113,
+  "floors": [
+    {
+      "id": "history_war",
+      "label": "History & War",
+      "roomStart": 0,
+      "roomCount": 30,
+      "bookCount": 18892,
+      "capacity": 19200,
+      "fillFrom": [
+        "literature_fiction"
+      ],
+      "subcategories": [
+        {
+          "id": "Biographies",
+          "label": "Biographies",
+          "count": 3308
+        },
+        {
+          "id": "History - American",
+          "label": "History - American",
+          "count": 1993
+        },
+        {
+          "id": "History - European",
+          "label": "History - European",
+          "count": 1369
+        },
+        {
+          "id": "History - British",
+          "label": "History - British",
+          "count": 1319
+        },
+        {
+          "id": "Essays, Letters & Speeches",
+          "label": "Essays, Letters & Speeches",
+          "count": 1081
+        },
+        {
+          "id": "Archaeology & Anthropology",
+          "label": "Archaeology & Anthropology",
+          "count": 918
+        },
+        {
+          "id": "Adventure",
+          "label": "Adventure",
+          "count": 865
+        },
+        {
+          "id": "History - Other",
+          "label": "History - Other",
+          "count": 830
+        },
+        {
+          "id": "Other",
+          "label": "Other",
+          "count": 7209
+        }
+      ]
+    },
+    {
+      "id": "literature_fiction",
+      "label": "Literature & Fiction",
+      "roomStart": 30,
+      "roomCount": 28,
+      "bookCount": 17437,
+      "capacity": 17920,
+      "fillFrom": [
+        "history_war"
+      ],
+      "subcategories": [
+        {
+          "id": "British Literature",
+          "label": "British Literature",
+          "count": 3370
+        },
+        {
+          "id": "American Literature",
+          "label": "American Literature",
+          "count": 2409
+        },
+        {
+          "id": "Novels",
+          "label": "Novels",
+          "count": 2345
+        },
+        {
+          "id": "Adventure",
+          "label": "Adventure",
+          "count": 1806
+        },
+        {
+          "id": "French Literature",
+          "label": "French Literature",
+          "count": 1304
+        },
+        {
+          "id": "Essays, Letters & Speeches",
+          "label": "Essays, Letters & Speeches",
+          "count": 682
+        },
+        {
+          "id": "German Literature",
+          "label": "German Literature",
+          "count": 663
+        },
+        {
+          "id": "Historical Novels",
+          "label": "Historical Novels",
+          "count": 653
+        },
+        {
+          "id": "Other",
+          "label": "Other",
+          "count": 4205
+        }
+      ]
+    },
+    {
+      "id": "crime_mystery_gothic",
+      "label": "Crime, Mystery & Gothic",
+      "roomStart": 58,
+      "roomCount": 4,
+      "bookCount": 2089,
+      "capacity": 2560,
+      "fillFrom": [
+        "literature_fiction",
+        "scifi_fantasy"
+      ],
+      "subcategories": [
+        {
+          "id": "British Literature",
+          "label": "British Literature",
+          "count": 596
+        },
+        {
+          "id": "Crime, Thrillers and Mystery",
+          "label": "Crime, Thrillers and Mystery",
+          "count": 551
+        },
+        {
+          "id": "American Literature",
+          "label": "American Literature",
+          "count": 324
+        },
+        {
+          "id": "Adventure",
+          "label": "Adventure",
+          "count": 218
+        },
+        {
+          "id": "Other",
+          "label": "Other",
+          "count": 400
+        }
+      ]
+    },
+    {
+      "id": "scifi_fantasy",
+      "label": "Sci‑Fi & Fantasy",
+      "roomStart": 62,
+      "roomCount": 9,
+      "bookCount": 5350,
+      "capacity": 5760,
+      "fillFrom": [
+        "literature_fiction"
+      ],
+      "subcategories": [
+        {
+          "id": "Science-Fiction & Fantasy",
+          "label": "Science-Fiction & Fantasy",
+          "count": 1885
+        },
+        {
+          "id": "Adventure",
+          "label": "Adventure",
+          "count": 629
+        },
+        {
+          "id": "Mythology, Legends & Folklore",
+          "label": "Mythology, Legends & Folklore",
+          "count": 566
+        },
+        {
+          "id": "British Literature",
+          "label": "British Literature",
+          "count": 305
+        },
+        {
+          "id": "American Literature",
+          "label": "American Literature",
+          "count": 275
+        },
+        {
+          "id": "Archaeology & Anthropology",
+          "label": "Archaeology & Anthropology",
+          "count": 238
+        },
+        {
+          "id": "Humour",
+          "label": "Humour",
+          "count": 238
+        },
+        {
+          "id": "Other",
+          "label": "Other",
+          "count": 1214
+        }
+      ]
+    },
+    {
+      "id": "children_ya",
+      "label": "Children & YA",
+      "roomStart": 71,
+      "roomCount": 15,
+      "bookCount": 9057,
+      "capacity": 9600,
+      "fillFrom": [
+        "literature_fiction"
+      ],
+      "subcategories": [
+        {
+          "id": "Adventure",
+          "label": "Adventure",
+          "count": 3446
+        },
+        {
+          "id": "Children & Young Adult Reading",
+          "label": "Children & Young Adult Reading",
+          "count": 2888
+        },
+        {
+          "id": "American Literature",
+          "label": "American Literature",
+          "count": 921
+        },
+        {
+          "id": "British Literature",
+          "label": "British Literature",
+          "count": 710
+        },
+        {
+          "id": "Other",
+          "label": "Other",
+          "count": 1092
+        }
+      ]
+    },
+    {
+      "id": "poetry_drama",
+      "label": "Poetry & Drama",
+      "roomStart": 86,
+      "roomCount": 11,
+      "bookCount": 6847,
+      "capacity": 7040,
+      "fillFrom": [
+        "literature_fiction"
+      ],
+      "subcategories": [
+        {
+          "id": "British Literature",
+          "label": "British Literature",
+          "count": 1532
+        },
+        {
+          "id": "Poetry",
+          "label": "Poetry",
+          "count": 1200
+        },
+        {
+          "id": "American Literature",
+          "label": "American Literature",
+          "count": 564
+        },
+        {
+          "id": "Plays/Films/Dramas",
+          "label": "Plays/Films/Dramas",
+          "count": 450
+        },
+        {
+          "id": "Humour",
+          "label": "Humour",
+          "count": 380
+        },
+        {
+          "id": "Classics of Literature",
+          "label": "Classics of Literature",
+          "count": 369
+        },
+        {
+          "id": "French Literature",
+          "label": "French Literature",
+          "count": 348
+        },
+        {
+          "id": "German Literature",
+          "label": "German Literature",
+          "count": 327
+        },
+        {
+          "id": "Other",
+          "label": "Other",
+          "count": 1677
+        }
+      ]
+    },
+    {
+      "id": "nonfiction_thought",
+      "label": "Non‑fiction & Thought",
+      "roomStart": 97,
+      "roomCount": 16,
+      "bookCount": 10174,
+      "capacity": 10240,
+      "fillFrom": [
+        "history_war",
+        "literature_fiction"
+      ],
+      "subcategories": [
+        {
+          "id": "Biographies",
+          "label": "Biographies",
+          "count": 1111
+        },
+        {
+          "id": "How To ...",
+          "label": "How To ...",
+          "count": 898
+        },
+        {
+          "id": "Philosophy & Ethics",
+          "label": "Philosophy & Ethics",
+          "count": 855
+        },
+        {
+          "id": "Essays, Letters & Speeches",
+          "label": "Essays, Letters & Speeches",
+          "count": 707
+        },
+        {
+          "id": "Religion/Spirituality",
+          "label": "Religion/Spirituality",
+          "count": 663
+        },
+        {
+          "id": "Travel Writing",
+          "label": "Travel Writing",
+          "count": 543
+        },
+        {
+          "id": "Art",
+          "label": "Art",
+          "count": 490
+        },
+        {
+          "id": "American Literature",
+          "label": "American Literature",
+          "count": 416
+        },
+        {
+          "id": "Other",
+          "label": "Other",
+          "count": 4491
+        }
+      ]
+    }
+  ]
+}
