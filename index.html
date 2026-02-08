@@ -1817,6 +1817,55 @@
         // Version stamp (helps ensure browser isn't using a cached index.html)
         const APP_BUILD = 'css-book-v11';
         window.__APP_BUILD = APP_BUILD;
+
+        // ============================================
+        // SERVER-DRIVEN LAYOUT (floors + tags + loc)
+        // ============================================
+        let LAYOUT = {
+            floors: null,
+            floorsById: null,
+            roomsTotal: null,
+            tagsCache: new Map(), // roomIndex -> tags json
+            tagsLoading: new Map(),
+        };
+
+        async function loadFloorsLayout() {
+            if (LAYOUT.floors) return LAYOUT.floors;
+            const res = await fetch('/api/layout/floors');
+            if (!res.ok) throw new Error('Failed to load /api/layout/floors');
+            const data = await res.json();
+            LAYOUT.floors = data.floors || [];
+            LAYOUT.roomsTotal = data.roomsTotal;
+            LAYOUT.floorsById = new Map(LAYOUT.floors.map(f => [f.id, f]));
+            if (typeof LAYOUT.roomsTotal === 'number') {
+                TOTAL_ROOMS = LAYOUT.roomsTotal;
+                const navRoom = document.getElementById('nav-room');
+                if (navRoom) navRoom.max = String(TOTAL_ROOMS);
+            }
+            return LAYOUT.floors;
+        }
+
+        async function getRoomTags(roomIndex) {
+            if (LAYOUT.tagsCache.has(roomIndex)) return LAYOUT.tagsCache.get(roomIndex);
+            if (LAYOUT.tagsLoading.has(roomIndex)) return await LAYOUT.tagsLoading.get(roomIndex);
+            const pr = (async () => {
+                const res = await fetch(`/api/layout/tags/room/${String(roomIndex).padStart(3,'0')}`);
+                if (!res.ok) throw new Error('Failed to load room tags');
+                const data = await res.json();
+                LAYOUT.tagsCache.set(roomIndex, data);
+                LAYOUT.tagsLoading.delete(roomIndex);
+                return data;
+            })();
+            LAYOUT.tagsLoading.set(roomIndex, pr);
+            return await pr;
+        }
+
+        async function getBookPrimaryLocation(bookId) {
+            const res = await fetch(`/api/layout/loc?bookId=${encodeURIComponent(bookId)}`);
+            if (!res.ok) throw new Error('Failed to resolve book location');
+            return await res.json();
+        }
+
         const buildTagEl = document.getElementById('build-tag');
         if (buildTagEl) buildTagEl.textContent = APP_BUILD;
 
@@ -1825,7 +1874,7 @@
         const WALLS_PER_ROOM = 4;
         const BOOKS_PER_ROOM = BOOKS_PER_SHELF * SHELVES_PER_WALL * WALLS_PER_ROOM; // 640
         const TOTAL_BOOKS = 70000;
-        const TOTAL_ROOMS = 111; // data-driven floors v3: 7 floors total rooms
+        let TOTAL_ROOMS = 113; // overridden by /api/layout/floors (roomsTotal)
 
         const WALL_NAMES = ['North', 'East', 'South', 'West'];
 
@@ -2238,6 +2287,15 @@
         })();
 
         function themeRange(themeIndex) {
+            if (LAYOUT && Array.isArray(LAYOUT.floors) && LAYOUT.floors.length) {
+                const f = LAYOUT.floors[themeIndex];
+                if (f) {
+                    const start = f.roomStart;
+                    const count = f.roomCount;
+                    const end = Math.max(start, start + count - 1);
+                    return { start, end, count };
+                }
+            }
             const start = THEME_ROOM_BASE_V2[themeIndex] ?? 0;
             const count = ROOMS_PER_THEME_V2[themeIndex] ?? 0;
             const end = Math.max(start, start + count - 1);
@@ -2245,6 +2303,13 @@
         }
 
         function themeIndexForRoom(roomIndex) {
+            if (LAYOUT && Array.isArray(LAYOUT.floors) && LAYOUT.floors.length) {
+                for (let i = 0; i < LAYOUT.floors.length; i++) {
+                    const { start, end } = themeRange(i);
+                    if (roomIndex >= start && roomIndex <= end) return i;
+                }
+                return 0;
+            }
             for (let i = 0; i < THEMES_V2.length; i++) {
                 const { start, end } = themeRange(i);
                 if (roomIndex >= start && roomIndex <= end) return i;
@@ -2956,13 +3021,95 @@ return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1,
             return { bookMesh, bookMap, originalColors, shelfLabels };
         }
 
+        
+
         // ============================================
+        // SHELF SECTION TAGS (server-driven, per-room)
+        // ============================================
+
+        function attachShelfTagsToRoom(roomData, tagsJson) {
+            if (!roomData || !roomData.group || !tagsJson || !Array.isArray(tagsJson.tags)) return;
+            if (roomData.shelfTagsGroup) {
+                roomData.group.remove(roomData.shelfTagsGroup);
+            }
+            const g = new THREE.Group();
+            g.name = 'shelf-tags';
+
+            const SHELF_DEPTH = 0.25;
+            const SHELF_THICKNESS = 0.02;
+            const TAG_INSET = 0.18;
+
+            for (const tag of tagsJson.tags) {
+                const w = tag.wall;
+                const s = tag.shelf;
+                const v = tag.volStart;
+                const label = (tag.label || tag.subId || 'SECTION').toString();
+
+                if (w < 0 || w >= BOOKSHELF_WALLS.length) continue;
+                if (s < 0 || s >= SHELF_HEIGHTS.length) continue;
+                if (v < 0 || v >= BOOKS_PER_SHELF) continue;
+
+                const wallIdx = BOOKSHELF_WALLS[w];
+                const va = HEX_VERTICES[wallIdx];
+                const vb = HEX_VERTICES[(wallIdx + 1) % 6];
+                const wallCenter = new THREE.Vector3((va.x + vb.x) / 2, 0, (va.z + vb.z) / 2);
+                const wallDir = new THREE.Vector3().subVectors(vb, va).normalize();
+                const inwardDir = new THREE.Vector3(-wallCenter.x, 0, -wallCenter.z).normalize();
+                const wallAngle = Math.atan2(-wallCenter.x, -wallCenter.z);
+
+                const slot = v - BOOKS_PER_SHELF / 2;
+                const slotWidth = (R - 0.2) / BOOKS_PER_SHELF;
+
+                const shelfPos = wallCenter.clone().add(inwardDir.clone().multiplyScalar(SHELF_DEPTH / 2 + 0.02));
+                shelfPos.y = SHELF_HEIGHTS[s];
+
+                const tagPos = shelfPos.clone()
+                    .add(wallDir.clone().multiplyScalar(slot * slotWidth))
+                    .add(inwardDir.clone().multiplyScalar(TAG_INSET));
+                tagPos.y = SHELF_HEIGHTS[s] + SHELF_THICKNESS + 0.04;
+
+                const tex = createShelfLabel(label, { fontSize: 16, width: 180, height: 28 });
+                const plateGeom = new THREE.PlaneGeometry(0.36, 0.06);
+                const plateMat = new THREE.MeshBasicMaterial({ map: tex, transparent: true });
+                const plate = new THREE.Mesh(plateGeom, plateMat);
+                plate.position.copy(tagPos);
+                plate.rotation.y = wallAngle;
+                g.add(plate);
+            }
+
+            roomData.shelfTagsGroup = g;
+            roomData.group.add(g);
+        }
+
+        async function ensureRoomTagsApplied(roomIndex) {
+            try {
+                const tagsJson = await getRoomTags(roomIndex);
+                const roomData = rooms.get(roomIndex);
+                if (roomData) attachShelfTagsToRoom(roomData, tagsJson);
+            } catch (e) {
+                // ignore
+            }
+        }
+// ============================================
         // ROOM MANAGEMENT
         // ============================================
 
         let currentRoomIndex = 0;
         // Initialize to first theme floor
-        setTimeout(() => { try { setThemeFloor(0, 0); updateRooms(); updateHUD(); } catch(e) {} }, 0);
+        setTimeout(async () => {
+            try {
+                await loadFloorsLayout();
+                ensureElevatorButtons();
+                setThemeFloor(0, 0);
+                updateRooms();
+                updateHUD();
+            } catch (e) {
+                console.warn('layout init failed', e);
+                setThemeFloor(0, 0);
+                updateRooms();
+                updateHUD();
+            }
+        }, 0);
         const rooms = new Map();
 
         function disposeRoom(room) {
@@ -3040,6 +3187,7 @@ return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1,
                     const roomData = createFullRoom(idx, offsetZ);
                     scene.add(roomData.group);
                     rooms.set(idx, roomData);
+                    ensureRoomTagsApplied(idx);
                 }
             }
         }
@@ -3982,25 +4130,31 @@ return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1,
             }).join('');
         }
 
-        window.jumpToGutenbergId = function() {
+        window.jumpToGutenbergId = async function() {
             const bookId = parseInt(document.getElementById('search-gutenberg-id').value);
             if (!bookId || bookId < 1 || bookId > TOTAL_BOOKS) {
                 showToast('Please enter a valid Gutenberg ID (1-70000)');
                 return;
             }
             closeSearch();
-            const location = bookIdToLocation(bookId);
-            teleportTo(location.room, () => {
-                openBook(bookId);
-            }, bookId);
+            try {
+                const loc = await getBookPrimaryLocation(bookId);
+                teleportTo(loc.room, () => { openBook(bookId); }, bookId);
+            } catch (e) {
+                console.error(e);
+                showToast('Failed to locate book');
+            }
         };
 
-        window.goToBook = function(bookId) {
-            const location = bookIdToLocation(bookId);
+        window.goToBook = async function(bookId) {
             closeSearch();
-            teleportTo(location.room, () => {
-                openBook(bookId);
-            }, bookId);
+            try {
+                const loc = await getBookPrimaryLocation(bookId);
+                teleportTo(loc.room, () => { openBook(bookId); }, bookId);
+            } catch (e) {
+                console.error(e);
+                showToast('Failed to locate book');
+            }
         };
 
         function escapeHtml(text) {
@@ -4044,11 +4198,12 @@ return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1,
         }
 
         window.teleportToTheme = function(themeIndex) {
-            // Switch floor (theme) and teleport to its first room
             setThemeFloor(themeIndex, 0);
             closeElevator();
             teleportTo(currentRoomIndex, null, null);
-            showToast(`Teleporting to ${THEMES_V2[currentThemeIndex]?.label || 'theme'}`);
+            const floors = (LAYOUT && Array.isArray(LAYOUT.floors) && LAYOUT.floors.length) ? LAYOUT.floors : null;
+            const label = floors ? (floors[themeIndex]?.label) : (THEMES_V2[themeIndex]?.label);
+            showToast(`Teleporting to ${label || 'floor'}`);
         };
 
         function ensureElevatorButtons() {
@@ -4056,9 +4211,15 @@ return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1,
             if (!host || host.dataset.built === '1') return;
             host.dataset.built = '1';
             host.innerHTML = '';
-            for (let i = 0; i < THEMES_V2.length; i++) {
+
+            const floors = (LAYOUT && Array.isArray(LAYOUT.floors) && LAYOUT.floors.length)
+                ? LAYOUT.floors
+                : THEMES_V2.map((t, i) => ({ id: t.id, label: t.label, roomStart: THEME_ROOM_BASE_V2[i], roomCount: ROOMS_PER_THEME_V2[i] }));
+
+            for (let i = 0; i < floors.length; i++) {
+                const f = floors[i];
                 const btn = document.createElement('button');
-                btn.textContent = THEMES_V2[i].label;
+                btn.textContent = f.label || f.id || `FLOOR ${i+1}`;
                 btn.onclick = () => teleportToTheme(i);
                 btn.style.background = 'linear-gradient(135deg, rgba(196,148,58,0.25), rgba(196,148,58,0.08))';
                 btn.style.border = '1px solid rgba(196,148,58,0.35)';
@@ -4092,15 +4253,17 @@ return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1,
             }, bookId);
         };
 
-        window.navigateToGutenbergId = function() {
+        window.navigateToGutenbergId = async function() {
             const bookId = parseInt(document.getElementById('nav-gutenberg-id').value);
             if (!bookId || bookId < 1 || bookId > TOTAL_BOOKS) return;
-
-            const location = bookIdToLocation(bookId);
             closeNav();
-            teleportTo(location.room, () => {
-                openBook(bookId);
-            }, bookId);
+            try {
+                const loc = await getBookPrimaryLocation(bookId);
+                teleportTo(loc.room, () => { openBook(bookId); }, bookId);
+            } catch (e) {
+                console.error(e);
+                showToast('Failed to locate book');
+            }
         };
 
         // ============================================
