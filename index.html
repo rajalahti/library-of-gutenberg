@@ -1549,6 +1549,8 @@
 
     <div id="toast-container"></div>
 
+    <div id="debug-overlay" style="position:fixed;left:12px;top:12px;z-index:99999;max-width:520px;white-space:pre-wrap;font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;font-size:12px;line-height:1.35;color:#d4c5a0;background:rgba(10,7,4,0.72);border:1px solid rgba(196,148,58,0.25);border-radius:8px;padding:10px 12px;display:none;pointer-events:none;"></div>
+
     <div id="reader">
         <div class="chapter-sidebar" id="chapter-sidebar">
             <div class="chapter-sidebar-title">TABLE OF CONTENTS</div>
@@ -1813,6 +1815,30 @@
         // Version stamp (helps ensure browser isn't using a cached index.html)
         const APP_BUILD = 'css-book-v11';
         window.__APP_BUILD = APP_BUILD;
+
+        // ============================================
+        // DEBUG OVERLAY
+        // ============================================
+
+        const DEBUG = {
+            enabled: true, // dev default
+        };
+
+        function setDebugText(text) {
+            const el = document.getElementById('debug-overlay');
+            if (!el) return;
+            el.style.display = DEBUG.enabled ? 'block' : 'none';
+            if (DEBUG.enabled) el.textContent = text || '';
+        }
+
+        function fmtLoc(loc) {
+            if (!loc) return '(none)';
+            const room = (loc.room ?? 0) + 1;
+            const wall = (loc.wall ?? 0) + 1;
+            const shelf = (loc.shelf ?? 0) + 1;
+            const vol = (loc.volume ?? 0) + 1;
+            return `Room ${room} · Wall ${wall} · Shelf ${shelf} · Vol ${vol}`;
+        }
 
         // ============================================
         // SERVER-DRIVEN LAYOUT (floors + tags + loc)
@@ -3337,6 +3363,11 @@ return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1,
                 case 'KeyA': keys.left = true; break;
                 case 'KeyD': keys.right = true; break;
                 case 'KeyE': if (elevatorInRange) { openElevator(); } break;
+                case 'KeyP':
+                    // Debug overlay toggle
+                    DEBUG.enabled = !DEBUG.enabled;
+                    setDebugText(document.getElementById('debug-overlay')?.textContent || '');
+                    break;
             }
         });
 
@@ -4016,11 +4047,26 @@ return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1,
                 currentBookId = bookId;
                 readerOpen = true;
 
-                const location = bookIdToLocation(bookId);
+                const legacyLoc = bookIdToLocation(bookId);
+                let apiLoc = null;
+                try {
+                    apiLoc = await getBookPrimaryLocation(bookId);
+                } catch (e) {
+                    // ignore
+                }
+                const location = apiLoc || legacyLoc;
 
-            document.getElementById('reader-title').textContent = 'Loading...';
-            document.getElementById('reader-author').textContent = '';
-            document.getElementById('reader-coords').textContent = `Room ${location.room + 1} · Wall ${location.wall + 1} (${WALL_NAMES[location.wall]}) · Shelf ${location.shelf + 1} · Volume ${location.volume + 1}`;
+                document.getElementById('reader-title').textContent = 'Loading...';
+                document.getElementById('reader-author').textContent = '';
+                document.getElementById('reader-coords').textContent = `Room ${location.room + 1} · Wall ${location.wall + 1} (${WALL_NAMES[location.wall]}) · Shelf ${location.shelf + 1} · Volume ${location.volume + 1}`;
+
+                setDebugText([
+                    `BUILD: ${APP_BUILD}`,
+                    `bookId: ${bookId}`,
+                    `apiLoc: ${fmtLoc(apiLoc)} (${apiLoc?.floorId || ''} ${apiLoc?.subId || ''})`,
+                    `legacyLoc: ${fmtLoc(legacyLoc)}`,
+                    `currentRoomIndex: ${currentRoomIndex + 1}/${TOTAL_ROOMS}`,
+                ].join('\n'));
             
             // Reset book pages to loading state
             document.getElementById('book-content-left').innerHTML = '<div style="text-align:center;color:#8b7355;font-style:italic;padding-top:60px;">Loading book text...</div>';
