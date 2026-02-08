@@ -4544,8 +4544,11 @@ return { group, bookMesh, bookMap, originalColors, shelfLabels, lights: [light1,
                     camera.position.add(moveDir.multiplyScalar(moveSpeed * delta));
 
                     applyCollision();
-            updateElevatorHint();
                     checkRoomTransition();
+                }
+
+                // Update elevator hint even when standing still
+                updateElevatorHint();
                 }
 
                 // Book hover highlight
