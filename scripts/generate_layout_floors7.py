@@ -320,6 +320,7 @@ def main() -> int:
             fill_subs: List[str] = []
 
             cursor = 0
+            donor_cursor: Dict[str, int] = defaultdict(int)
             # Round-robin donors
             while need > 0:
                 donor = chain[cursor % len(chain)]
@@ -327,8 +328,10 @@ def main() -> int:
                 pool = donor_pool.get(donor) or []
                 if not pool:
                     continue
-                # take deterministically by cycling
-                take_bid = pool[(need + cursor) % len(pool)]
+                # take deterministically by cycling through each donor pool
+                idx = donor_cursor[donor] % len(pool)
+                donor_cursor[donor] += 1
+                take_bid = pool[idx]
                 fill_ids.append(take_bid)
                 fill_subs.append(f"RELATED:{donor}")
                 need -= 1
