@@ -34,6 +34,84 @@ Stop:
 kill $(cat .devserver.pid)
 ```
 
+## Deploy to AWS (Lambda + S3 + CloudFront + Route53)
+
+This repo includes serverless AWS infrastructure for low cost:
+
+- Static files (`index.html`, `images/`, `data/`) are served from private S3 through CloudFront.
+- API routes (`/api/*` and `/.netlify/functions/*`) run on Lambda via Function URL.
+- Route53 alias points `library.rajalahti.me` to CloudFront.
+- Existing ACM cert in `us-east-1` is used for TLS.
+
+### One-time prerequisites
+
+- AWS CLI configured and authenticated.
+- Certificate exists in ACM `us-east-1` and covers `library.rajalahti.me` (or `*.rajalahti.me`).
+- Route53 hosted zone exists for `rajalahti.me`.
+- `zip` installed locally.
+
+### First deployment
+
+```bash
+npm install
+npm run aws:deploy
+```
+
+Defaults used by the deploy script:
+
+- `STACK_NAME=library-of-gutenberg`
+- `AWS_REGION` from your AWS CLI config (fallback `eu-north-1`)
+- `DOMAIN_NAME=library.rajalahti.me`
+- `ROOT_DOMAIN=rajalahti.me`
+- `CERT_MATCH_DOMAIN=*.rajalahti.me` (searched from ACM in `us-east-1`)
+
+### Deploy a new version
+
+After making code/data changes, run:
+
+```bash
+npm run aws:deploy
+```
+
+The script will:
+
+1. Build `.dist/lambda.zip` and static site artifacts.
+2. Upload Lambda artifact to the deployment artifacts bucket.
+3. Update the CloudFormation stack.
+4. Sync static files to the site S3 bucket.
+5. Keep CloudFront cache cost low via short `index.html` TTL and longer asset TTL.
+
+If you need the HTML change immediately instead of waiting for cache TTL:
+
+```bash
+INVALIDATE_CF=true npm run aws:deploy
+```
+
+### Useful overrides
+
+```bash
+STACK_NAME=library-of-gutenberg-prod \
+AWS_REGION=eu-north-1 \
+DOMAIN_NAME=library.rajalahti.me \
+ROOT_DOMAIN=rajalahti.me \
+CERT_ARN=arn:aws:acm:us-east-1:123456789012:certificate/abc... \
+npm run aws:deploy
+```
+
+### Destroy stack
+
+```bash
+npm run aws:destroy
+```
+
+Files added for AWS deployment:
+
+- `infra/aws/cloudformation.yml`
+- `lambda/index.mjs`
+- `scripts/aws/build_artifacts.sh`
+- `scripts/aws/deploy.sh`
+- `scripts/aws/destroy.sh`
+
 ## Layout (server-driven)
 
 The canonical layout is generated offline and served via API endpoints.
@@ -61,6 +139,7 @@ python3 scripts/generate_layout_floors7.py
 - `GET /api/layout/floors`
 - `GET /api/layout/tags/room/:room` (room is 0-indexed, padded to 3 digits)
 - `GET /api/layout/loc?bookId=<id>`
+- `GET /api/gutenberg?id=<id>|meta=<id>|search=<query>|page=<n>`
 
 Local metadata snapshot endpoint (avoids Gutendex 429s):
 

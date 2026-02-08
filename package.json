@@ -5,7 +5,10 @@
   "description": "A finite library filled with Project Gutenberg books",
   "scripts": {
     "dev": "node server.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "aws:build": "scripts/aws/build_artifacts.sh",
+    "aws:deploy": "scripts/aws/deploy.sh",
+    "aws:destroy": "scripts/aws/destroy.sh"
   },
   "dependencies": {
     "page-flip": "^2.0.7"

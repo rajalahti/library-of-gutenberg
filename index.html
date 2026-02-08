@@ -2698,7 +2698,7 @@
                     }
                 } catch (e) {}
 
-                const response = await fetch(`/.netlify/functions/gutenberg?meta=${bookId}`);
+                const response = await fetch(`/api/gutenberg?meta=${bookId}`);
                 if (!response.ok) return null;
                 const data = await response.json();
                 const book = {
@@ -2739,7 +2739,7 @@
 
         async function fetchBookText(bookId) {
             try {
-                const response = await fetch(`/.netlify/functions/gutenberg?id=${bookId}`);
+                const response = await fetch(`/api/gutenberg?id=${bookId}`);
                 if (!response.ok) return null;
                 return await response.text();
             } catch (e) {
@@ -2750,7 +2750,7 @@
 
         async function searchBooks(query, language = '', topic = '') {
             try {
-                let url = `/.netlify/functions/gutenberg?search=${encodeURIComponent(query)}`;
+                let url = `/api/gutenberg?search=${encodeURIComponent(query)}`;
                 if (language) url += `&languages=${language}`;
                 if (topic) url += `&topic=${encodeURIComponent(topic)}`;
                 
