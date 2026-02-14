@@ -61,9 +61,17 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.7) 100%);
+            background:
+                radial-gradient(ellipse at center, transparent 64%, rgba(0,0,0,0.46) 100%),
+                radial-gradient(ellipse at 50% 12%, rgba(214, 170, 95, 0.09), rgba(214, 170, 95, 0) 62%);
             pointer-events: none;
             z-index: 2;
+            animation: vignetteBreath 18s ease-in-out infinite;
+        }
+
+        @keyframes vignetteBreath {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.985; }
         }
 
         #deco-frame {
@@ -2208,7 +2216,7 @@
             </div>
             <div class="control-group">
                 <span>☀</span>
-                <input type="range" id="brightness-slider" min="30" max="150" value="80" title="Brightness">
+                <input type="range" id="brightness-slider" min="30" max="150" value="90" title="Brightness">
             </div>
         </div>
     </div>
@@ -2541,7 +2549,7 @@
         // ============================================
 
         // Version stamp (helps ensure browser isn't using a cached index.html)
-        const APP_BUILD = 'css-book-v21-mobile-readability-recovery';
+        const APP_BUILD = 'css-book-v26-readable-depth';
         window.__APP_BUILD = APP_BUILD;
 
         // ============================================
@@ -3372,25 +3380,403 @@
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.outputColorSpace = THREE.SRGBColorSpace;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 0.8;
+        renderer.toneMappingExposure = 0.9;
 
         const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 50);
         camera.position.set(0, 1.6, 0);
 
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x0a0806);
-        scene.fog = new THREE.FogExp2(0x0a0806, 0.08);
+        scene.fog = new THREE.FogExp2(0x0a0806, 0.058);
 
-        const ambientLight = new THREE.AmbientLight(0x201510, 0.4);
+        const ambientLight = new THREE.AmbientLight(0x271b12, 0.56);
         scene.add(ambientLight);
-        const decoSkyFill = new THREE.HemisphereLight(0x4d3920, 0x070504, 0.13);
+        const decoSkyFill = new THREE.HemisphereLight(0x664a2b, 0x0b0806, 0.2);
         scene.add(decoSkyFill);
 
         // Materials
-        const wallMaterial = new THREE.MeshStandardMaterial({ color: 0x2a1f15, roughness: 0.9, metalness: 0.0 });
-        const floorMaterial = new THREE.MeshStandardMaterial({ color: 0x1a1208, roughness: 0.95 });
+        function createDeterministicRng(seed = 1) {
+            let state = seed >>> 0 || 1;
+            return () => {
+                state = (state * 1664525 + 1013904223) >>> 0;
+                return state / 0x100000000;
+            };
+        }
+
+        function finalizeCanvasTexture(canvas, { repeatX = 1, repeatY = 1, isColor = false } = {}) {
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            texture.repeat.set(repeatX, repeatY);
+            texture.minFilter = THREE.LinearMipMapLinearFilter;
+            texture.magFilter = THREE.LinearFilter;
+            texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+            if (isColor) texture.colorSpace = THREE.SRGBColorSpace;
+            texture.needsUpdate = true;
+            return texture;
+        }
+
+        function createWallTextureSet(seed = 11) {
+            const size = 512;
+            const rng = createDeterministicRng(seed);
+            const colorCanvas = document.createElement('canvas');
+            colorCanvas.width = size;
+            colorCanvas.height = size;
+            const colorCtx = colorCanvas.getContext('2d');
+
+            const baseGrad = colorCtx.createLinearGradient(0, 0, 0, size);
+            baseGrad.addColorStop(0, '#2f241a');
+            baseGrad.addColorStop(0.4, '#2a1f16');
+            baseGrad.addColorStop(1, '#241a12');
+            colorCtx.fillStyle = baseGrad;
+            colorCtx.fillRect(0, 0, size, size);
+
+            for (let i = 0; i < 3200; i++) {
+                const x = rng() * size;
+                const y = rng() * size;
+                const w = 1 + rng() * 4;
+                const h = 1 + rng() * 4;
+                const shade = Math.floor(70 + rng() * 60);
+                colorCtx.fillStyle = `rgba(${shade}, ${Math.floor(shade * 0.8)}, ${Math.floor(shade * 0.55)}, ${0.03 + rng() * 0.08})`;
+                colorCtx.fillRect(x, y, w, h);
+            }
+
+            colorCtx.strokeStyle = 'rgba(210, 169, 108, 0.05)';
+            colorCtx.lineWidth = 1.2;
+            for (let i = 0; i < 80; i++) {
+                const x = rng() * size;
+                colorCtx.beginPath();
+                colorCtx.moveTo(x, 0);
+                colorCtx.lineTo(x + (rng() - 0.5) * 48, size);
+                colorCtx.stroke();
+            }
+
+            const roughCanvas = document.createElement('canvas');
+            roughCanvas.width = size;
+            roughCanvas.height = size;
+            const roughCtx = roughCanvas.getContext('2d');
+            roughCtx.fillStyle = '#cbcbcb';
+            roughCtx.fillRect(0, 0, size, size);
+            for (let i = 0; i < 2800; i++) {
+                const v = 138 + Math.floor(rng() * 92);
+                roughCtx.fillStyle = `rgba(${v}, ${v}, ${v}, ${0.15 + rng() * 0.45})`;
+                roughCtx.fillRect(rng() * size, rng() * size, 1 + rng() * 6, 1 + rng() * 6);
+            }
+
+            const bumpCanvas = document.createElement('canvas');
+            bumpCanvas.width = size;
+            bumpCanvas.height = size;
+            const bumpCtx = bumpCanvas.getContext('2d');
+            bumpCtx.fillStyle = '#7f7f7f';
+            bumpCtx.fillRect(0, 0, size, size);
+            for (let i = 0; i < 2400; i++) {
+                const v = 100 + Math.floor(rng() * 85);
+                bumpCtx.fillStyle = `rgba(${v}, ${v}, ${v}, ${0.2 + rng() * 0.35})`;
+                bumpCtx.fillRect(rng() * size, rng() * size, 1 + rng() * 5, 1 + rng() * 5);
+            }
+            bumpCtx.strokeStyle = 'rgba(70,70,70,0.28)';
+            bumpCtx.lineWidth = 1;
+            for (let i = 0; i < 48; i++) {
+                const x0 = rng() * size;
+                const y0 = rng() * size;
+                bumpCtx.beginPath();
+                bumpCtx.moveTo(x0, y0);
+                bumpCtx.lineTo(x0 + (rng() - 0.5) * 84, y0 + (rng() - 0.5) * 84);
+                bumpCtx.stroke();
+            }
+
+            return {
+                map: finalizeCanvasTexture(colorCanvas, { repeatX: 2.6, repeatY: 1.3, isColor: true }),
+                roughnessMap: finalizeCanvasTexture(roughCanvas, { repeatX: 2.6, repeatY: 1.3 }),
+                bumpMap: finalizeCanvasTexture(bumpCanvas, { repeatX: 2.6, repeatY: 1.3 })
+            };
+        }
+
+        function createWoodTextureSet(seed = 29) {
+            const size = 512;
+            const rng = createDeterministicRng(seed);
+            const colorCanvas = document.createElement('canvas');
+            colorCanvas.width = size;
+            colorCanvas.height = size;
+            const colorCtx = colorCanvas.getContext('2d');
+
+            colorCtx.fillStyle = '#4b2e18';
+            colorCtx.fillRect(0, 0, size, size);
+            for (let i = 0; i < 520; i++) {
+                const x = rng() * size;
+                const width = 0.5 + rng() * 2.7;
+                const dark = rng() > 0.55;
+                const alpha = 0.08 + rng() * 0.22;
+                colorCtx.fillStyle = dark ? `rgba(52,26,13,${alpha})` : `rgba(122,83,49,${alpha * 0.65})`;
+                colorCtx.fillRect(x, 0, width, size);
+            }
+            for (let i = 0; i < 42; i++) {
+                const cx = rng() * size;
+                const cy = rng() * size;
+                const rx = 8 + rng() * 26;
+                const ry = 3 + rng() * 12;
+                colorCtx.beginPath();
+                colorCtx.ellipse(cx, cy, rx, ry, rng() * Math.PI, 0, Math.PI * 2);
+                colorCtx.strokeStyle = `rgba(40,24,14,${0.12 + rng() * 0.2})`;
+                colorCtx.lineWidth = 1 + rng() * 1.2;
+                colorCtx.stroke();
+            }
+
+            const roughCanvas = document.createElement('canvas');
+            roughCanvas.width = size;
+            roughCanvas.height = size;
+            const roughCtx = roughCanvas.getContext('2d');
+            roughCtx.fillStyle = '#a7a7a7';
+            roughCtx.fillRect(0, 0, size, size);
+            for (let i = 0; i < 780; i++) {
+                const x = rng() * size;
+                const width = 1 + rng() * 3;
+                const v = 118 + Math.floor(rng() * 82);
+                roughCtx.fillStyle = `rgba(${v},${v},${v},${0.18 + rng() * 0.35})`;
+                roughCtx.fillRect(x, 0, width, size);
+            }
+
+            const bumpCanvas = document.createElement('canvas');
+            bumpCanvas.width = size;
+            bumpCanvas.height = size;
+            const bumpCtx = bumpCanvas.getContext('2d');
+            bumpCtx.fillStyle = '#808080';
+            bumpCtx.fillRect(0, 0, size, size);
+            for (let i = 0; i < 960; i++) {
+                const x = rng() * size;
+                const width = 1 + rng() * 2;
+                const v = 96 + Math.floor(rng() * 96);
+                bumpCtx.fillStyle = `rgba(${v},${v},${v},${0.25 + rng() * 0.3})`;
+                bumpCtx.fillRect(x, 0, width, size);
+            }
+
+            return {
+                map: finalizeCanvasTexture(colorCanvas, { repeatX: 5.4, repeatY: 1.4, isColor: true }),
+                roughnessMap: finalizeCanvasTexture(roughCanvas, { repeatX: 5.4, repeatY: 1.4 }),
+                bumpMap: finalizeCanvasTexture(bumpCanvas, { repeatX: 5.4, repeatY: 1.4 })
+            };
+        }
+
+        function createFloorTextureSet(seed = 53) {
+            const size = 512;
+            const rng = createDeterministicRng(seed);
+            const colorCanvas = document.createElement('canvas');
+            colorCanvas.width = size;
+            colorCanvas.height = size;
+            const colorCtx = colorCanvas.getContext('2d');
+
+            const floorGrad = colorCtx.createLinearGradient(0, 0, size, size);
+            floorGrad.addColorStop(0, '#1f150d');
+            floorGrad.addColorStop(0.5, '#25180f');
+            floorGrad.addColorStop(1, '#1a120a');
+            colorCtx.fillStyle = floorGrad;
+            colorCtx.fillRect(0, 0, size, size);
+
+            colorCtx.strokeStyle = 'rgba(190,145,86,0.16)';
+            colorCtx.lineWidth = 2;
+            const tileStep = 96;
+            for (let x = 0; x <= size; x += tileStep) {
+                colorCtx.beginPath();
+                colorCtx.moveTo(x, 0);
+                colorCtx.lineTo(x, size);
+                colorCtx.stroke();
+            }
+            for (let y = 0; y <= size; y += tileStep) {
+                colorCtx.beginPath();
+                colorCtx.moveTo(0, y);
+                colorCtx.lineTo(size, y);
+                colorCtx.stroke();
+            }
+            colorCtx.strokeStyle = 'rgba(120,88,53,0.08)';
+            for (let i = -size; i <= size * 2; i += tileStep) {
+                colorCtx.beginPath();
+                colorCtx.moveTo(i, 0);
+                colorCtx.lineTo(i - size, size);
+                colorCtx.stroke();
+            }
+
+            for (let i = 0; i < 2800; i++) {
+                const v = 56 + Math.floor(rng() * 72);
+                colorCtx.fillStyle = `rgba(${v},${Math.floor(v * 0.72)},${Math.floor(v * 0.44)},${0.03 + rng() * 0.08})`;
+                colorCtx.fillRect(rng() * size, rng() * size, 1 + rng() * 3, 1 + rng() * 3);
+            }
+
+            const roughCanvas = document.createElement('canvas');
+            roughCanvas.width = size;
+            roughCanvas.height = size;
+            const roughCtx = roughCanvas.getContext('2d');
+            roughCtx.fillStyle = '#c0c0c0';
+            roughCtx.fillRect(0, 0, size, size);
+            for (let i = 0; i < 2200; i++) {
+                const v = 136 + Math.floor(rng() * 90);
+                roughCtx.fillStyle = `rgba(${v},${v},${v},${0.14 + rng() * 0.4})`;
+                roughCtx.fillRect(rng() * size, rng() * size, 1 + rng() * 4, 1 + rng() * 4);
+            }
+            roughCtx.strokeStyle = 'rgba(88,88,88,0.18)';
+            roughCtx.lineWidth = 2;
+            for (let x = 0; x <= size; x += tileStep) {
+                roughCtx.beginPath();
+                roughCtx.moveTo(x, 0);
+                roughCtx.lineTo(x, size);
+                roughCtx.stroke();
+            }
+            for (let y = 0; y <= size; y += tileStep) {
+                roughCtx.beginPath();
+                roughCtx.moveTo(0, y);
+                roughCtx.lineTo(size, y);
+                roughCtx.stroke();
+            }
+
+            const bumpCanvas = document.createElement('canvas');
+            bumpCanvas.width = size;
+            bumpCanvas.height = size;
+            const bumpCtx = bumpCanvas.getContext('2d');
+            bumpCtx.fillStyle = '#808080';
+            bumpCtx.fillRect(0, 0, size, size);
+            for (let i = 0; i < 1700; i++) {
+                const v = 100 + Math.floor(rng() * 92);
+                bumpCtx.fillStyle = `rgba(${v},${v},${v},${0.2 + rng() * 0.3})`;
+                bumpCtx.fillRect(rng() * size, rng() * size, 1 + rng() * 4, 1 + rng() * 4);
+            }
+            bumpCtx.strokeStyle = 'rgba(98,98,98,0.26)';
+            bumpCtx.lineWidth = 1.5;
+            for (let x = 0; x <= size; x += tileStep) {
+                bumpCtx.beginPath();
+                bumpCtx.moveTo(x, 0);
+                bumpCtx.lineTo(x, size);
+                bumpCtx.stroke();
+            }
+            for (let y = 0; y <= size; y += tileStep) {
+                bumpCtx.beginPath();
+                bumpCtx.moveTo(0, y);
+                bumpCtx.lineTo(size, y);
+                bumpCtx.stroke();
+            }
+
+            return {
+                map: finalizeCanvasTexture(colorCanvas, { repeatX: 2.1, repeatY: 2.1, isColor: true }),
+                roughnessMap: finalizeCanvasTexture(roughCanvas, { repeatX: 2.1, repeatY: 2.1 }),
+                bumpMap: finalizeCanvasTexture(bumpCanvas, { repeatX: 2.1, repeatY: 2.1 })
+            };
+        }
+
+        function createBookClothTextureSet(seed = 97) {
+            const size = 256;
+            const rng = createDeterministicRng(seed);
+            const colorCanvas = document.createElement('canvas');
+            colorCanvas.width = size;
+            colorCanvas.height = size;
+            const colorCtx = colorCanvas.getContext('2d');
+
+            colorCtx.fillStyle = '#f5f0e6';
+            colorCtx.fillRect(0, 0, size, size);
+            for (let i = 0; i < 1200; i++) {
+                const x = rng() * size;
+                const y = rng() * size;
+                const w = 1 + rng() * 2;
+                const h = 2 + rng() * 8;
+                const v = 210 + Math.floor(rng() * 45);
+                colorCtx.fillStyle = `rgba(${v}, ${v}, ${v}, ${0.04 + rng() * 0.1})`;
+                colorCtx.fillRect(x, y, w, h);
+            }
+
+            const roughCanvas = document.createElement('canvas');
+            roughCanvas.width = size;
+            roughCanvas.height = size;
+            const roughCtx = roughCanvas.getContext('2d');
+            roughCtx.fillStyle = '#b8b8b8';
+            roughCtx.fillRect(0, 0, size, size);
+            for (let i = 0; i < 1400; i++) {
+                const v = 120 + Math.floor(rng() * 100);
+                roughCtx.fillStyle = `rgba(${v}, ${v}, ${v}, ${0.12 + rng() * 0.34})`;
+                roughCtx.fillRect(rng() * size, rng() * size, 1 + rng() * 3, 1 + rng() * 6);
+            }
+
+            const bumpCanvas = document.createElement('canvas');
+            bumpCanvas.width = size;
+            bumpCanvas.height = size;
+            const bumpCtx = bumpCanvas.getContext('2d');
+            bumpCtx.fillStyle = '#808080';
+            bumpCtx.fillRect(0, 0, size, size);
+            for (let i = 0; i < 1600; i++) {
+                const v = 102 + Math.floor(rng() * 86);
+                bumpCtx.fillStyle = `rgba(${v}, ${v}, ${v}, ${0.16 + rng() * 0.28})`;
+                bumpCtx.fillRect(rng() * size, rng() * size, 1 + rng() * 2, 2 + rng() * 8);
+            }
+
+            return {
+                map: finalizeCanvasTexture(colorCanvas, { isColor: true }),
+                roughnessMap: finalizeCanvasTexture(roughCanvas),
+                bumpMap: finalizeCanvasTexture(bumpCanvas)
+            };
+        }
+
+        function createWearDecalTexture(seed = 79) {
+            const size = 256;
+            const rng = createDeterministicRng(seed);
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, size, size);
+            const grad = ctx.createRadialGradient(size * 0.5, size * 0.45, size * 0.1, size * 0.5, size * 0.5, size * 0.5);
+            grad.addColorStop(0, 'rgba(255,255,255,0.85)');
+            grad.addColorStop(0.55, 'rgba(255,255,255,0.26)');
+            grad.addColorStop(1, 'rgba(255,255,255,0)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, size, size);
+
+            ctx.globalCompositeOperation = 'destination-out';
+            for (let i = 0; i < 120; i++) {
+                const x = rng() * size;
+                const y = rng() * size;
+                const r = 3 + rng() * 14;
+                const cut = ctx.createRadialGradient(x, y, 0, x, y, r);
+                cut.addColorStop(0, `rgba(0,0,0,${0.05 + rng() * 0.24})`);
+                cut.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = cut;
+                ctx.beginPath();
+                ctx.arc(x, y, r, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            return finalizeCanvasTexture(canvas, { isColor: true });
+        }
+
+        const wallTextureSet = createWallTextureSet();
+        const shelfTextureSet = createWoodTextureSet();
+        const floorTextureSet = createFloorTextureSet();
+        const bookTextureSet = createBookClothTextureSet();
+        const wearDecalTexture = createWearDecalTexture();
+
+        const wallMaterial = new THREE.MeshStandardMaterial({
+            color: 0xffffff,
+            roughness: 0.9,
+            metalness: 0.0,
+            map: wallTextureSet.map,
+            roughnessMap: wallTextureSet.roughnessMap,
+            bumpMap: wallTextureSet.bumpMap,
+            bumpScale: 0.022
+        });
+        const floorMaterial = new THREE.MeshStandardMaterial({
+            color: 0xffffff,
+            roughness: 0.93,
+            metalness: 0.02,
+            map: floorTextureSet.map,
+            roughnessMap: floorTextureSet.roughnessMap,
+            bumpMap: floorTextureSet.bumpMap,
+            bumpScale: 0.026
+        });
         const ceilingMaterial = new THREE.MeshStandardMaterial({ color: 0x1f1a12, roughness: 0.9 });
-        const shelfMaterial = new THREE.MeshStandardMaterial({ color: 0x4a2510, roughness: 0.7 });
+        const shelfMaterial = new THREE.MeshStandardMaterial({
+            color: 0xffffff,
+            roughness: 0.68,
+            metalness: 0.05,
+            map: shelfTextureSet.map,
+            roughnessMap: shelfTextureSet.roughnessMap,
+            bumpMap: shelfTextureSet.bumpMap,
+            bumpScale: 0.015
+        });
 
         const BOOK_COLORS = [
             0x8B1A1A, 0x1A3C5A, 0x2B5329, 0x4A3728, 0x3A2E4D,
@@ -3399,9 +3785,24 @@
             0x5A3A28, 0x283A5A, 0x3A5A28, 0x5A2838, 0x38285A,
         ];
 
-        const columnMaterial = new THREE.MeshStandardMaterial({ color: 0x2a1f15, roughness: 0.85 });
+        const columnMaterial = new THREE.MeshStandardMaterial({
+            color: 0xffffff,
+            roughness: 0.86,
+            map: wallTextureSet.map,
+            roughnessMap: wallTextureSet.roughnessMap,
+            bumpMap: wallTextureSet.bumpMap,
+            bumpScale: 0.017
+        });
         const signMaterial = new THREE.MeshStandardMaterial({ color: 0x1a1208, roughness: 0.8 });
         const decoBrassMaterial = new THREE.MeshStandardMaterial({ color: 0xa78347, roughness: 0.36, metalness: 0.76 });
+        const wearDecalMaterial = new THREE.MeshBasicMaterial({
+            map: wearDecalTexture,
+            color: 0x3a2715,
+            transparent: true,
+            opacity: 0.12,
+            side: THREE.DoubleSide,
+            depthWrite: false
+        });
         const decoInlayMaterial = new THREE.MeshBasicMaterial({
             color: 0xc6a15a,
             transparent: true,
@@ -3426,6 +3827,7 @@
             columnMaterial,
             signMaterial,
             decoBrassMaterial,
+            wearDecalMaterial,
             decoInlayMaterial,
             decoGlassMaterial
         ]);
@@ -3646,6 +4048,60 @@
             return texture;
         }
 
+        function createAuraTexture(size = 256) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+
+            const grad = ctx.createRadialGradient(
+                size / 2,
+                size / 2,
+                size * 0.05,
+                size / 2,
+                size / 2,
+                size * 0.48
+            );
+            grad.addColorStop(0, 'rgba(255, 236, 190, 1)');
+            grad.addColorStop(0.35, 'rgba(255, 197, 118, 0.55)');
+            grad.addColorStop(1, 'rgba(255, 151, 76, 0)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, size, size);
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+            texture.minFilter = THREE.LinearFilter;
+            texture.magFilter = THREE.LinearFilter;
+            return texture;
+        }
+
+        function createPortalGlowTexture(width = 256, height = 256) {
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+
+            const grad = ctx.createRadialGradient(
+                width / 2,
+                height * 0.45,
+                8,
+                width / 2,
+                height * 0.55,
+                width * 0.55
+            );
+            grad.addColorStop(0, 'rgba(248, 212, 150, 0.9)');
+            grad.addColorStop(0.45, 'rgba(222, 159, 88, 0.38)');
+            grad.addColorStop(1, 'rgba(130, 79, 39, 0)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, width, height);
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+            texture.minFilter = THREE.LinearFilter;
+            texture.magFilter = THREE.LinearFilter;
+            return texture;
+        }
+
         // ============================================
         // HEXAGONAL ROOM GEOMETRY
         // ============================================
@@ -3670,6 +4126,8 @@
         }
 
         const lightShaftTexture = createLightShaftTexture();
+        const auraTexture = createAuraTexture();
+        const portalGlowTexture = createPortalGlowTexture();
 
         function addArtDecoCenterpiece(group, roomIndex) {
             const inlayGroup = new THREE.Group();
@@ -3785,6 +4243,8 @@
         function createFullRoom(roomIndex, offsetZ) {
             const group = new THREE.Group();
             group.position.z = offsetZ;
+            const corridorRunners = [];
+            const portalGlows = [];
 
             // Floor
             const floorShape = new THREE.Shape();
@@ -3910,6 +4370,36 @@
                 corridorFloor.position.y = 0;
                 group.add(corridorFloor);
 
+                // Corridor runner and brass rails
+                const runnerWidth = corridorWidth * 0.62;
+                const runnerDepth = corridorDepth * 0.9;
+                const runnerMat = new THREE.MeshStandardMaterial({
+                    color: 0x2c1b11,
+                    emissive: 0x3f2313,
+                    emissiveIntensity: 0.22,
+                    roughness: 0.82,
+                    metalness: 0.06
+                });
+                const runner = new THREE.Mesh(new THREE.PlaneGeometry(runnerWidth, runnerDepth), runnerMat);
+                runner.rotation.x = -Math.PI / 2;
+                runner.position.copy(corridorCenter);
+                runner.position.y = 0.005;
+                group.add(runner);
+                corridorRunners.push({ mesh: runner, basePulse: seededRandom(roomIndex * 97 + passIdx * 13) * Math.PI * 2 });
+
+                const brassRailMat = new THREE.MeshStandardMaterial({
+                    color: 0x9a7742,
+                    roughness: 0.34,
+                    metalness: 0.76
+                });
+                const railOffset = runnerWidth / 2 + 0.03;
+                for (const side of [-1, 1]) {
+                    const rail = new THREE.Mesh(new THREE.BoxGeometry(0.024, 0.01, runnerDepth), brassRailMat);
+                    rail.position.copy(corridorCenter).add(rightDir.clone().multiplyScalar(railOffset * side));
+                    rail.position.y = 0.01;
+                    group.add(rail);
+                }
+
                 // Corridor ceiling
                 const corridorCeiling = new THREE.Mesh(corridorFloorGeom, ceilingMaterial);
                 corridorCeiling.rotation.x = Math.PI / 2;
@@ -3934,6 +4424,22 @@
                 rightWall.rotation.y = passAngle - Math.PI / 2;
                 group.add(rightWall);
 
+                // Subtle corridor wear to break up large flat surfaces
+                const wearShift = (seededRandom(roomIndex * 37 + passIdx * 19) - 0.5) * 0.34;
+                const leftWear = new THREE.Mesh(new THREE.PlaneGeometry(0.72, 1.28), wearDecalMaterial);
+                leftWear.position.copy(leftWallPos).add(rightDir.clone().multiplyScalar(0.012));
+                leftWear.position.add(outwardDir.clone().multiplyScalar(wearShift));
+                leftWear.position.y = 1.02;
+                leftWear.rotation.y = passAngle + Math.PI / 2;
+                group.add(leftWear);
+
+                const rightWear = new THREE.Mesh(new THREE.PlaneGeometry(0.72, 1.22), wearDecalMaterial);
+                rightWear.position.copy(rightWallPos).add(rightDir.clone().multiplyScalar(-0.012));
+                rightWear.position.add(outwardDir.clone().multiplyScalar(-wearShift));
+                rightWear.position.y = 1.04;
+                rightWear.rotation.y = passAngle - Math.PI / 2;
+                group.add(rightWear);
+
                 // Infill walls
                 const gapPerSide = (R - corridorWidth) / 2;
                 if (gapPerSide > 0.01) {
@@ -3955,6 +4461,27 @@
                     rightInfill.rotation.y = passAngle;
                     group.add(rightInfill);
                 }
+
+                // Soft glow at corridor end to suggest depth beyond visible geometry
+                const portalGlow = new THREE.Mesh(
+                    new THREE.PlaneGeometry(corridorWidth * 0.96, ROOM_HEIGHT * 0.76),
+                    new THREE.MeshBasicMaterial({
+                        map: portalGlowTexture,
+                        color: 0xffc67b,
+                        transparent: true,
+                        opacity: 0.16,
+                        blending: THREE.AdditiveBlending,
+                        depthWrite: false
+                    })
+                );
+                portalGlow.position.copy(
+                    corridorCenter.clone().add(outwardDir.clone().multiplyScalar(corridorDepth / 2 - 0.04))
+                );
+                portalGlow.position.y = ROOM_HEIGHT * 0.45;
+                portalGlow.rotation.y = passAngle + Math.PI;
+                portalGlow.renderOrder = 7;
+                group.add(portalGlow);
+                portalGlows.push({ mesh: portalGlow, phase: seededRandom(roomIndex * 71 + passIdx * 19) * Math.PI * 2 });
             }
 
             // Lamps with more dynamic flicker
@@ -3973,6 +4500,45 @@
             const light2 = new THREE.PointLight(0xFFD280, 2.0, 10, 1.2);
             light2.position.copy(lamp2.position);
             group.add(light2);
+
+            // Warm shelf fill lights for readability deeper in stacks
+            const shelfFillLeft = new THREE.PointLight(0xffc996, 0.65, 6.4, 1.7);
+            shelfFillLeft.position.set(-1.92, 1.42, -0.12);
+            group.add(shelfFillLeft);
+            const shelfFillRight = new THREE.PointLight(0xffc996, 0.65, 6.4, 1.7);
+            shelfFillRight.position.set(1.92, 1.42, -0.12);
+            group.add(shelfFillRight);
+
+            // Additive halos around lamps and chandelier for richer warm bloom
+            const lampAuras = [];
+            for (const lamp of [lamp1, lamp2]) {
+                const aura = new THREE.Sprite(new THREE.SpriteMaterial({
+                    map: auraTexture,
+                    color: 0xffc98d,
+                    transparent: true,
+                    opacity: 0.22,
+                    blending: THREE.AdditiveBlending,
+                    depthWrite: false
+                }));
+                aura.position.copy(lamp.position);
+                aura.scale.setScalar(0.95);
+                aura.renderOrder = 9;
+                group.add(aura);
+                lampAuras.push(aura);
+            }
+
+            const chandelierAura = new THREE.Sprite(new THREE.SpriteMaterial({
+                map: auraTexture,
+                color: 0xffd6a5,
+                transparent: true,
+                opacity: 0.2,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false
+            }));
+            chandelierAura.position.set(0, ROOM_HEIGHT - 0.72, 0);
+            chandelierAura.scale.set(1.95, 1.95, 1.95);
+            chandelierAura.renderOrder = 9;
+            group.add(chandelierAura);
 
             // Add bookshelves with books and wall/shelf signs
             const { bookMesh, bookMap, originalColors } = addBookshelves(group, roomIndex);
@@ -4081,6 +4647,10 @@
                 originalColors,
                 lights: [light1, light2],
                 lamps: [lamp1, lamp2],
+                lampAuras,
+                chandelierAura,
+                corridorRunners,
+                portalGlows,
                 roomIndex,
                 elevatorLocal,
                 inlayGroup: decoCenterpiece.inlayGroup,
@@ -4136,7 +4706,14 @@
             // Books as instanced mesh
             const totalBooks = BOOKSHELF_WALLS.length * SHELF_HEIGHTS.length * BOOKS_PER_SHELF;
             const bookGeom = new THREE.BoxGeometry(0.07, 0.20, 0.18);
-            const bookMat = new THREE.MeshStandardMaterial({ roughness: 0.6, metalness: 0.05 });
+            const bookMat = new THREE.MeshStandardMaterial({
+                roughness: 0.58,
+                metalness: 0.04,
+                map: bookTextureSet.map,
+                roughnessMap: bookTextureSet.roughnessMap,
+                bumpMap: bookTextureSet.bumpMap,
+                bumpScale: 0.012
+            });
             const bookMesh = new THREE.InstancedMesh(bookGeom, bookMat, totalBooks);
 
             const bookMap = [];
@@ -6538,6 +7115,7 @@
         brightnessSlider.addEventListener('input', (e) => {
             renderer.toneMappingExposure = e.target.value / 100;
         });
+        renderer.toneMappingExposure = Number(brightnessSlider.value || 90) / 100;
 
         // ============================================
         // INTRO SEQUENCE
@@ -6747,6 +7325,18 @@
                     room.lamps[0].material.color.setRGB(1, warmth1 * 0.88, warmth1 * 0.63);
                     room.lamps[1].material.color.setRGB(1, warmth2 * 0.88, warmth2 * 0.63);
 
+                    if (room.lampAuras) {
+                        const auraFlickers = [flicker1, flicker2];
+                        for (let i = 0; i < room.lampAuras.length; i++) {
+                            const aura = room.lampAuras[i];
+                            const f = auraFlickers[i] || 0;
+                            const shimmer = Math.sin(elapsedTime * 1.6 + room.roomIndex * 0.2 + i) * 0.04;
+                            aura.material.opacity = THREE.MathUtils.clamp(0.14 + f * 0.14 + shimmer * 0.4, 0.06, 0.28);
+                            const scale = 0.78 + f * 0.12 + shimmer * 0.45;
+                            aura.scale.setScalar(Math.max(0.72, scale));
+                        }
+                    }
+
                     if (room.inlayGroup) {
                         room.inlayGroup.rotation.y = elapsedTime * 0.08 + (room.decoMotionSeed || 0);
                     }
@@ -6760,12 +7350,35 @@
                         room.chandelierLight.intensity = 1.35 + Math.sin(elapsedTime * 1.7 + room.roomIndex) * 0.09;
                     }
 
+                    if (room.chandelierAura) {
+                        const auraPulse = Math.sin(elapsedTime * 1.2 + room.roomIndex * 0.3) * 0.07;
+                        room.chandelierAura.material.opacity = THREE.MathUtils.clamp(0.12 + auraPulse * 0.55, 0.07, 0.24);
+                        const s = 1.7 + auraPulse * 0.9;
+                        room.chandelierAura.scale.set(s, s, s);
+                    }
+
                     if (room.lightShafts) {
                         const shaftPulse = 0.12 + (Math.max(flicker1, flicker2) + 0.15) * 0.2;
                         for (let i = 0; i < room.lightShafts.length; i++) {
                             const shaft = room.lightShafts[i];
                             shaft.material.opacity = Math.max(0.06, shaftPulse + Math.sin(elapsedTime * 0.9 + i + room.roomIndex) * 0.02);
                             shaft.rotation.y = elapsedTime * 0.1 + i * 0.6;
+                        }
+                    }
+
+                    if (room.corridorRunners) {
+                        for (const runnerData of room.corridorRunners) {
+                            const mat = runnerData.mesh.material;
+                            if (!mat || typeof mat.emissiveIntensity !== 'number') continue;
+                            const pulse = Math.sin(elapsedTime * 0.85 + (runnerData.basePulse || 0) + room.roomIndex * 0.16) * 0.07;
+                            mat.emissiveIntensity = 0.22 + pulse;
+                        }
+                    }
+
+                    if (room.portalGlows) {
+                        for (const portalData of room.portalGlows) {
+                            const pulse = Math.sin(elapsedTime * 1.1 + (portalData.phase || 0) + room.roomIndex * 0.27) * 0.04;
+                            portalData.mesh.material.opacity = THREE.MathUtils.clamp(0.1 + pulse * 0.7, 0.05, 0.18);
                         }
                     }
                 }
@@ -6928,6 +7541,7 @@
             }
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
 
