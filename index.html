@@ -5003,10 +5003,6 @@
         let pageTurnAnimationToken = 0;
         const PAGE_TURN_OUT_MS = 280;
         const PAGE_TURN_IN_MS = 360;
-<<<<<<< HEAD
-        const PAGE_NUM_RESERVE_PX = 24;
-=======
->>>>>>> codex/navigation-pr-clean
         const PAGE_MEASURE_MIN_WIDTH_PX = 300;
         const PAGE_MEASURE_MIN_HEIGHT_PX = 420;
         const textCache = new Map();
@@ -5018,14 +5014,11 @@
 
         let pageCharStarts = [];
         let fontRepaginateTimer = null;
-<<<<<<< HEAD
-=======
         let mobileReaderUIVisible = true;
         let mobileReaderHideTimer = null;
         let mobileReaderRepaginateTimer = null;
         let compactTapStamp = 0;
         const MOBILE_READER_HIDE_MS = 2800;
->>>>>>> codex/navigation-pr-clean
 
         function applyReaderTheme() {
             const reader = document.getElementById('reader');
@@ -5037,8 +5030,6 @@
             btn.title = readerDarkMode ? 'Switch to light pages' : 'Switch to dark pages';
         }
 
-<<<<<<< HEAD
-=======
         function clearMobileReaderHideTimer() {
             if (mobileReaderHideTimer) {
                 clearTimeout(mobileReaderHideTimer);
@@ -5111,7 +5102,6 @@
             setMobileReaderUIVisible(!mobileReaderUIVisible);
         }
 
->>>>>>> codex/navigation-pr-clean
         function clearPageTurnClasses() {
             const leftPage = document.getElementById('book-page-left');
             const rightPage = document.getElementById('book-page-right');
@@ -5199,22 +5189,14 @@
             const padY = (parseFloat(pageStyle.paddingTop) || 0) + (parseFloat(pageStyle.paddingBottom) || 0);
 
             let w = pageRect.width - padX;
-<<<<<<< HEAD
-            let h = pageRect.height - padY - PAGE_NUM_RESERVE_PX;
-=======
             let h = pageRect.height - padY - pageNumReservePx();
->>>>>>> codex/navigation-pr-clean
 
             // If layout hasn't fully settled yet, derive a sane fallback from the spread box.
             if ((w < PAGE_MEASURE_MIN_WIDTH_PX || h < PAGE_MEASURE_MIN_HEIGHT_PX) && bookSpread) {
                 const spreadRect = bookSpread.getBoundingClientRect();
                 if (spreadRect.width > 0 && spreadRect.height > 0) {
                     w = Math.max(w, ((spreadRect.width - 12) / 2) - padX);
-<<<<<<< HEAD
-                    h = Math.max(h, spreadRect.height - padY - PAGE_NUM_RESERVE_PX);
-=======
                     h = Math.max(h, spreadRect.height - padY - pageNumReservePx());
->>>>>>> codex/navigation-pr-clean
                 }
             }
 
@@ -5477,15 +5459,9 @@
 
                 // Toggle modal width class based on mode
                 const readerPanel = document.querySelector('#reader .reader-page');
-<<<<<<< HEAD
-                if (readerPanel) readerPanel.classList.toggle('single-page', singlePageMode);
-
-                if (singlePageMode) {
-=======
                 if (readerPanel) readerPanel.classList.toggle('single-page', readerSinglePage);
 
                 if (readerSinglePage) {
->>>>>>> codex/navigation-pr-clean
                     // Single page mode
                     rightPage.style.display = 'none';
                     bookSpine.style.display = 'none';
@@ -5538,13 +5514,8 @@
 
             const token = pageTurnAnimationToken;
             const forward = direction >= 0;
-<<<<<<< HEAD
-            const turningPage = singlePageMode ? leftPage : (forward ? rightPage : leftPage);
-            const settlingPage = singlePageMode ? null : (forward ? leftPage : rightPage);
-=======
             const turningPage = readerSinglePage ? leftPage : (forward ? rightPage : leftPage);
             const settlingPage = readerSinglePage ? null : (forward ? leftPage : rightPage);
->>>>>>> codex/navigation-pr-clean
             const dirClass = forward ? 'turn-next' : 'turn-prev';
 
             if (turningPage) turningPage.classList.add('turning-out', dirClass);
@@ -5564,8 +5535,6 @@
                     clearPageTurnClasses();
                 }, PAGE_TURN_IN_MS);
             }, PAGE_TURN_OUT_MS);
-<<<<<<< HEAD
-=======
         }
 
         const bookSpreadEl = document.getElementById('book-spread');
@@ -5593,7 +5562,6 @@
                     setMobileReaderUIVisible(true);
                 }
             });
->>>>>>> codex/navigation-pr-clean
         }
 
         function highlightSearchInText(text, query) {
@@ -5638,16 +5606,6 @@
             settings.readerDarkMode = readerDarkMode;
             saveToStorage(STORAGE_KEYS.SETTINGS, settings);
             applyReaderTheme();
-<<<<<<< HEAD
-        };
-
-        // Typography controls
-        window.toggleTypographyDropdown = function() {
-            const dropdown = document.getElementById('typography-dropdown');
-            dropdown.classList.toggle('visible');
-        };
-
-=======
         };
 
         // Typography controls
@@ -5658,7 +5616,6 @@
             if (!dropdown.classList.contains('visible')) scheduleMobileReaderAutoHide();
         };
 
->>>>>>> codex/navigation-pr-clean
         window.changeFont = async function(font) {
             currentFont = font;
             settings.font = font;
@@ -5819,10 +5776,7 @@
             document.getElementById('reader-content').classList.add('loading');
             document.getElementById('reader-gutenberg-link').href = `https://www.gutenberg.org/ebooks/${bookId}`;
             document.getElementById('reader').classList.add('visible');
-<<<<<<< HEAD
-=======
             setMobileReaderUIVisible(!isCompactReaderMode());
->>>>>>> codex/navigation-pr-clean
             applyReaderTheme();
             
             // Reset search
@@ -6498,14 +6452,10 @@
         window.goToBookFromLibrary = function(bookId) {
             closeLibrary();
             const location = bookIdToLocation(bookId);
-<<<<<<< HEAD
-            if (!location) return;
-=======
             if (!location) {
                 showToast('Book location unavailable');
                 return;
             }
->>>>>>> codex/navigation-pr-clean
             teleportTo(location.room, () => {
                 openBook(bookId);
             }, bookId);
@@ -6514,14 +6464,10 @@
         window.continueReading = function(bookId, page) {
             closeLibrary();
             const location = bookIdToLocation(bookId);
-<<<<<<< HEAD
-            if (!location) return;
-=======
             if (!location) {
                 showToast('Book location unavailable');
                 return;
             }
->>>>>>> codex/navigation-pr-clean
             teleportTo(location.room, () => {
                 openBook(bookId, page);
             }, bookId);
