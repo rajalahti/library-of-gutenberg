@@ -35,6 +35,13 @@
             height: 100vh;
         }
 
+        body.touch-input {
+            overscroll-behavior: none;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
+
         #scene {
             position: fixed;
             top: 0;
@@ -42,6 +49,10 @@
             width: 100%;
             height: 100%;
             display: block;
+        }
+
+        body.touch-input #scene {
+            touch-action: none;
         }
 
         #vignette {
@@ -160,6 +171,20 @@
             display: flex;
             align-items: center;
             gap: 16px;
+        }
+
+        .mobile-menu-toggle {
+            display: none;
+            background: linear-gradient(180deg, rgba(66, 45, 25, 0.75), rgba(36, 25, 15, 0.9));
+            border: 1px solid rgba(198, 161, 90, 0.45);
+            color: #e8d5af;
+            font-family: "IBM Plex Mono", monospace;
+            font-size: 11px;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            border-radius: 8px;
+            padding: 6px 10px;
+            cursor: pointer;
         }
 
         #brightness-slider, #volume-slider {
@@ -507,6 +532,153 @@
             height: min(920px, 90vh);
         }
 
+        #reader.mobile-fullscreen {
+            align-items: stretch;
+            justify-content: stretch;
+        }
+
+        #reader.mobile-fullscreen .reader-container {
+            height: 100dvh;
+            align-items: stretch;
+            justify-content: stretch;
+        }
+
+        #reader.mobile-fullscreen .reader-page,
+        #reader.mobile-fullscreen .reader-page.single-page {
+            width: 100vw;
+            max-width: 100vw;
+            height: 100dvh;
+            max-height: 100dvh;
+            border-radius: 0;
+            padding: calc(8px + env(safe-area-inset-top)) 8px calc(8px + env(safe-area-inset-bottom));
+            position: relative;
+        }
+
+        #reader.mobile-fullscreen .book-spread {
+            margin: 0;
+            background: #ede5d7;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: none;
+            border: none;
+        }
+
+        #reader.mobile-fullscreen .book-page {
+            min-height: 0;
+            border-radius: 0;
+            box-shadow: none;
+            background: transparent;
+            padding: 14px 10px 20px;
+        }
+
+        #reader.mobile-fullscreen .book-page.left,
+        #reader.mobile-fullscreen .book-page.right {
+            border-radius: 0;
+            box-shadow: none;
+        }
+
+        #reader.mobile-fullscreen .book-page::before,
+        #reader.mobile-fullscreen .book-page::after {
+            display: none;
+        }
+
+        #reader.mobile-fullscreen .book-page-content {
+            line-height: 1.78;
+        }
+
+        #reader.mobile-fullscreen .book-page-num {
+            bottom: 6px;
+            font-size: 10px;
+        }
+
+        #reader.mobile-fullscreen.reader-dark .book-spread {
+            background: #1b2230;
+        }
+
+        #reader.mobile-fullscreen .reader-header {
+            margin-bottom: 6px;
+            padding-bottom: 4px;
+            border-bottom: none;
+        }
+
+        #reader.mobile-fullscreen .reader-title {
+            font-size: 13px;
+            line-height: 1.22;
+        }
+
+        #reader.mobile-fullscreen .reader-author {
+            font-size: 10px;
+            margin-top: 1px;
+        }
+
+        #reader.mobile-fullscreen .reader-coords {
+            display: none;
+        }
+
+        #reader.mobile-fullscreen .reader-close {
+            font-size: 22px;
+            width: 24px;
+            height: 24px;
+        }
+
+        #reader.mobile-fullscreen .reader-footer {
+            gap: 6px;
+            padding-top: 6px;
+            border-top: none;
+        }
+
+        #reader.mobile-fullscreen .reader-actions {
+            width: 100%;
+            justify-content: space-between;
+            gap: 6px;
+            order: 2;
+        }
+
+        #reader.mobile-fullscreen .reader-nav {
+            width: 100%;
+            justify-content: space-between;
+            order: 3;
+            gap: 8px;
+        }
+
+        #reader.mobile-fullscreen .reader-nav button {
+            min-width: 92px;
+            font-size: 14px;
+            padding: 7px 12px;
+        }
+
+        #reader.mobile-fullscreen .reader-page-num {
+            width: 100%;
+            order: 1;
+        }
+
+        #reader.mobile-fullscreen #reader-gutenberg-link {
+            width: 100%;
+            order: 4;
+            font-size: 13px !important;
+        }
+
+        #reader.mobile-fullscreen.mobile-reader-ui-hidden .reader-header,
+        #reader.mobile-fullscreen.mobile-reader-ui-hidden .reader-footer,
+        #reader.mobile-fullscreen.mobile-reader-ui-hidden .reader-search-bar,
+        #reader.mobile-fullscreen.mobile-reader-ui-hidden .chapter-sidebar {
+            display: none !important;
+        }
+
+        #reader.mobile-fullscreen.mobile-reader-ui-hidden .book-spread {
+            border-radius: 0;
+            height: 100%;
+        }
+
+        #reader.mobile-fullscreen.mobile-reader-ui-hidden .book-page {
+            padding-top: 12px;
+            padding-bottom: 10px;
+        }
+
+        #reader.mobile-fullscreen.mobile-reader-ui-hidden .book-page-num {
+            bottom: 2px;
+        }
+
         .reader-header {
             display: flex;
             justify-content: space-between;
@@ -647,6 +819,9 @@
                 inset 0 0 40px rgba(0,0,0,0.08),
                 0 2px 20px rgba(0,0,0,0.3);
             transition: transform 0.4s ease, box-shadow 0.3s ease;
+            transform-style: preserve-3d;
+            backface-visibility: hidden;
+            will-change: transform, opacity, filter;
         }
 
         .book-page.left {
@@ -743,20 +918,44 @@
         .book-page.right .book-page-num { right: 20px; }
 
         /* Page turn animation */
-        .book-page.turning-out {
-            animation: pageTurnOut 0.35s ease-in forwards;
+        .book-page.turning-out.turn-next {
+            animation: pageTurnOutNext 280ms cubic-bezier(0.45, 0.04, 0.75, 0.35) forwards;
         }
-        .book-page.turning-in {
-            animation: pageTurnIn 0.35s ease-out forwards;
+        .book-page.turning-in.turn-next {
+            animation: pageTurnInNext 360ms cubic-bezier(0.18, 0.9, 0.25, 1) forwards;
+        }
+        .book-page.turning-out.turn-prev {
+            animation: pageTurnOutPrev 280ms cubic-bezier(0.45, 0.04, 0.75, 0.35) forwards;
+        }
+        .book-page.turning-in.turn-prev {
+            animation: pageTurnInPrev 360ms cubic-bezier(0.18, 0.9, 0.25, 1) forwards;
+        }
+        .book-page.settling {
+            animation: pageSettle 360ms cubic-bezier(0.2, 0.82, 0.24, 1);
         }
 
-        @keyframes pageTurnOut {
-            0% { transform: rotateY(0deg); opacity: 1; }
-            100% { transform: rotateY(-30deg); opacity: 0.7; }
+        @keyframes pageTurnOutNext {
+            0% { transform: rotateY(0deg) translateX(0px); opacity: 1; filter: brightness(1); }
+            45% { filter: brightness(0.9); }
+            100% { transform: rotateY(-78deg) translateX(-10px); opacity: 0.86; filter: brightness(0.74); }
         }
-        @keyframes pageTurnIn {
-            0% { transform: rotateY(30deg); opacity: 0.7; }
-            100% { transform: rotateY(0deg); opacity: 1; }
+        @keyframes pageTurnInNext {
+            0% { transform: rotateY(74deg) translateX(8px); opacity: 0.84; filter: brightness(0.76); }
+            100% { transform: rotateY(0deg) translateX(0px); opacity: 1; filter: brightness(1); }
+        }
+        @keyframes pageTurnOutPrev {
+            0% { transform: rotateY(0deg) translateX(0px); opacity: 1; filter: brightness(1); }
+            45% { filter: brightness(0.9); }
+            100% { transform: rotateY(78deg) translateX(10px); opacity: 0.86; filter: brightness(0.74); }
+        }
+        @keyframes pageTurnInPrev {
+            0% { transform: rotateY(-74deg) translateX(-8px); opacity: 0.84; filter: brightness(0.76); }
+            100% { transform: rotateY(0deg) translateX(0px); opacity: 1; filter: brightness(1); }
+        }
+        @keyframes pageSettle {
+            0% { transform: translateX(0px); filter: brightness(0.96); }
+            45% { transform: translateX(2px); filter: brightness(1.02); }
+            100% { transform: translateX(0px); filter: brightness(1); }
         }
 
         /* Decorative corner flourishes */
@@ -772,6 +971,20 @@
         }
         .book-page.left::before { left: 8px; }
         .book-page.right::before { right: 8px; transform: scaleX(-1); }
+
+        .book-page::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0;
+            background: linear-gradient(90deg, rgba(0,0,0,0.24) 0%, rgba(0,0,0,0.05) 35%, rgba(255,255,255,0.06) 70%, transparent 100%);
+            transition: opacity 0.2s ease;
+        }
+        .book-page.turning-out::after,
+        .book-page.turning-in::after {
+            opacity: 1;
+        }
 
         .book-page .search-highlight {
             background: rgba(196, 148, 58, 0.5);
@@ -883,6 +1096,141 @@
         @keyframes pageFlip {
             0% { opacity: 0.35; transform: translateX(8px); }
             100% { opacity: 1; transform: translateX(0); }
+        }
+
+        #reader.reader-dark .reader-page {
+            background: linear-gradient(170deg, #15181f 0%, #11151b 40%, #0d1015 100%);
+            border-color: #303b4b;
+            box-shadow: 0 0 60px rgba(0,0,0,0.84), inset 0 1px 0 rgba(181, 208, 255, 0.08);
+        }
+        #reader.reader-dark .reader-header {
+            border-bottom-color: #303b4b;
+        }
+        #reader.reader-dark .reader-title {
+            color: #bad2ff;
+        }
+        #reader.reader-dark .reader-author,
+        #reader.reader-dark .reader-coords {
+            color: #90a4c1;
+        }
+        #reader.reader-dark .reader-close {
+            color: #8ba0be;
+        }
+        #reader.reader-dark .reader-close:hover {
+            color: #d2dff4;
+        }
+        #reader.reader-dark .book-page {
+            background: linear-gradient(140deg, #232a36 0%, #1a212c 45%, #161c25 100%);
+            color: #d9e0ea;
+            box-shadow:
+                inset 0 0 42px rgba(0,0,0,0.32),
+                0 2px 20px rgba(0,0,0,0.48);
+        }
+        #reader.reader-dark .book-page.left {
+            box-shadow:
+                inset -20px 0 30px -20px rgba(0,0,0,0.35),
+                inset 0 0 40px rgba(0,0,0,0.2),
+                -4px 4px 15px rgba(0,0,0,0.38);
+        }
+        #reader.reader-dark .book-page.right {
+            box-shadow:
+                inset 20px 0 30px -20px rgba(0,0,0,0.35),
+                inset 0 0 40px rgba(0,0,0,0.2),
+                4px 4px 15px rgba(0,0,0,0.38);
+        }
+        #reader.reader-dark .book-spine {
+            background: linear-gradient(90deg, #10141b 0%, #202938 20%, #18202c 50%, #202938 80%, #10141b 100%);
+        }
+        #reader.reader-dark .book-page-content {
+            color: #d9e0ea;
+        }
+        #reader.reader-dark .book-page-num {
+            color: rgba(205, 223, 255, 0.55);
+        }
+        #reader.reader-dark .book-page::before {
+            opacity: 0.1;
+            filter: brightness(2.7);
+        }
+        #reader.reader-dark .book-page .search-highlight,
+        #reader.reader-dark .reader-content .search-highlight {
+            background: rgba(143, 175, 255, 0.32);
+        }
+        #reader.reader-dark .reader-footer {
+            border-top-color: #303b4b;
+        }
+        #reader.reader-dark .reader-page-num {
+            color: #9db1ce;
+        }
+        #reader.reader-dark .reader-action-btn {
+            color: #9db1ce;
+        }
+        #reader.reader-dark .reader-action-btn:hover {
+            color: #d1e1ff;
+            border-color: #3a4c67;
+        }
+        #reader.reader-dark .reader-action-btn.active,
+        #reader.reader-dark .reader-action-btn.bookmarked {
+            color: #c5dbff;
+        }
+        #reader.reader-dark .reader-nav button {
+            background: rgba(33, 43, 57, 0.78);
+            border-color: #3a4c67;
+            color: #d5e4ff;
+        }
+        #reader.reader-dark .reader-nav button:hover:not(:disabled) {
+            background: rgba(52, 67, 88, 0.95);
+            border-color: #87a8df;
+        }
+        #reader.reader-dark .reader-page-jump input {
+            background: #131a24;
+            border-color: #314059;
+            color: #d5e4ff;
+        }
+        #reader.reader-dark .reader-page-jump input:focus {
+            border-color: #87a8df;
+        }
+        #reader.reader-dark .reader-search-bar,
+        #reader.reader-dark .typography-dropdown {
+            background: rgba(17, 22, 31, 0.98);
+            border-color: #314059;
+        }
+        #reader.reader-dark .reader-search-bar input,
+        #reader.reader-dark .typography-dropdown select {
+            background: #131a24;
+            border-color: #314059;
+            color: #d5e4ff;
+        }
+        #reader.reader-dark .reader-search-bar .search-info,
+        #reader.reader-dark .reader-search-bar button {
+            color: #9db1ce;
+        }
+        #reader.reader-dark .reader-search-bar button:hover {
+            color: #d1e1ff;
+        }
+        #reader.reader-dark .typography-dropdown label {
+            color: #9db1ce;
+        }
+        #reader.reader-dark .chapter-sidebar {
+            background: #0f141d;
+        }
+        #reader.reader-dark .chapter-sidebar.visible {
+            border-right-color: #314059;
+        }
+        #reader.reader-dark .chapter-sidebar-title {
+            color: #bad2ff;
+        }
+        #reader.reader-dark .chapter-item {
+            color: #c8d9f5;
+        }
+        #reader.reader-dark .chapter-item:hover {
+            background: rgba(52, 67, 88, 0.5);
+        }
+        #reader.reader-dark .chapter-item.active {
+            background: rgba(52, 67, 88, 0.72);
+            border-left-color: #bad2ff;
+        }
+        #reader.reader-dark #reader-gutenberg-link {
+            color: #9ec4ff !important;
         }
 
         /* In-book search bar */
@@ -1623,6 +1971,90 @@
             box-shadow: 0 12px 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(230,216,184,0.12);
         }
 
+        #touch-controls {
+            position: fixed;
+            inset: 0;
+            z-index: 12;
+            pointer-events: none;
+            display: none;
+        }
+
+        #touch-controls.visible {
+            display: block;
+        }
+
+        .touch-pad {
+            position: fixed;
+            width: 128px;
+            height: 128px;
+            border-radius: 50%;
+            border: 1px solid rgba(198, 161, 90, 0.45);
+            background: radial-gradient(circle at 35% 30%, rgba(80, 58, 34, 0.42), rgba(20, 14, 10, 0.65));
+            box-shadow: inset 0 0 0 1px rgba(230, 216, 184, 0.1), 0 10px 24px rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(1px);
+            pointer-events: auto;
+            touch-action: none;
+        }
+
+        #touch-move-pad {
+            left: 14px;
+            bottom: calc(110px + env(safe-area-inset-bottom));
+        }
+
+        #touch-look-pad {
+            right: 14px;
+            bottom: calc(110px + env(safe-area-inset-bottom));
+        }
+
+        .touch-pad-label {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            color: rgba(239, 223, 191, 0.82);
+            font-size: 12px;
+            letter-spacing: 1.6px;
+            font-family: "IBM Plex Mono", monospace;
+            pointer-events: none;
+        }
+
+        #touch-move-thumb {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 46px;
+            height: 46px;
+            margin-left: -23px;
+            margin-top: -23px;
+            border-radius: 50%;
+            border: 1px solid rgba(198, 161, 90, 0.64);
+            background: radial-gradient(circle at 35% 30%, rgba(198, 161, 90, 0.72), rgba(84, 60, 32, 0.82));
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+            pointer-events: none;
+            transition: transform 0.08s ease-out;
+        }
+
+        #touch-interact-btn {
+            position: fixed;
+            right: 16px;
+            bottom: calc(252px + env(safe-area-inset-bottom));
+            border: 1px solid rgba(198, 161, 90, 0.58);
+            border-radius: 12px;
+            background: linear-gradient(180deg, rgba(82, 58, 33, 0.88), rgba(37, 26, 15, 0.94));
+            color: #efdfbf;
+            font-family: "IBM Plex Mono", monospace;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+            padding: 10px 14px;
+            pointer-events: auto;
+            touch-action: manipulation;
+            box-shadow: inset 0 1px 0 rgba(230, 216, 184, 0.22), 0 10px 22px rgba(0, 0, 0, 0.44);
+        }
+
+        #touch-interact-btn:active {
+            transform: translateY(1px);
+        }
+
         #elevator-current-floor {
             margin: 0 0 14px;
             padding: 8px 10px;
@@ -1679,11 +2111,23 @@
 
         @media (max-width: 900px) {
             #toolbar {
-                bottom: 62px;
-                width: calc(100vw - 16px);
+                bottom: calc(70px + env(safe-area-inset-bottom));
+                width: calc(100vw - 14px);
                 justify-content: center;
                 flex-wrap: wrap;
                 gap: 8px;
+                display: none;
+                z-index: 26;
+            }
+
+            body.mobile-menu-open #toolbar {
+                display: flex;
+            }
+
+            body.touch-input .mobile-menu-toggle {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
             }
 
             .toolbar-btn {
@@ -1711,6 +2155,39 @@
                 align-items: flex-start;
                 gap: 3px;
             }
+
+            .touch-pad {
+                width: 112px;
+                height: 112px;
+            }
+
+            #touch-move-pad {
+                left: 10px;
+                bottom: calc(98px + env(safe-area-inset-bottom));
+            }
+
+            #touch-look-pad {
+                right: 10px;
+                bottom: calc(98px + env(safe-area-inset-bottom));
+            }
+
+            #touch-move-thumb {
+                width: 40px;
+                height: 40px;
+                margin-left: -20px;
+                margin-top: -20px;
+            }
+
+            #touch-interact-btn {
+                right: 10px;
+                bottom: calc(222px + env(safe-area-inset-bottom));
+                padding: 9px 13px;
+                font-size: 12px;
+            }
+
+            #two-page-btn {
+                display: none;
+            }
         }
 </style>
 </head>
@@ -1724,6 +2201,7 @@
     <div id="title-bar">
         <span>THE LIBRARY OF GUTENBERG <span id="build-tag" style="opacity:0.35;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1px;">—</span></span>
         <div class="title-bar-controls">
+            <button id="mobile-menu-toggle" class="mobile-menu-toggle" type="button" aria-expanded="false">Menu</button>
             <div class="control-group">
                 <span class="control-icon" id="audio-toggle" title="Toggle ambient audio">🔇</span>
                 <input type="range" id="volume-slider" min="0" max="100" value="30" title="Volume">
@@ -1739,7 +2217,7 @@
         <div id="intro-text">
             <div class="intro-quote">"A library is not a luxury but one of the necessities of life."</div>
             <div class="intro-attribution">— Henry Ward Beecher</div>
-            <div class="intro-prompt">Click anywhere to enter the Library</div>
+            <div class="intro-prompt" id="intro-prompt">Click anywhere to enter the Library</div>
         </div>
     </div>
 
@@ -1747,6 +2225,17 @@
 
     <div id="instructions">
         Click to look around. WASD to walk. Click any book to read it.
+    </div>
+
+    <div id="touch-controls">
+        <div id="touch-move-pad" class="touch-pad">
+            <div id="touch-move-thumb"></div>
+            <div class="touch-pad-label">MOVE</div>
+        </div>
+        <div id="touch-look-pad" class="touch-pad">
+            <div class="touch-pad-label">LOOK</div>
+        </div>
+        <button id="touch-interact-btn" type="button">Read / Use</button>
     </div>
 
     <div id="book-tooltip">
@@ -1811,6 +2300,7 @@
                         <button class="reader-action-btn" id="toc-btn" onclick="toggleChapterSidebar()" title="Table of Contents">📑</button>
                         <button class="reader-action-btn" id="search-book-btn" onclick="openReaderSearch()" title="Search in book (Ctrl+F)">🔍</button>
                         <button class="reader-action-btn" id="bookmark-btn" onclick="toggleBookmark()" title="Bookmark">🔖</button>
+                        <button class="reader-action-btn" id="reader-theme-btn" onclick="toggleReaderTheme()" title="Switch to dark pages">☾</button>
                         <div style="position:relative;">
                             <button class="reader-action-btn" id="typography-btn" onclick="toggleTypographyDropdown()" title="Typography">Aa</button>
                             <div class="typography-dropdown" id="typography-dropdown">
@@ -1925,7 +2415,7 @@
         </div>
         <div class="nav-field">
             <label>Room Number:</label>
-            <input type="number" id="nav-room" min="1" max="111" value="1">
+            <input type="number" id="nav-room" min="1" max="128" value="1">
         </div>
         <div class="nav-field">
             <label>Wall (1-4):</label>
@@ -2010,6 +2500,7 @@
         <div class="about-content">
             <p><strong>WASD</strong> — Move around<br>
             <strong>Mouse</strong> — Look around (click to engage)<br>
+            <strong>Touch (iPhone/iPad)</strong> — Left thumb moves, right thumb looks<br>
             <strong>Click a book</strong> — Read it<br>
             <strong>ESC</strong> — Release mouse / Close panels<br>
             <strong>Ctrl+F</strong> — Search within book</p>
@@ -2050,7 +2541,7 @@
         // ============================================
 
         // Version stamp (helps ensure browser isn't using a cached index.html)
-        const APP_BUILD = 'css-book-v16';
+        const APP_BUILD = 'css-book-v21-mobile-readability-recovery';
         window.__APP_BUILD = APP_BUILD;
 
         // ============================================
@@ -2077,6 +2568,7 @@
             LAYOUT.floorsById = new Map(LAYOUT.floors.map(f => [f.id, f]));
             if (typeof LAYOUT.roomsTotal === 'number') {
                 TOTAL_ROOMS = LAYOUT.roomsTotal;
+                TOTAL_BOOKS = Math.max(TOTAL_BOOKS, TOTAL_ROOMS * BOOKS_PER_ROOM);
                 const navRoom = document.getElementById('nav-room');
                 if (navRoom) navRoom.max = String(TOTAL_ROOMS);
             }
@@ -2088,6 +2580,12 @@
             if (LAYOUT.tagsLoading.has(roomIndex)) return await LAYOUT.tagsLoading.get(roomIndex);
             const pr = (async () => {
                 const res = await fetch(`/api/layout/tags/room/${String(roomIndex).padStart(3,'0')}`);
+                if (res.status === 404) {
+                    const empty = { room: roomIndex, tags: [] };
+                    LAYOUT.tagsCache.set(roomIndex, empty);
+                    LAYOUT.tagsLoading.delete(roomIndex);
+                    return empty;
+                }
                 if (!res.ok) throw new Error('Failed to load room tags');
                 const data = await res.json();
                 LAYOUT.tagsCache.set(roomIndex, data);
@@ -2196,8 +2694,8 @@
         const SHELVES_PER_WALL = 5;
         const WALLS_PER_ROOM = 4;
         const BOOKS_PER_ROOM = BOOKS_PER_SHELF * SHELVES_PER_WALL * WALLS_PER_ROOM; // 640
-        const TOTAL_BOOKS = 70000;
-        let TOTAL_ROOMS = 113; // overridden by /api/layout/floors (roomsTotal)
+        let TOTAL_ROOMS = 128; // overridden by /api/layout/floors (roomsTotal)
+        let TOTAL_BOOKS = TOTAL_ROOMS * BOOKS_PER_ROOM;
 
         const WALL_NAMES = ['North', 'East', 'South', 'West'];
 
@@ -2241,6 +2739,7 @@
             singlePageMode: false, 
             font: 'serif', 
             fontSize: 'medium',
+            readerDarkMode: false,
             audioEnabled: false,
             volume: 30
         });
@@ -2520,7 +3019,7 @@
                     }
                 } catch (e) {}
 
-                const response = await fetch(`/.netlify/functions/gutenberg?meta=${bookId}`);
+                const response = await fetch(`/api/gutenberg?meta=${bookId}`);
                 if (!response.ok) return null;
                 const data = await response.json();
                 const book = {
@@ -2561,7 +3060,7 @@
 
         async function fetchBookText(bookId) {
             try {
-                const response = await fetch(`/.netlify/functions/gutenberg?id=${bookId}`);
+                const response = await fetch(`/api/gutenberg?id=${bookId}`);
                 if (!response.ok) return null;
                 return await response.text();
             } catch (e) {
@@ -2572,7 +3071,7 @@
 
         async function searchBooks(query, language = '', topic = '') {
             try {
-                let url = `/.netlify/functions/gutenberg?search=${encodeURIComponent(query)}`;
+                let url = `/api/gutenberg?search=${encodeURIComponent(query)}`;
                 if (language) url += `&languages=${language}`;
                 if (topic) url += `&topic=${encodeURIComponent(topic)}`;
                 
@@ -2804,6 +3303,21 @@
             return (settings.layoutVersion === 2) ? bookIdToLocation_v2(bookId) : bookIdToLocation_v1(bookId);
         }
 
+        function fallbackBookIdToLocation(bookId) {
+            const id = Number(bookId);
+            if (!Number.isInteger(id) || id < 1) return null;
+
+            const slotCount = Math.max(1, TOTAL_ROOMS * BOOKS_PER_ROOM);
+            const slot = ((id - 1) % slotCount + slotCount) % slotCount;
+            const room = Math.floor(slot / BOOKS_PER_ROOM);
+            const inRoom = slot % BOOKS_PER_ROOM;
+            const wall = Math.floor(inRoom / (BOOKS_PER_SHELF * SHELVES_PER_WALL));
+            const inWall = inRoom % (BOOKS_PER_SHELF * SHELVES_PER_WALL);
+            const shelf = Math.floor(inWall / BOOKS_PER_SHELF);
+            const volume = inWall % BOOKS_PER_SHELF;
+            return { room, wall, shelf, volume, bookId: id, layout: 'overflow' };
+        }
+
         function locationToBookId_v1(room, wall, shelf, volume) {
             const index = room * BOOKS_PER_ROOM +
                           wall * BOOKS_PER_SHELF * SHELVES_PER_WALL +
@@ -2833,7 +3347,15 @@
         }
 
         function bookIdToLocation(bookId) {
-            return bookIdToLocationCanonical(bookId) || bookIdToLocation_legacy(bookId);
+            const canonical = bookIdToLocationCanonical(bookId);
+            if (canonical) return canonical;
+
+            const legacy = bookIdToLocation_legacy(bookId);
+            if (legacy && Number.isInteger(legacy.room) && legacy.room >= 0 && legacy.room < TOTAL_ROOMS) {
+                return legacy;
+            }
+
+            return fallbackBookIdToLocation(bookId);
         }
 
         function locationToBookId(room, wall, shelf, volume) {
@@ -2922,6 +3444,7 @@
 
         function highlightBook(bookId) {
             const location = bookIdToLocation(bookId);
+            if (!location) return;
             highlightedBookInfo = {
                 bookId,
                 room: location.room,
@@ -4011,26 +4534,267 @@
         let elevatorInRange = false;
 
         let introHidden = false;
+        const introPromptEl = document.getElementById('intro-prompt');
+        const instructionsEl = document.getElementById('instructions');
+        const crosshairEl = document.getElementById('crosshair');
+        const elevatorHintEl = document.getElementById('elevator-hint');
+        const touchControlsEl = document.getElementById('touch-controls');
+        const touchMovePadEl = document.getElementById('touch-move-pad');
+        const touchMoveThumbEl = document.getElementById('touch-move-thumb');
+        const touchLookPadEl = document.getElementById('touch-look-pad');
+        const touchInteractBtnEl = document.getElementById('touch-interact-btn');
+        const mobileMenuToggleEl = document.getElementById('mobile-menu-toggle');
+        const readerEl = document.getElementById('reader');
 
-        canvas.addEventListener('click', (e) => {
-            if (!readerOpen && !searchOpen && !navOpen && !aboutOpen && !libraryOpen && introHidden) {
+        const isTouchDevice = window.matchMedia('(any-pointer: coarse)').matches ||
+            navigator.maxTouchPoints > 0 ||
+            /iPhone|iPad|iPod/i.test(navigator.userAgent);
+        const TOUCH_JOYSTICK_RADIUS = 40;
+        const TOUCH_LOOK_SENSITIVITY = 0.0027;
+        const TOUCH_PITCH_LIMIT = Math.PI / 2 - 0.08;
+
+        const touchState = {
+            moveIdentifier: null,
+            lookIdentifier: null,
+            moveX: 0,
+            moveY: 0,
+            lookX: 0,
+            lookY: 0,
+            yaw: 0,
+            pitch: 0,
+            hintDismissed: false,
+            lastInteractAt: 0
+        };
+
+        let mobileMenuOpen = false;
+
+        function isCompactReaderMode() {
+            return isTouchDevice || window.innerWidth <= 900;
+        }
+
+        function isReaderSinglePageMode() {
+            return singlePageMode || isCompactReaderMode();
+        }
+
+        function hasBlockingPanel() {
+            return readerOpen || searchOpen || navOpen || aboutOpen || libraryOpen || elevatorOpen || mobileMenuOpen;
+        }
+
+        function isNavigationActive() {
+            return controls.isLocked || (isTouchDevice && introHidden && !hasBlockingPanel());
+        }
+
+        function setMobileMenuOpen(open) {
+            mobileMenuOpen = !!open && isTouchDevice && window.innerWidth <= 900 && introHidden && !readerOpen;
+            document.body.classList.toggle('mobile-menu-open', mobileMenuOpen);
+            if (mobileMenuToggleEl) {
+                mobileMenuToggleEl.setAttribute('aria-expanded', mobileMenuOpen ? 'true' : 'false');
+                mobileMenuToggleEl.textContent = mobileMenuOpen ? 'Close' : 'Menu';
+            }
+            refreshTouchUI();
+        }
+
+        function syncReaderLayoutMode() {
+            if (!readerEl) return;
+            const compact = isCompactReaderMode();
+            readerEl.classList.toggle('mobile-fullscreen', compact);
+            if (!compact) {
+                readerEl.classList.remove('mobile-reader-ui-hidden');
+            }
+        }
+
+        function startAmbientAudioFromGesture() {
+            if (audioEnabled && !audioContext) {
+                initAudio().then(() => setAmbientVolume(audioVolume)).catch(() => {});
+            }
+        }
+
+        function syncTouchAnglesFromCamera() {
+            const euler = new THREE.Euler().setFromQuaternion(camera.quaternion, 'YXZ');
+            touchState.pitch = THREE.MathUtils.clamp(euler.x, -TOUCH_PITCH_LIMIT, TOUCH_PITCH_LIMIT);
+            touchState.yaw = euler.y;
+        }
+
+        function dismissTouchHint() {
+            if (!isTouchDevice || touchState.hintDismissed) return;
+            touchState.hintDismissed = true;
+            if (instructionsEl) instructionsEl.classList.add('hidden');
+        }
+
+        function resetTouchMove() {
+            touchState.moveX = 0;
+            touchState.moveY = 0;
+            if (touchMoveThumbEl) {
+                touchMoveThumbEl.style.transform = 'translate(0px, 0px)';
+            }
+        }
+
+        function updateTouchMoveFromTouch(touch) {
+            if (!touchMovePadEl) return;
+            const rect = touchMovePadEl.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.height / 2;
+            let dx = touch.clientX - cx;
+            let dy = touch.clientY - cy;
+            const len = Math.hypot(dx, dy);
+            if (len > TOUCH_JOYSTICK_RADIUS && len > 0) {
+                const scale = TOUCH_JOYSTICK_RADIUS / len;
+                dx *= scale;
+                dy *= scale;
+            }
+            touchState.moveX = dx / TOUCH_JOYSTICK_RADIUS;
+            touchState.moveY = dy / TOUCH_JOYSTICK_RADIUS;
+            if (touchMoveThumbEl) {
+                touchMoveThumbEl.style.transform = `translate(${dx}px, ${dy}px)`;
+            }
+        }
+
+        function findTouchByIdentifier(touchList, identifier) {
+            for (let i = 0; i < touchList.length; i++) {
+                if (touchList[i].identifier === identifier) return touchList[i];
+            }
+            return null;
+        }
+
+        function refreshTouchUI() {
+            if (!isTouchDevice) return;
+            const active = introHidden && !hasBlockingPanel();
+            if (touchControlsEl) touchControlsEl.classList.toggle('visible', active);
+            crosshairEl.classList.toggle('visible', active);
+            if (instructionsEl) {
+                instructionsEl.classList.toggle('hidden', touchState.hintDismissed || !active);
+            }
+            if (!active) {
+                touchState.moveIdentifier = null;
+                touchState.lookIdentifier = null;
+                resetTouchMove();
+            }
+        }
+
+        if (isTouchDevice) {
+            document.body.classList.add('touch-input');
+            if (introPromptEl) introPromptEl.textContent = 'Tap anywhere to enter the Library';
+            if (instructionsEl) {
+                instructionsEl.textContent = 'Two-thumb controls: left pad moves, right pad looks. Tap Read / Use to open books.';
+            }
+            if (elevatorHintEl) {
+                elevatorHintEl.innerHTML = 'Tap <strong>Read / Use</strong> to call elevator';
+            }
+            syncTouchAnglesFromCamera();
+            syncReaderLayoutMode();
+
+            if (mobileMenuToggleEl) {
+                mobileMenuToggleEl.addEventListener('click', () => {
+                    setMobileMenuOpen(!mobileMenuOpen);
+                });
+            }
+
+            if (touchMovePadEl) {
+                touchMovePadEl.addEventListener('touchstart', (e) => {
+                    if (touchState.moveIdentifier !== null) return;
+                    const touch = e.changedTouches[0];
+                    if (!touch) return;
+                    touchState.moveIdentifier = touch.identifier;
+                    updateTouchMoveFromTouch(touch);
+                    dismissTouchHint();
+                    startAmbientAudioFromGesture();
+                    e.preventDefault();
+                }, { passive: false });
+
+                touchMovePadEl.addEventListener('touchmove', (e) => {
+                    if (touchState.moveIdentifier === null) return;
+                    const touch = findTouchByIdentifier(e.touches, touchState.moveIdentifier);
+                    if (!touch) return;
+                    updateTouchMoveFromTouch(touch);
+                    dismissTouchHint();
+                    e.preventDefault();
+                }, { passive: false });
+            }
+
+            if (touchLookPadEl) {
+                touchLookPadEl.addEventListener('touchstart', (e) => {
+                    if (touchState.lookIdentifier !== null) return;
+                    const touch = e.changedTouches[0];
+                    if (!touch) return;
+                    touchState.lookIdentifier = touch.identifier;
+                    touchState.lookX = touch.clientX;
+                    touchState.lookY = touch.clientY;
+                    syncTouchAnglesFromCamera();
+                    dismissTouchHint();
+                    startAmbientAudioFromGesture();
+                    e.preventDefault();
+                }, { passive: false });
+
+                touchLookPadEl.addEventListener('touchmove', (e) => {
+                    if (touchState.lookIdentifier === null) return;
+                    const touch = findTouchByIdentifier(e.touches, touchState.lookIdentifier);
+                    if (!touch) return;
+                    const dx = touch.clientX - touchState.lookX;
+                    const dy = touch.clientY - touchState.lookY;
+                    touchState.lookX = touch.clientX;
+                    touchState.lookY = touch.clientY;
+                    if (isNavigationActive()) {
+                        touchState.yaw -= dx * TOUCH_LOOK_SENSITIVITY;
+                        touchState.pitch = THREE.MathUtils.clamp(
+                            touchState.pitch - dy * TOUCH_LOOK_SENSITIVITY,
+                            -TOUCH_PITCH_LIMIT,
+                            TOUCH_PITCH_LIMIT
+                        );
+                        camera.rotation.set(touchState.pitch, touchState.yaw, 0, 'YXZ');
+                    }
+                    dismissTouchHint();
+                    e.preventDefault();
+                }, { passive: false });
+            }
+
+            window.addEventListener('touchend', (e) => {
+                for (const touch of Array.from(e.changedTouches)) {
+                    if (touch.identifier === touchState.moveIdentifier) {
+                        touchState.moveIdentifier = null;
+                        resetTouchMove();
+                    }
+                    if (touch.identifier === touchState.lookIdentifier) {
+                        touchState.lookIdentifier = null;
+                    }
+                }
+            }, { passive: false });
+
+            window.addEventListener('touchcancel', (e) => {
+                for (const touch of Array.from(e.changedTouches)) {
+                    if (touch.identifier === touchState.moveIdentifier) {
+                        touchState.moveIdentifier = null;
+                        resetTouchMove();
+                    }
+                    if (touch.identifier === touchState.lookIdentifier) {
+                        touchState.lookIdentifier = null;
+                    }
+                }
+            }, { passive: false });
+        }
+
+        syncReaderLayoutMode();
+
+        canvas.addEventListener('click', () => {
+            if (isTouchDevice) return;
+            if (!hasBlockingPanel() && introHidden) {
                 controls.lock();
             }
         });
 
         controls.addEventListener('lock', () => {
-            document.getElementById('crosshair').classList.add('visible');
-            document.getElementById('instructions').classList.add('hidden');
-            // Start ambient audio on interaction (requires user gesture)
-            if (audioEnabled && !audioContext) {
-                initAudio().then(() => setAmbientVolume(audioVolume));
+            if (!isTouchDevice) {
+                crosshairEl.classList.add('visible');
+                if (instructionsEl) instructionsEl.classList.add('hidden');
             }
+            startAmbientAudioFromGesture();
         });
 
         controls.addEventListener('unlock', () => {
-            document.getElementById('crosshair').classList.remove('visible');
-            if (introHidden && !readerOpen && !searchOpen && !navOpen && !aboutOpen && !libraryOpen) {
-                document.getElementById('instructions').classList.remove('hidden');
+            if (!isTouchDevice) {
+                crosshairEl.classList.remove('visible');
+                if (instructionsEl && introHidden && !hasBlockingPanel()) {
+                    instructionsEl.classList.remove('hidden');
+                }
             }
         });
 
@@ -4044,7 +4808,7 @@
         window.addEventListener('keydown', (e) => {
             switch(e.code) {
                 case 'KeyW': keys.forward = true; break;
-                case 'KeyS': if (controls.isLocked) keys.backward = true; break;
+                case 'KeyS': if (isNavigationActive()) keys.backward = true; break;
                 case 'KeyA': keys.left = true; break;
                 case 'KeyD': keys.right = true; break;
                 case 'KeyE': if (elevatorInRange) { openElevator(); } break;
@@ -4112,7 +4876,7 @@
             if (!hint) return;
             const room = rooms.get(currentRoomIndex);
             elevatorInRange = false;
-            if (room && room.elevatorLocal && controls.isLocked && !readerOpen && !searchOpen && !navOpen && !aboutOpen && !libraryOpen && !elevatorOpen) {
+            if (room && room.elevatorLocal && isNavigationActive()) {
                 const localPos = camera.position.clone().applyMatrix4(new THREE.Matrix4().copy(room.group.matrixWorld).invert());
                 const dx = localPos.x - room.elevatorLocal.x;
                 const dz = localPos.z - room.elevatorLocal.z;
@@ -4132,9 +4896,12 @@
 
         let hoveredBookId = null;
 
-        document.addEventListener('click', async (event) => {
-            if (!controls.isLocked) return;
-
+        function interactAtCrosshair() {
+            if (!isNavigationActive()) return false;
+            if (elevatorInRange) {
+                openElevator();
+                return true;
+            }
             raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
 
             for (const [idx, room] of rooms) {
@@ -4142,13 +4909,40 @@
                 if (intersects.length > 0) {
                     const instanceId = intersects[0].instanceId;
                     const bookInfo = room.bookMap[instanceId];
-                    if (!bookInfo || !Number.isInteger(bookInfo.bookId) || bookInfo.bookId < 1) return;
+                    if (!bookInfo || !Number.isInteger(bookInfo.bookId) || bookInfo.bookId < 1) return false;
                     openBook(bookInfo.bookId);
                     controls.unlock();
-                    return;
+                    return true;
                 }
             }
+            return false;
+        }
+
+        document.addEventListener('click', () => {
+            if (isTouchDevice || !controls.isLocked) return;
+            interactAtCrosshair();
         });
+
+        if (touchInteractBtnEl) {
+            touchInteractBtnEl.addEventListener('touchstart', (e) => {
+                touchState.lastInteractAt = Date.now();
+                dismissTouchHint();
+                startAmbientAudioFromGesture();
+                interactAtCrosshair();
+                e.preventDefault();
+            }, { passive: false });
+
+            touchInteractBtnEl.addEventListener('click', (e) => {
+                if (Date.now() - touchState.lastInteractAt < 450) {
+                    e.preventDefault();
+                    return;
+                }
+                dismissTouchHint();
+                startAmbientAudioFromGesture();
+                interactAtCrosshair();
+                e.preventDefault();
+            });
+        }
 
         // ============================================
         // SPINE LABEL SYSTEM (screen-space overlay)
@@ -4205,6 +4999,12 @@
         let currentFont = settings.font || 'serif';
         let currentFontSize = settings.fontSize || 'medium';
         let singlePageMode = settings.singlePageMode || false;
+        let readerDarkMode = !!settings.readerDarkMode;
+        let pageTurnAnimationToken = 0;
+        const PAGE_TURN_OUT_MS = 280;
+        const PAGE_TURN_IN_MS = 360;
+        const PAGE_MEASURE_MIN_WIDTH_PX = 300;
+        const PAGE_MEASURE_MIN_HEIGHT_PX = 420;
         const textCache = new Map();
 
         // In-book search state
@@ -4213,6 +5013,135 @@
         let readerSearchCurrentIndex = -1;
 
         let pageCharStarts = [];
+        let fontRepaginateTimer = null;
+        let mobileReaderUIVisible = true;
+        let mobileReaderHideTimer = null;
+        let mobileReaderRepaginateTimer = null;
+        let compactTapStamp = 0;
+        const MOBILE_READER_HIDE_MS = 2800;
+
+        function applyReaderTheme() {
+            const reader = document.getElementById('reader');
+            const btn = document.getElementById('reader-theme-btn');
+            if (!reader || !btn) return;
+            reader.classList.toggle('reader-dark', readerDarkMode);
+            btn.classList.toggle('active', readerDarkMode);
+            btn.textContent = readerDarkMode ? '☀︎' : '☾';
+            btn.title = readerDarkMode ? 'Switch to light pages' : 'Switch to dark pages';
+        }
+
+        function clearMobileReaderHideTimer() {
+            if (mobileReaderHideTimer) {
+                clearTimeout(mobileReaderHideTimer);
+                mobileReaderHideTimer = null;
+            }
+        }
+
+        function pageNumReservePx() {
+            if (isCompactReaderMode() && !mobileReaderUIVisible) return 10;
+            return 24;
+        }
+
+        function scheduleMobileReaderRepaginate() {
+            if (!readerOpen || !currentBookText) return;
+            if (mobileReaderRepaginateTimer) clearTimeout(mobileReaderRepaginateTimer);
+            mobileReaderRepaginateTimer = setTimeout(() => {
+                mobileReaderRepaginateTimer = null;
+                repaginateCurrentBook();
+            }, 90);
+        }
+
+        function scheduleMobileReaderAutoHide() {
+            clearMobileReaderHideTimer();
+            if (!readerOpen || !isCompactReaderMode() || !mobileReaderUIVisible) return;
+            mobileReaderHideTimer = setTimeout(() => {
+                if (!readerOpen || !isCompactReaderMode()) return;
+                if (document.getElementById('reader-search-bar')?.classList.contains('visible')) return;
+                if (document.getElementById('typography-dropdown')?.classList.contains('visible')) return;
+                if (document.getElementById('chapter-sidebar')?.classList.contains('visible')) return;
+                setMobileReaderUIVisible(false);
+            }, MOBILE_READER_HIDE_MS);
+        }
+
+        function setMobileReaderUIVisible(visible) {
+            if (!readerEl) return;
+            const nextVisible = !!visible;
+            const changed = mobileReaderUIVisible !== nextVisible;
+            if (!isCompactReaderMode()) {
+                mobileReaderUIVisible = true;
+                readerEl.classList.remove('mobile-reader-ui-hidden');
+                clearMobileReaderHideTimer();
+                return;
+            }
+            mobileReaderUIVisible = nextVisible;
+            readerEl.classList.toggle('mobile-reader-ui-hidden', !mobileReaderUIVisible);
+            if (mobileReaderUIVisible) {
+                scheduleMobileReaderAutoHide();
+            } else {
+                clearMobileReaderHideTimer();
+            }
+            if (changed) {
+                scheduleMobileReaderRepaginate();
+            }
+        }
+
+        function handleCompactReaderTap(clientX, spreadRect) {
+            if (!readerOpen || !isCompactReaderMode() || !spreadRect || spreadRect.width <= 0) return;
+            const ratio = (clientX - spreadRect.left) / spreadRect.width;
+            const leftZone = 0.32;
+            const rightZone = 0.68;
+
+            if (ratio <= leftZone) {
+                prevPage();
+                return;
+            }
+            if (ratio >= rightZone) {
+                nextPage();
+                return;
+            }
+            setMobileReaderUIVisible(!mobileReaderUIVisible);
+        }
+
+        function clearPageTurnClasses() {
+            const leftPage = document.getElementById('book-page-left');
+            const rightPage = document.getElementById('book-page-right');
+            for (const page of [leftPage, rightPage]) {
+                if (!page) continue;
+                page.classList.remove('turning-out', 'turning-in', 'turn-next', 'turn-prev', 'settling');
+            }
+        }
+
+        function readerFontFamilyForSetting(font) {
+            if (font === 'mono') return '"IBM Plex Mono"';
+            if (font === 'baskerville') return '"Libre Baskerville"';
+            return '"Cormorant Garamond"';
+        }
+
+        function readerFontPxForSetting(size) {
+            if (size === 'small') return 13;
+            if (size === 'large') return 17;
+            if (size === 'xlarge') return 19;
+            return 15; // medium
+        }
+
+        async function waitForReaderTypographyReady(font = currentFont, size = currentFontSize, timeoutMs = 1800) {
+            if (!document.fonts || typeof document.fonts.load !== 'function') return;
+            const family = readerFontFamilyForSetting(font);
+            const px = readerFontPxForSetting(size);
+            const descriptor = `${px}px ${family}`;
+            const timeout = new Promise(resolve => setTimeout(resolve, timeoutMs));
+            try {
+                await Promise.race([
+                    Promise.all([
+                        document.fonts.load(descriptor),
+                        document.fonts.ready
+                    ]),
+                    timeout
+                ]);
+            } catch (_) {
+                // Ignore font loading failures and continue with fallback fonts.
+            }
+        }
 
         function normalizeBookText(text) {
             const t = (text || '')
@@ -4250,6 +5179,7 @@
             const measure = document.getElementById('paginator-measure');
             const leftPage = document.getElementById('book-page-left');
             const leftContent = document.getElementById('book-content-left');
+            const bookSpread = document.getElementById('book-spread');
             if (!measure || !leftPage || !leftContent) return null;
 
             // Match the *inner* printable area of the page (page size minus padding)
@@ -4258,8 +5188,20 @@
             const padX = (parseFloat(pageStyle.paddingLeft) || 0) + (parseFloat(pageStyle.paddingRight) || 0);
             const padY = (parseFloat(pageStyle.paddingTop) || 0) + (parseFloat(pageStyle.paddingBottom) || 0);
 
-            const w = Math.max(200, pageRect.width - padX);
-            const h = Math.max(200, pageRect.height - padY);
+            let w = pageRect.width - padX;
+            let h = pageRect.height - padY - pageNumReservePx();
+
+            // If layout hasn't fully settled yet, derive a sane fallback from the spread box.
+            if ((w < PAGE_MEASURE_MIN_WIDTH_PX || h < PAGE_MEASURE_MIN_HEIGHT_PX) && bookSpread) {
+                const spreadRect = bookSpread.getBoundingClientRect();
+                if (spreadRect.width > 0 && spreadRect.height > 0) {
+                    w = Math.max(w, ((spreadRect.width - 12) / 2) - padX);
+                    h = Math.max(h, spreadRect.height - padY - pageNumReservePx());
+                }
+            }
+
+            w = Math.max(PAGE_MEASURE_MIN_WIDTH_PX, w);
+            h = Math.max(PAGE_MEASURE_MIN_HEIGHT_PX, h);
             measure.style.width = w + 'px';
             measure.style.height = h + 'px';
 
@@ -4423,9 +5365,11 @@
         };
 
         window.toggleChapterSidebar = function() {
+            if (isCompactReaderMode()) setMobileReaderUIVisible(true);
             const sidebar = document.getElementById('chapter-sidebar');
             sidebar.classList.toggle('visible');
             document.getElementById('toc-btn').classList.toggle('active', sidebar.classList.contains('visible'));
+            if (!sidebar.classList.contains('visible')) scheduleMobileReaderAutoHide();
         };
 
         function applyBookTypography() {
@@ -4475,7 +5419,19 @@
             }, 180);
         });
 
-        function renderPage(animate = false) {
+        if (document.fonts && typeof document.fonts.addEventListener === 'function') {
+            const reflowAfterFontLoad = () => {
+                if (!readerOpen || !currentBookText) return;
+                clearTimeout(fontRepaginateTimer);
+                fontRepaginateTimer = setTimeout(() => {
+                    repaginateCurrentBook();
+                }, 60);
+            };
+            document.fonts.addEventListener('loadingdone', reflowAfterFontLoad);
+            document.fonts.addEventListener('loadingerror', reflowAfterFontLoad);
+        }
+
+        function renderPage(animate = false, direction = 1) {
             const leftContent = document.getElementById('book-content-left');
             const rightContent = document.getElementById('book-content-right');
             const leftPage = document.getElementById('book-page-left');
@@ -4486,81 +5442,126 @@
             const prevBtn = document.getElementById('prev-page-btn');
             const nextBtn = document.getElementById('next-page-btn');
             const pageJumpInput = document.getElementById('page-jump-input');
-            const bookSpread = document.getElementById('book-spread');
             const bookSpine = document.querySelector('.book-spine');
+            const readerSinglePage = isReaderSinglePageMode();
 
             const total = currentBookPages.length || 1;
 
             // In book mode, always work with spreads (even indices)
             let idx = Math.max(0, Math.min(currentPageIndex, total - 1));
-            if (!singlePageMode) {
+            if (!readerSinglePage) {
                 idx = Math.floor(idx / 2) * 2;
             }
             currentPageIndex = idx;
 
-            // Animation
-            if (animate) {
-                leftPage.classList.add('turning-out');
-                if (!singlePageMode) rightPage.classList.add('turning-out');
-                setTimeout(() => {
-                    leftPage.classList.remove('turning-out');
-                    rightPage.classList.remove('turning-out');
-                    leftPage.classList.add('turning-in');
-                    rightPage.classList.add('turning-in');
-                    setTimeout(() => {
-                        leftPage.classList.remove('turning-in');
-                        rightPage.classList.remove('turning-in');
-                    }, 350);
-                }, 350);
-            }
+            const applyRenderedContent = () => {
+                applyBookTypography();
 
-            applyBookTypography();
+                // Toggle modal width class based on mode
+                const readerPanel = document.querySelector('#reader .reader-page');
+                if (readerPanel) readerPanel.classList.toggle('single-page', readerSinglePage);
 
-            // Toggle modal width class based on mode
-            const readerPanel = document.querySelector('#reader .reader-page');
-            if (readerPanel) readerPanel.classList.toggle('single-page', singlePageMode);
-
-            if (singlePageMode) {
-                // Single page mode
-                rightPage.style.display = 'none';
-                bookSpine.style.display = 'none';
-                leftContent.innerHTML = formatBookPageHtml(currentBookPages[idx] || '');
-                leftNum.textContent = idx + 1;
-                pageNumEl.textContent = `Page ${idx + 1} of ${total}`;
-                prevBtn.disabled = idx === 0;
-                nextBtn.disabled = idx >= total - 1;
-            } else {
-                // Two-page spread mode (default)
-                rightPage.style.display = '';
-                bookSpine.style.display = '';
-                
-                leftContent.innerHTML = formatBookPageHtml(currentBookPages[idx] || '');
-                leftNum.textContent = idx + 1;
-                
-                if (idx + 1 < total) {
-                    rightContent.innerHTML = formatBookPageHtml(currentBookPages[idx + 1] || '');
-                    rightNum.textContent = idx + 2;
+                if (readerSinglePage) {
+                    // Single page mode
+                    rightPage.style.display = 'none';
+                    bookSpine.style.display = 'none';
+                    leftContent.innerHTML = formatBookPageHtml(currentBookPages[idx] || '');
+                    leftNum.textContent = idx + 1;
+                    pageNumEl.textContent = `Page ${idx + 1} of ${total}`;
+                    prevBtn.disabled = idx === 0;
+                    nextBtn.disabled = idx >= total - 1;
                 } else {
-                    rightContent.innerHTML = '';
-                    rightNum.textContent = '';
+                    // Two-page spread mode (default)
+                    rightPage.style.display = '';
+                    bookSpine.style.display = '';
+
+                    leftContent.innerHTML = formatBookPageHtml(currentBookPages[idx] || '');
+                    leftNum.textContent = idx + 1;
+
+                    if (idx + 1 < total) {
+                        rightContent.innerHTML = formatBookPageHtml(currentBookPages[idx + 1] || '');
+                        rightNum.textContent = idx + 2;
+                    } else {
+                        rightContent.innerHTML = '';
+                        rightNum.textContent = '';
+                    }
+
+                    pageNumEl.textContent = `Pages ${idx + 1}–${Math.min(idx + 2, total)} of ${total}`;
+                    prevBtn.disabled = idx === 0;
+                    nextBtn.disabled = idx + 2 >= total;
                 }
-                
-                pageNumEl.textContent = `Pages ${idx + 1}–${Math.min(idx + 2, total)} of ${total}`;
-                prevBtn.disabled = idx === 0;
-                nextBtn.disabled = idx + 2 >= total;
+
+                // Update page jump input
+                pageJumpInput.value = idx + 1;
+                pageJumpInput.max = total;
+
+                // Save reading progress
+                if (currentBookId) {
+                    saveReadingProgress(currentBookId, idx, total);
+                }
+
+                // Update chapter highlight
+                updateChapterList();
+            };
+
+            pageTurnAnimationToken++;
+            clearPageTurnClasses();
+
+            if (!animate) {
+                applyRenderedContent();
+                return;
             }
 
-            // Update page jump input
-            pageJumpInput.value = idx + 1;
-            pageJumpInput.max = total;
+            const token = pageTurnAnimationToken;
+            const forward = direction >= 0;
+            const turningPage = readerSinglePage ? leftPage : (forward ? rightPage : leftPage);
+            const settlingPage = readerSinglePage ? null : (forward ? leftPage : rightPage);
+            const dirClass = forward ? 'turn-next' : 'turn-prev';
 
-            // Save reading progress
-            if (currentBookId) {
-                saveReadingProgress(currentBookId, idx, total);
-            }
-            
-            // Update chapter highlight
-            updateChapterList();
+            if (turningPage) turningPage.classList.add('turning-out', dirClass);
+            if (settlingPage) settlingPage.classList.add('settling');
+
+            setTimeout(() => {
+                if (token !== pageTurnAnimationToken) return;
+
+                applyRenderedContent();
+                if (turningPage) {
+                    turningPage.classList.remove('turning-out');
+                    turningPage.classList.add('turning-in');
+                }
+
+                setTimeout(() => {
+                    if (token !== pageTurnAnimationToken) return;
+                    clearPageTurnClasses();
+                }, PAGE_TURN_IN_MS);
+            }, PAGE_TURN_OUT_MS);
+        }
+
+        const bookSpreadEl = document.getElementById('book-spread');
+        if (bookSpreadEl) {
+            bookSpreadEl.addEventListener('touchend', (e) => {
+                if (!readerOpen || !isCompactReaderMode()) return;
+                const touch = e.changedTouches[0];
+                if (!touch) return;
+                compactTapStamp = Date.now();
+                handleCompactReaderTap(touch.clientX, bookSpreadEl.getBoundingClientRect());
+                e.preventDefault();
+            }, { passive: false });
+
+            bookSpreadEl.addEventListener('click', (e) => {
+                if (!readerOpen || !isCompactReaderMode()) return;
+                if (Date.now() - compactTapStamp < 420) return;
+                handleCompactReaderTap(e.clientX, bookSpreadEl.getBoundingClientRect());
+            });
+        }
+
+        if (readerEl) {
+            readerEl.addEventListener('click', (e) => {
+                if (!readerOpen || !isCompactReaderMode()) return;
+                if (e.target.closest('.reader-header, .reader-footer, .reader-search-bar, .chapter-sidebar, .typography-dropdown')) {
+                    setMobileReaderUIVisible(true);
+                }
+            });
         }
 
         function highlightSearchInText(text, query) {
@@ -4578,13 +5579,16 @@
             const input = document.getElementById('page-jump-input');
             const page = parseInt(input.value) - 1;
             if (page >= 0 && page < currentBookPages.length) {
+                const direction = page >= currentPageIndex ? 1 : -1;
                 currentPageIndex = page;
-                renderPage(true);
+                renderPage(true, direction);
                 playPageTurn();
+                if (mobileReaderUIVisible) scheduleMobileReaderAutoHide();
             }
         };
 
         window.toggleTwoPage = function() {
+            if (isCompactReaderMode()) return;
             singlePageMode = !singlePageMode;
             settings.singlePageMode = singlePageMode;
             saveToStorage(STORAGE_KEYS.SETTINGS, settings);
@@ -4597,17 +5601,27 @@
             renderPage();
         };
 
-        // Typography controls
-        window.toggleTypographyDropdown = function() {
-            const dropdown = document.getElementById('typography-dropdown');
-            dropdown.classList.toggle('visible');
+        window.toggleReaderTheme = function() {
+            readerDarkMode = !readerDarkMode;
+            settings.readerDarkMode = readerDarkMode;
+            saveToStorage(STORAGE_KEYS.SETTINGS, settings);
+            applyReaderTheme();
         };
 
-        window.changeFont = function(font) {
+        // Typography controls
+        window.toggleTypographyDropdown = function() {
+            if (isCompactReaderMode()) setMobileReaderUIVisible(true);
+            const dropdown = document.getElementById('typography-dropdown');
+            dropdown.classList.toggle('visible');
+            if (!dropdown.classList.contains('visible')) scheduleMobileReaderAutoHide();
+        };
+
+        window.changeFont = async function(font) {
             currentFont = font;
             settings.font = font;
             saveToStorage(STORAGE_KEYS.SETTINGS, settings);
             applyBookTypography();
+            await waitForReaderTypographyReady(currentFont, currentFontSize, 1400);
             repaginateCurrentBook();
         };
 
@@ -4621,6 +5635,7 @@
 
         // In-book search
         window.openReaderSearch = function() {
+            if (isCompactReaderMode()) setMobileReaderUIVisible(true);
             const searchBar = document.getElementById('reader-search-bar');
             searchBar.classList.add('visible');
             document.getElementById('reader-search-input').focus();
@@ -4634,6 +5649,7 @@
             readerSearchCurrentIndex = -1;
             document.getElementById('reader-search-info').textContent = '';
             renderPage(); // Remove highlights
+            scheduleMobileReaderAutoHide();
         };
 
         window.readerSearchPrev = function() {
@@ -4705,28 +5721,32 @@
 
         window.nextPage = function() {
             if (!readerOpen) return;
-            const step = singlePageMode ? 1 : 2;
+            const step = isReaderSinglePageMode() ? 1 : 2;
             if (currentPageIndex < (currentBookPages.length - step)) {
                 currentPageIndex += step;
-                renderPage(true);
+                renderPage(true, 1);
                 playPageTurn();
+                if (mobileReaderUIVisible) scheduleMobileReaderAutoHide();
             }
         };
 
         window.prevPage = function() {
             if (!readerOpen) return;
-            const step = singlePageMode ? 1 : 2;
+            const step = isReaderSinglePageMode() ? 1 : 2;
             if (currentPageIndex >= step) {
                 currentPageIndex -= step;
-                renderPage(true);
+                renderPage(true, -1);
                 playPageTurn();
+                if (mobileReaderUIVisible) scheduleMobileReaderAutoHide();
             }
         };
 
         window.openBook = async function(bookId, resumePage = null) {
             try {
+                setMobileMenuOpen(false);
                 currentBookId = bookId;
                 readerOpen = true;
+                syncReaderLayoutMode();
 
                 const legacyLoc = bookIdToLocation_legacy(bookId);
                 const slotsLoc = bookIdToLocationCanonical(bookId);
@@ -4736,11 +5756,15 @@
                 } catch (e) {
                     // ignore
                 }
-                const location = apiLoc || slotsLoc || legacyLoc;
+                const location = apiLoc || slotsLoc || legacyLoc || fallbackBookIdToLocation(bookId);
 
                 document.getElementById('reader-title').textContent = 'Loading...';
                 document.getElementById('reader-author').textContent = '';
-                document.getElementById('reader-coords').textContent = `Room ${location.room + 1} · Wall ${location.wall + 1} (${WALL_NAMES[location.wall]}) · Shelf ${location.shelf + 1} · Volume ${location.volume + 1}`;
+                if (location) {
+                    document.getElementById('reader-coords').textContent = `Room ${location.room + 1} · Wall ${location.wall + 1} (${WALL_NAMES[location.wall]}) · Shelf ${location.shelf + 1} · Volume ${location.volume + 1}`;
+                } else {
+                    document.getElementById('reader-coords').textContent = 'Location unavailable';
+                }
             
             // Reset book pages to loading state
             document.getElementById('book-content-left').innerHTML = '<div style="text-align:center;color:#8b7355;font-style:italic;padding-top:60px;">Loading book text...</div>';
@@ -4752,6 +5776,8 @@
             document.getElementById('reader-content').classList.add('loading');
             document.getElementById('reader-gutenberg-link').href = `https://www.gutenberg.org/ebooks/${bookId}`;
             document.getElementById('reader').classList.add('visible');
+            setMobileReaderUIVisible(!isCompactReaderMode());
+            applyReaderTheme();
             
             // Reset search
             readerSearchQuery = '';
@@ -4767,7 +5793,11 @@
             document.getElementById('bookmark-btn').classList.toggle('bookmarked', isBookmarked(bookId));
             
             // Update single-page toggle button state
-            document.getElementById('two-page-btn').classList.toggle('active', singlePageMode);
+            const effectiveSinglePage = isReaderSinglePageMode();
+            const twoPageBtn = document.getElementById('two-page-btn');
+            twoPageBtn.classList.toggle('active', effectiveSinglePage);
+            twoPageBtn.disabled = isCompactReaderMode();
+            twoPageBtn.title = effectiveSinglePage ? 'Two-page view' : 'Single page view';
             
             // Apply saved typography settings
             document.getElementById('font-select').value = currentFont;
@@ -4798,6 +5828,9 @@
             if (text) {
                 currentBookText = text;
                 const cleanText = text.replace(/\r\n/g, '\n').replace(/\n{4,}/g, '\n\n\n');
+                // Wait for reader layout to settle so paginator measures the real page size.
+                await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+                await waitForReaderTypographyReady(currentFont, currentFontSize, 2200);
                 currentBookPages = paginateText(cleanText);
                 detectedChapters = detectChapters(cleanText);
                 updateChapterList();
@@ -4828,12 +5861,17 @@
             document.getElementById('reader').classList.remove('visible');
             document.getElementById('chapter-sidebar').classList.remove('visible');
             document.getElementById('typography-dropdown').classList.remove('visible');
+            pageTurnAnimationToken++;
+            clearPageTurnClasses();
             readerOpen = false;
             currentBookId = null;
             currentBookText = '';
             currentBookPages = [];
             currentPageIndex = 0;
             detectedChapters = [];
+            clearMobileReaderHideTimer();
+            setMobileReaderUIVisible(true);
+            refreshTouchUI();
         };
 
         // Close typography dropdown when clicking outside
@@ -4862,6 +5900,7 @@
         let selectedSearchIndex = -1;
 
         window.openSearch = function() {
+            setMobileMenuOpen(false);
             closeAllPanels('search');
             document.getElementById('search-panel').classList.add('visible');
             searchOpen = true;
@@ -4906,6 +5945,9 @@
             const resultsDiv = document.getElementById('search-results');
             resultsDiv.innerHTML = searchResults.map((book, i) => {
                 const location = bookIdToLocation(book.id);
+                const locationText = location
+                    ? `Room ${location.room + 1} · Wall ${location.wall + 1} · Shelf ${location.shelf + 1}`
+                    : 'Location unavailable';
                 const authors = book.authors?.map(a => a.name).join(', ') || 'Unknown Author';
                 const languages = book.languages?.join(', ') || '';
                 const subjects = book.subjects?.slice(0, 2).join('; ') || '';
@@ -4918,22 +5960,33 @@
                         <div class="search-result-title">${escapeHtml(book.title)}</div>
                         <div class="search-result-author">${escapeHtml(authors)}</div>
                         ${languages || subjects ? `<div class="search-result-meta">${languages ? `📖 ${languages}` : ''} ${subjects ? `· ${subjects}` : ''}</div>` : ''}
-                        <div class="search-result-location">Room ${location.room + 1} · Wall ${location.wall + 1} · Shelf ${location.shelf + 1}</div>
+                        <div class="search-result-location">${locationText}</div>
                         ${progressText ? `<div class="search-result-progress">${progressText}</div>` : ''}
                     </div>
                 `;
             }).join('');
         }
 
+        async function resolveBookLocation(bookId) {
+            try {
+                const loc = await getBookPrimaryLocation(bookId);
+                if (loc && Number.isInteger(loc.room) && loc.room >= 0 && loc.room < TOTAL_ROOMS) return loc;
+            } catch (e) {
+                // Fallback below
+            }
+            return bookIdToLocation(bookId);
+        }
+
         window.jumpToGutenbergId = async function() {
             const bookId = parseInt(document.getElementById('search-gutenberg-id').value);
-            if (!bookId || bookId < 1 || bookId > TOTAL_BOOKS) {
-                showToast('Please enter a valid Gutenberg ID (1-70000)');
+            if (!Number.isInteger(bookId) || bookId < 1) {
+                showToast('Please enter a valid Gutenberg ID (> 0)');
                 return;
             }
             closeSearch();
             try {
-                const loc = await getBookPrimaryLocation(bookId);
+                const loc = await resolveBookLocation(bookId);
+                if (!loc) throw new Error('location unavailable');
                 teleportTo(loc.room, () => { openBook(bookId); }, bookId);
             } catch (e) {
                 console.error(e);
@@ -4944,7 +5997,8 @@
         window.goToBook = async function(bookId) {
             closeSearch();
             try {
-                const loc = await getBookPrimaryLocation(bookId);
+                const loc = await resolveBookLocation(bookId);
+                if (!loc) throw new Error('location unavailable');
                 teleportTo(loc.room, () => { openBook(bookId); }, bookId);
             } catch (e) {
                 console.error(e);
@@ -5139,6 +6193,7 @@
         });
 
         window.openNav = async function() {
+            setMobileMenuOpen(false);
             closeAllPanels('nav');
             try {
                 await initializeNavPanelOptions();
@@ -5161,6 +6216,7 @@
         // ============================================
 
         window.openElevator = function() {
+            setMobileMenuOpen(false);
             closeAllPanels('elevator');
             ensureElevatorButtons();
             updateElevatorPanelState();
@@ -5289,10 +6345,11 @@
 
         window.navigateToGutenbergId = async function() {
             const bookId = parseInt(document.getElementById('nav-gutenberg-id').value);
-            if (!bookId || bookId < 1 || bookId > TOTAL_BOOKS) return;
+            if (!Number.isInteger(bookId) || bookId < 1) return;
             closeNav();
             try {
-                const loc = await getBookPrimaryLocation(bookId);
+                const loc = await resolveBookLocation(bookId);
+                if (!loc) throw new Error('location unavailable');
                 teleportTo(loc.room, () => { openBook(bookId); }, bookId);
             } catch (e) {
                 console.error(e);
@@ -5305,6 +6362,7 @@
         // ============================================
 
         window.openLibrary = function() {
+            setMobileMenuOpen(false);
             closeAllPanels('library');
             document.getElementById('library-panel').classList.add('visible');
             libraryOpen = true;
@@ -5350,6 +6408,9 @@
             } else {
                 bookmarksList.innerHTML = bookmarks.map(b => {
                     const location = bookIdToLocation(b.bookId);
+                    const locationText = location
+                        ? `Room ${location.room + 1} · Wall ${location.wall + 1} · Shelf ${location.shelf + 1}`
+                        : 'Location unavailable';
                     const progress = getReadingProgress(b.bookId);
                     const progressText = progress ? `Page ${progress.page + 1} of ${progress.total}` : '';
                     return `
@@ -5357,7 +6418,7 @@
                             <button class="bookmark-remove" onclick="event.stopPropagation(); removeBookmarkFromUI(${b.bookId})">&times;</button>
                             <div class="search-result-title">${escapeHtml(b.title)}</div>
                             <div class="search-result-author">${escapeHtml(b.authors)}</div>
-                            <div class="search-result-location">Room ${location.room + 1} · Wall ${location.wall + 1} · Shelf ${location.shelf + 1}</div>
+                            <div class="search-result-location">${locationText}</div>
                             ${progressText ? `<div class="search-result-progress">${progressText}</div>` : ''}
                         </div>
                     `;
@@ -5371,13 +6432,16 @@
             } else {
                 recentsList.innerHTML = recents.map(r => {
                     const location = bookIdToLocation(r.bookId);
+                    const locationText = location
+                        ? `Room ${location.room + 1} · Wall ${location.wall + 1} · Shelf ${location.shelf + 1}`
+                        : 'Location unavailable';
                     const progress = getReadingProgress(r.bookId);
                     const progressText = progress ? `Page ${progress.page + 1} of ${progress.total}` : '';
                     return `
                         <div class="recent-item" onclick="goToBookFromLibrary(${r.bookId})">
                             <div class="search-result-title">${escapeHtml(r.title)}</div>
                             <div class="search-result-author">${escapeHtml(r.authors)}</div>
-                            <div class="search-result-location">Room ${location.room + 1} · Wall ${location.wall + 1} · Shelf ${location.shelf + 1}</div>
+                            <div class="search-result-location">${locationText}</div>
                             ${progressText ? `<div class="search-result-progress">${progressText}</div>` : ''}
                         </div>
                     `;
@@ -5388,6 +6452,10 @@
         window.goToBookFromLibrary = function(bookId) {
             closeLibrary();
             const location = bookIdToLocation(bookId);
+            if (!location) {
+                showToast('Book location unavailable');
+                return;
+            }
             teleportTo(location.room, () => {
                 openBook(bookId);
             }, bookId);
@@ -5396,6 +6464,10 @@
         window.continueReading = function(bookId, page) {
             closeLibrary();
             const location = bookIdToLocation(bookId);
+            if (!location) {
+                showToast('Book location unavailable');
+                return;
+            }
             teleportTo(location.room, () => {
                 openBook(bookId, page);
             }, bookId);
@@ -5430,6 +6502,7 @@
         // ============================================
 
         window.openAbout = function() {
+            setMobileMenuOpen(false);
             closeAllPanels('about');
             document.getElementById('about-overlay').classList.add('visible');
             document.getElementById('about-modal').classList.add('visible');
@@ -5473,8 +6546,11 @@
         const intro = document.getElementById('intro');
         intro.addEventListener('click', () => {
             if (intro.classList.contains('hidden')) return;
+            startAmbientAudioFromGesture();
             intro.classList.add('hidden');
             introHidden = true;
+            setMobileMenuOpen(false);
+            refreshTouchUI();
             setTimeout(() => {
                 intro.style.display = 'none';
             }, 1500);
@@ -5495,14 +6571,22 @@
             const elapsedTime = clock.getElapsedTime();
             const now = performance.now();
 
-            if (controls.isLocked) {
+            if (isTouchDevice) refreshTouchUI();
+
+            if (isNavigationActive()) {
                 const direction = new THREE.Vector3();
                 if (keys.forward) direction.z -= 1;
                 if (keys.backward) direction.z += 1;
                 if (keys.left) direction.x -= 1;
                 if (keys.right) direction.x += 1;
+                if (isTouchDevice) {
+                    direction.x += touchState.moveX;
+                    direction.z += touchState.moveY;
+                }
 
                 if (direction.length() > 0) {
+                    const touchMagnitude = isTouchDevice ? Math.min(1, Math.hypot(touchState.moveX, touchState.moveY)) : 0;
+                    const speedScale = touchMagnitude > 0 ? Math.max(0.35, touchMagnitude) : 1;
                     direction.normalize();
 
                     const moveDir = direction.clone();
@@ -5510,7 +6594,7 @@
                     moveDir.y = 0;
                     moveDir.normalize();
 
-                    camera.position.add(moveDir.multiplyScalar(moveSpeed * delta));
+                    camera.position.add(moveDir.multiplyScalar(moveSpeed * speedScale * delta));
 
                     applyCollision();
                     checkRoomTransition();
@@ -5554,7 +6638,7 @@
                             hoveredBookId = bookInfo.bookId;
                             const tooltip = document.getElementById('book-tooltip');
                             tooltip.querySelector('.title').textContent = `Book #${bookInfo.bookId}`;
-                            tooltip.querySelector('.author').textContent = 'Click to read';
+                            tooltip.querySelector('.author').textContent = isTouchDevice ? 'Tap Read / Use' : 'Click to read';
                             tooltip.querySelector('.location-hint').textContent = 
                                 `Wall ${bookInfo.wall + 1} · Shelf ${bookInfo.shelf + 1} · Vol ${bookInfo.vol + 1}`;
                             tooltip.classList.add('visible');
@@ -5761,6 +6845,10 @@
         // ============================================
 
         window.addEventListener('keydown', (e) => {
+            if (e.code === 'Escape' && mobileMenuOpen) {
+                setMobileMenuOpen(false);
+                return;
+            }
             if (readerOpen) {
                 if (e.code === 'Escape') { 
                     if (document.getElementById('reader-search-bar').classList.contains('visible')) {
@@ -5772,6 +6860,7 @@
                 if (e.code === 'ArrowRight' || e.code === 'ArrowDown') { e.preventDefault(); nextPage(); }
                 if (e.code === 'ArrowLeft' || e.code === 'ArrowUp') { e.preventDefault(); prevPage(); }
                 if (e.code === 'KeyB') { toggleBookmark(); }
+                if (e.code === 'KeyD' && !e.ctrlKey && !e.metaKey && !e.altKey) { toggleReaderTheme(); }
                 if ((e.ctrlKey || e.metaKey) && e.code === 'KeyF') {
                     e.preventDefault();
                     openReaderSearch();
@@ -5818,6 +6907,25 @@
         // ============================================
 
         window.addEventListener('resize', () => {
+            syncReaderLayoutMode();
+            if (mobileMenuOpen && window.innerWidth > 900) {
+                setMobileMenuOpen(false);
+            }
+            if (readerOpen) {
+                if (isCompactReaderMode()) {
+                    setMobileReaderUIVisible(mobileReaderUIVisible);
+                    if (mobileReaderUIVisible) scheduleMobileReaderAutoHide();
+                } else {
+                    setMobileReaderUIVisible(true);
+                }
+                const twoPageBtn = document.getElementById('two-page-btn');
+                if (twoPageBtn) {
+                    const effectiveSinglePage = isReaderSinglePageMode();
+                    twoPageBtn.classList.toggle('active', effectiveSinglePage);
+                    twoPageBtn.disabled = isCompactReaderMode();
+                    twoPageBtn.title = effectiveSinglePage ? 'Two-page view' : 'Single page view';
+                }
+            }
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
@@ -5830,6 +6938,7 @@
         updateRooms();
         updateHUD();
         updateLibraryUI();
+        applyReaderTheme();
         animate();
     </script>
 </body>
