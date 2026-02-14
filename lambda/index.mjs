@@ -24,6 +24,24 @@ let primaryLocationCache = null;
 const tagsCache = new Map();
 let localMetaById = null;
 
+const BOOKS_PER_SHELF = 32;
+const SHELVES_PER_WALL = 5;
+const WALLS_PER_ROOM = 4;
+const BOOKS_PER_ROOM = BOOKS_PER_SHELF * SHELVES_PER_WALL * WALLS_PER_ROOM;
+
+function fallbackLocationForBookId(bookId, roomsTotal) {
+  const safeRooms = Number.isInteger(roomsTotal) && roomsTotal > 0 ? roomsTotal : 1;
+  const slotCount = safeRooms * BOOKS_PER_ROOM;
+  const slot = ((bookId - 1) % slotCount + slotCount) % slotCount;
+  const room = Math.floor(slot / BOOKS_PER_ROOM);
+  const inRoom = slot % BOOKS_PER_ROOM;
+  const wall = Math.floor(inRoom / (BOOKS_PER_SHELF * SHELVES_PER_WALL));
+  const inWall = inRoom % (BOOKS_PER_SHELF * SHELVES_PER_WALL);
+  const shelf = Math.floor(inWall / BOOKS_PER_SHELF);
+  const volume = inWall % BOOKS_PER_SHELF;
+  return { room, wall, shelf, volume, floorId: null, subId: null, layout: 'overflow' };
+}
+
 function response(statusCode, body, headers = JSON_HEADERS) {
   return {
     statusCode,
@@ -254,9 +272,10 @@ export async function handler(event) {
       }
 
       loadLayoutIfNeeded();
+      const roomsTotal = Number(floorsCache?.roomsTotal) || 1;
       const loc = primaryLocationCache[String(bookId)];
-      if (!loc) {
-        return json(404, { error: 'bookId not found' });
+      if (!loc || !Number.isInteger(loc.room) || loc.room < 0 || loc.room >= roomsTotal) {
+        return json(200, fallbackLocationForBookId(bookId, roomsTotal));
       }
 
       return json(200, loc);
