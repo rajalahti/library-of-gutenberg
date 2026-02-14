@@ -35,6 +35,13 @@
             height: 100vh;
         }
 
+        body.touch-input {
+            overscroll-behavior: none;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
+
         #scene {
             position: fixed;
             top: 0;
@@ -42,6 +49,10 @@
             width: 100%;
             height: 100%;
             display: block;
+        }
+
+        body.touch-input #scene {
+            touch-action: none;
         }
 
         #vignette {
@@ -160,6 +171,20 @@
             display: flex;
             align-items: center;
             gap: 16px;
+        }
+
+        .mobile-menu-toggle {
+            display: none;
+            background: linear-gradient(180deg, rgba(66, 45, 25, 0.75), rgba(36, 25, 15, 0.9));
+            border: 1px solid rgba(198, 161, 90, 0.45);
+            color: #e8d5af;
+            font-family: "IBM Plex Mono", monospace;
+            font-size: 11px;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            border-radius: 8px;
+            padding: 6px 10px;
+            cursor: pointer;
         }
 
         #brightness-slider, #volume-slider {
@@ -505,6 +530,153 @@
         .reader-page.single-page {
             width: min(980px, 72vw);
             height: min(920px, 90vh);
+        }
+
+        #reader.mobile-fullscreen {
+            align-items: stretch;
+            justify-content: stretch;
+        }
+
+        #reader.mobile-fullscreen .reader-container {
+            height: 100dvh;
+            align-items: stretch;
+            justify-content: stretch;
+        }
+
+        #reader.mobile-fullscreen .reader-page,
+        #reader.mobile-fullscreen .reader-page.single-page {
+            width: 100vw;
+            max-width: 100vw;
+            height: 100dvh;
+            max-height: 100dvh;
+            border-radius: 0;
+            padding: calc(8px + env(safe-area-inset-top)) 8px calc(8px + env(safe-area-inset-bottom));
+            position: relative;
+        }
+
+        #reader.mobile-fullscreen .book-spread {
+            margin: 0;
+            background: #ede5d7;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: none;
+            border: none;
+        }
+
+        #reader.mobile-fullscreen .book-page {
+            min-height: 0;
+            border-radius: 0;
+            box-shadow: none;
+            background: transparent;
+            padding: 14px 10px 20px;
+        }
+
+        #reader.mobile-fullscreen .book-page.left,
+        #reader.mobile-fullscreen .book-page.right {
+            border-radius: 0;
+            box-shadow: none;
+        }
+
+        #reader.mobile-fullscreen .book-page::before,
+        #reader.mobile-fullscreen .book-page::after {
+            display: none;
+        }
+
+        #reader.mobile-fullscreen .book-page-content {
+            line-height: 1.78;
+        }
+
+        #reader.mobile-fullscreen .book-page-num {
+            bottom: 6px;
+            font-size: 10px;
+        }
+
+        #reader.mobile-fullscreen.reader-dark .book-spread {
+            background: #1b2230;
+        }
+
+        #reader.mobile-fullscreen .reader-header {
+            margin-bottom: 6px;
+            padding-bottom: 4px;
+            border-bottom: none;
+        }
+
+        #reader.mobile-fullscreen .reader-title {
+            font-size: 13px;
+            line-height: 1.22;
+        }
+
+        #reader.mobile-fullscreen .reader-author {
+            font-size: 10px;
+            margin-top: 1px;
+        }
+
+        #reader.mobile-fullscreen .reader-coords {
+            display: none;
+        }
+
+        #reader.mobile-fullscreen .reader-close {
+            font-size: 22px;
+            width: 24px;
+            height: 24px;
+        }
+
+        #reader.mobile-fullscreen .reader-footer {
+            gap: 6px;
+            padding-top: 6px;
+            border-top: none;
+        }
+
+        #reader.mobile-fullscreen .reader-actions {
+            width: 100%;
+            justify-content: space-between;
+            gap: 6px;
+            order: 2;
+        }
+
+        #reader.mobile-fullscreen .reader-nav {
+            width: 100%;
+            justify-content: space-between;
+            order: 3;
+            gap: 8px;
+        }
+
+        #reader.mobile-fullscreen .reader-nav button {
+            min-width: 92px;
+            font-size: 14px;
+            padding: 7px 12px;
+        }
+
+        #reader.mobile-fullscreen .reader-page-num {
+            width: 100%;
+            order: 1;
+        }
+
+        #reader.mobile-fullscreen #reader-gutenberg-link {
+            width: 100%;
+            order: 4;
+            font-size: 13px !important;
+        }
+
+        #reader.mobile-fullscreen.mobile-reader-ui-hidden .reader-header,
+        #reader.mobile-fullscreen.mobile-reader-ui-hidden .reader-footer,
+        #reader.mobile-fullscreen.mobile-reader-ui-hidden .reader-search-bar,
+        #reader.mobile-fullscreen.mobile-reader-ui-hidden .chapter-sidebar {
+            display: none !important;
+        }
+
+        #reader.mobile-fullscreen.mobile-reader-ui-hidden .book-spread {
+            border-radius: 0;
+            height: 100%;
+        }
+
+        #reader.mobile-fullscreen.mobile-reader-ui-hidden .book-page {
+            padding-top: 12px;
+            padding-bottom: 10px;
+        }
+
+        #reader.mobile-fullscreen.mobile-reader-ui-hidden .book-page-num {
+            bottom: 2px;
         }
 
         .reader-header {
@@ -1799,6 +1971,90 @@
             box-shadow: 0 12px 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(230,216,184,0.12);
         }
 
+        #touch-controls {
+            position: fixed;
+            inset: 0;
+            z-index: 12;
+            pointer-events: none;
+            display: none;
+        }
+
+        #touch-controls.visible {
+            display: block;
+        }
+
+        .touch-pad {
+            position: fixed;
+            width: 128px;
+            height: 128px;
+            border-radius: 50%;
+            border: 1px solid rgba(198, 161, 90, 0.45);
+            background: radial-gradient(circle at 35% 30%, rgba(80, 58, 34, 0.42), rgba(20, 14, 10, 0.65));
+            box-shadow: inset 0 0 0 1px rgba(230, 216, 184, 0.1), 0 10px 24px rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(1px);
+            pointer-events: auto;
+            touch-action: none;
+        }
+
+        #touch-move-pad {
+            left: 14px;
+            bottom: calc(110px + env(safe-area-inset-bottom));
+        }
+
+        #touch-look-pad {
+            right: 14px;
+            bottom: calc(110px + env(safe-area-inset-bottom));
+        }
+
+        .touch-pad-label {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            color: rgba(239, 223, 191, 0.82);
+            font-size: 12px;
+            letter-spacing: 1.6px;
+            font-family: "IBM Plex Mono", monospace;
+            pointer-events: none;
+        }
+
+        #touch-move-thumb {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 46px;
+            height: 46px;
+            margin-left: -23px;
+            margin-top: -23px;
+            border-radius: 50%;
+            border: 1px solid rgba(198, 161, 90, 0.64);
+            background: radial-gradient(circle at 35% 30%, rgba(198, 161, 90, 0.72), rgba(84, 60, 32, 0.82));
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+            pointer-events: none;
+            transition: transform 0.08s ease-out;
+        }
+
+        #touch-interact-btn {
+            position: fixed;
+            right: 16px;
+            bottom: calc(252px + env(safe-area-inset-bottom));
+            border: 1px solid rgba(198, 161, 90, 0.58);
+            border-radius: 12px;
+            background: linear-gradient(180deg, rgba(82, 58, 33, 0.88), rgba(37, 26, 15, 0.94));
+            color: #efdfbf;
+            font-family: "IBM Plex Mono", monospace;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+            padding: 10px 14px;
+            pointer-events: auto;
+            touch-action: manipulation;
+            box-shadow: inset 0 1px 0 rgba(230, 216, 184, 0.22), 0 10px 22px rgba(0, 0, 0, 0.44);
+        }
+
+        #touch-interact-btn:active {
+            transform: translateY(1px);
+        }
+
         #elevator-current-floor {
             margin: 0 0 14px;
             padding: 8px 10px;
@@ -1855,11 +2111,23 @@
 
         @media (max-width: 900px) {
             #toolbar {
-                bottom: 62px;
-                width: calc(100vw - 16px);
+                bottom: calc(70px + env(safe-area-inset-bottom));
+                width: calc(100vw - 14px);
                 justify-content: center;
                 flex-wrap: wrap;
                 gap: 8px;
+                display: none;
+                z-index: 26;
+            }
+
+            body.mobile-menu-open #toolbar {
+                display: flex;
+            }
+
+            body.touch-input .mobile-menu-toggle {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
             }
 
             .toolbar-btn {
@@ -1887,6 +2155,39 @@
                 align-items: flex-start;
                 gap: 3px;
             }
+
+            .touch-pad {
+                width: 112px;
+                height: 112px;
+            }
+
+            #touch-move-pad {
+                left: 10px;
+                bottom: calc(98px + env(safe-area-inset-bottom));
+            }
+
+            #touch-look-pad {
+                right: 10px;
+                bottom: calc(98px + env(safe-area-inset-bottom));
+            }
+
+            #touch-move-thumb {
+                width: 40px;
+                height: 40px;
+                margin-left: -20px;
+                margin-top: -20px;
+            }
+
+            #touch-interact-btn {
+                right: 10px;
+                bottom: calc(222px + env(safe-area-inset-bottom));
+                padding: 9px 13px;
+                font-size: 12px;
+            }
+
+            #two-page-btn {
+                display: none;
+            }
         }
 </style>
 </head>
@@ -1900,6 +2201,7 @@
     <div id="title-bar">
         <span>THE LIBRARY OF GUTENBERG <span id="build-tag" style="opacity:0.35;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1px;">—</span></span>
         <div class="title-bar-controls">
+            <button id="mobile-menu-toggle" class="mobile-menu-toggle" type="button" aria-expanded="false">Menu</button>
             <div class="control-group">
                 <span class="control-icon" id="audio-toggle" title="Toggle ambient audio">🔇</span>
                 <input type="range" id="volume-slider" min="0" max="100" value="30" title="Volume">
@@ -1915,7 +2217,7 @@
         <div id="intro-text">
             <div class="intro-quote">"A library is not a luxury but one of the necessities of life."</div>
             <div class="intro-attribution">— Henry Ward Beecher</div>
-            <div class="intro-prompt">Click anywhere to enter the Library</div>
+            <div class="intro-prompt" id="intro-prompt">Click anywhere to enter the Library</div>
         </div>
     </div>
 
@@ -1923,6 +2225,17 @@
 
     <div id="instructions">
         Click to look around. WASD to walk. Click any book to read it.
+    </div>
+
+    <div id="touch-controls">
+        <div id="touch-move-pad" class="touch-pad">
+            <div id="touch-move-thumb"></div>
+            <div class="touch-pad-label">MOVE</div>
+        </div>
+        <div id="touch-look-pad" class="touch-pad">
+            <div class="touch-pad-label">LOOK</div>
+        </div>
+        <button id="touch-interact-btn" type="button">Read / Use</button>
     </div>
 
     <div id="book-tooltip">
@@ -2187,6 +2500,7 @@
         <div class="about-content">
             <p><strong>WASD</strong> — Move around<br>
             <strong>Mouse</strong> — Look around (click to engage)<br>
+            <strong>Touch (iPhone/iPad)</strong> — Left thumb moves, right thumb looks<br>
             <strong>Click a book</strong> — Read it<br>
             <strong>ESC</strong> — Release mouse / Close panels<br>
             <strong>Ctrl+F</strong> — Search within book</p>
@@ -2227,7 +2541,7 @@
         // ============================================
 
         // Version stamp (helps ensure browser isn't using a cached index.html)
-        const APP_BUILD = 'css-book-v16';
+        const APP_BUILD = 'css-book-v21-mobile-readability-recovery';
         window.__APP_BUILD = APP_BUILD;
 
         // ============================================
@@ -4220,26 +4534,267 @@
         let elevatorInRange = false;
 
         let introHidden = false;
+        const introPromptEl = document.getElementById('intro-prompt');
+        const instructionsEl = document.getElementById('instructions');
+        const crosshairEl = document.getElementById('crosshair');
+        const elevatorHintEl = document.getElementById('elevator-hint');
+        const touchControlsEl = document.getElementById('touch-controls');
+        const touchMovePadEl = document.getElementById('touch-move-pad');
+        const touchMoveThumbEl = document.getElementById('touch-move-thumb');
+        const touchLookPadEl = document.getElementById('touch-look-pad');
+        const touchInteractBtnEl = document.getElementById('touch-interact-btn');
+        const mobileMenuToggleEl = document.getElementById('mobile-menu-toggle');
+        const readerEl = document.getElementById('reader');
 
-        canvas.addEventListener('click', (e) => {
-            if (!readerOpen && !searchOpen && !navOpen && !aboutOpen && !libraryOpen && introHidden) {
+        const isTouchDevice = window.matchMedia('(any-pointer: coarse)').matches ||
+            navigator.maxTouchPoints > 0 ||
+            /iPhone|iPad|iPod/i.test(navigator.userAgent);
+        const TOUCH_JOYSTICK_RADIUS = 40;
+        const TOUCH_LOOK_SENSITIVITY = 0.0027;
+        const TOUCH_PITCH_LIMIT = Math.PI / 2 - 0.08;
+
+        const touchState = {
+            moveIdentifier: null,
+            lookIdentifier: null,
+            moveX: 0,
+            moveY: 0,
+            lookX: 0,
+            lookY: 0,
+            yaw: 0,
+            pitch: 0,
+            hintDismissed: false,
+            lastInteractAt: 0
+        };
+
+        let mobileMenuOpen = false;
+
+        function isCompactReaderMode() {
+            return isTouchDevice || window.innerWidth <= 900;
+        }
+
+        function isReaderSinglePageMode() {
+            return singlePageMode || isCompactReaderMode();
+        }
+
+        function hasBlockingPanel() {
+            return readerOpen || searchOpen || navOpen || aboutOpen || libraryOpen || elevatorOpen || mobileMenuOpen;
+        }
+
+        function isNavigationActive() {
+            return controls.isLocked || (isTouchDevice && introHidden && !hasBlockingPanel());
+        }
+
+        function setMobileMenuOpen(open) {
+            mobileMenuOpen = !!open && isTouchDevice && window.innerWidth <= 900 && introHidden && !readerOpen;
+            document.body.classList.toggle('mobile-menu-open', mobileMenuOpen);
+            if (mobileMenuToggleEl) {
+                mobileMenuToggleEl.setAttribute('aria-expanded', mobileMenuOpen ? 'true' : 'false');
+                mobileMenuToggleEl.textContent = mobileMenuOpen ? 'Close' : 'Menu';
+            }
+            refreshTouchUI();
+        }
+
+        function syncReaderLayoutMode() {
+            if (!readerEl) return;
+            const compact = isCompactReaderMode();
+            readerEl.classList.toggle('mobile-fullscreen', compact);
+            if (!compact) {
+                readerEl.classList.remove('mobile-reader-ui-hidden');
+            }
+        }
+
+        function startAmbientAudioFromGesture() {
+            if (audioEnabled && !audioContext) {
+                initAudio().then(() => setAmbientVolume(audioVolume)).catch(() => {});
+            }
+        }
+
+        function syncTouchAnglesFromCamera() {
+            const euler = new THREE.Euler().setFromQuaternion(camera.quaternion, 'YXZ');
+            touchState.pitch = THREE.MathUtils.clamp(euler.x, -TOUCH_PITCH_LIMIT, TOUCH_PITCH_LIMIT);
+            touchState.yaw = euler.y;
+        }
+
+        function dismissTouchHint() {
+            if (!isTouchDevice || touchState.hintDismissed) return;
+            touchState.hintDismissed = true;
+            if (instructionsEl) instructionsEl.classList.add('hidden');
+        }
+
+        function resetTouchMove() {
+            touchState.moveX = 0;
+            touchState.moveY = 0;
+            if (touchMoveThumbEl) {
+                touchMoveThumbEl.style.transform = 'translate(0px, 0px)';
+            }
+        }
+
+        function updateTouchMoveFromTouch(touch) {
+            if (!touchMovePadEl) return;
+            const rect = touchMovePadEl.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.height / 2;
+            let dx = touch.clientX - cx;
+            let dy = touch.clientY - cy;
+            const len = Math.hypot(dx, dy);
+            if (len > TOUCH_JOYSTICK_RADIUS && len > 0) {
+                const scale = TOUCH_JOYSTICK_RADIUS / len;
+                dx *= scale;
+                dy *= scale;
+            }
+            touchState.moveX = dx / TOUCH_JOYSTICK_RADIUS;
+            touchState.moveY = dy / TOUCH_JOYSTICK_RADIUS;
+            if (touchMoveThumbEl) {
+                touchMoveThumbEl.style.transform = `translate(${dx}px, ${dy}px)`;
+            }
+        }
+
+        function findTouchByIdentifier(touchList, identifier) {
+            for (let i = 0; i < touchList.length; i++) {
+                if (touchList[i].identifier === identifier) return touchList[i];
+            }
+            return null;
+        }
+
+        function refreshTouchUI() {
+            if (!isTouchDevice) return;
+            const active = introHidden && !hasBlockingPanel();
+            if (touchControlsEl) touchControlsEl.classList.toggle('visible', active);
+            crosshairEl.classList.toggle('visible', active);
+            if (instructionsEl) {
+                instructionsEl.classList.toggle('hidden', touchState.hintDismissed || !active);
+            }
+            if (!active) {
+                touchState.moveIdentifier = null;
+                touchState.lookIdentifier = null;
+                resetTouchMove();
+            }
+        }
+
+        if (isTouchDevice) {
+            document.body.classList.add('touch-input');
+            if (introPromptEl) introPromptEl.textContent = 'Tap anywhere to enter the Library';
+            if (instructionsEl) {
+                instructionsEl.textContent = 'Two-thumb controls: left pad moves, right pad looks. Tap Read / Use to open books.';
+            }
+            if (elevatorHintEl) {
+                elevatorHintEl.innerHTML = 'Tap <strong>Read / Use</strong> to call elevator';
+            }
+            syncTouchAnglesFromCamera();
+            syncReaderLayoutMode();
+
+            if (mobileMenuToggleEl) {
+                mobileMenuToggleEl.addEventListener('click', () => {
+                    setMobileMenuOpen(!mobileMenuOpen);
+                });
+            }
+
+            if (touchMovePadEl) {
+                touchMovePadEl.addEventListener('touchstart', (e) => {
+                    if (touchState.moveIdentifier !== null) return;
+                    const touch = e.changedTouches[0];
+                    if (!touch) return;
+                    touchState.moveIdentifier = touch.identifier;
+                    updateTouchMoveFromTouch(touch);
+                    dismissTouchHint();
+                    startAmbientAudioFromGesture();
+                    e.preventDefault();
+                }, { passive: false });
+
+                touchMovePadEl.addEventListener('touchmove', (e) => {
+                    if (touchState.moveIdentifier === null) return;
+                    const touch = findTouchByIdentifier(e.touches, touchState.moveIdentifier);
+                    if (!touch) return;
+                    updateTouchMoveFromTouch(touch);
+                    dismissTouchHint();
+                    e.preventDefault();
+                }, { passive: false });
+            }
+
+            if (touchLookPadEl) {
+                touchLookPadEl.addEventListener('touchstart', (e) => {
+                    if (touchState.lookIdentifier !== null) return;
+                    const touch = e.changedTouches[0];
+                    if (!touch) return;
+                    touchState.lookIdentifier = touch.identifier;
+                    touchState.lookX = touch.clientX;
+                    touchState.lookY = touch.clientY;
+                    syncTouchAnglesFromCamera();
+                    dismissTouchHint();
+                    startAmbientAudioFromGesture();
+                    e.preventDefault();
+                }, { passive: false });
+
+                touchLookPadEl.addEventListener('touchmove', (e) => {
+                    if (touchState.lookIdentifier === null) return;
+                    const touch = findTouchByIdentifier(e.touches, touchState.lookIdentifier);
+                    if (!touch) return;
+                    const dx = touch.clientX - touchState.lookX;
+                    const dy = touch.clientY - touchState.lookY;
+                    touchState.lookX = touch.clientX;
+                    touchState.lookY = touch.clientY;
+                    if (isNavigationActive()) {
+                        touchState.yaw -= dx * TOUCH_LOOK_SENSITIVITY;
+                        touchState.pitch = THREE.MathUtils.clamp(
+                            touchState.pitch - dy * TOUCH_LOOK_SENSITIVITY,
+                            -TOUCH_PITCH_LIMIT,
+                            TOUCH_PITCH_LIMIT
+                        );
+                        camera.rotation.set(touchState.pitch, touchState.yaw, 0, 'YXZ');
+                    }
+                    dismissTouchHint();
+                    e.preventDefault();
+                }, { passive: false });
+            }
+
+            window.addEventListener('touchend', (e) => {
+                for (const touch of Array.from(e.changedTouches)) {
+                    if (touch.identifier === touchState.moveIdentifier) {
+                        touchState.moveIdentifier = null;
+                        resetTouchMove();
+                    }
+                    if (touch.identifier === touchState.lookIdentifier) {
+                        touchState.lookIdentifier = null;
+                    }
+                }
+            }, { passive: false });
+
+            window.addEventListener('touchcancel', (e) => {
+                for (const touch of Array.from(e.changedTouches)) {
+                    if (touch.identifier === touchState.moveIdentifier) {
+                        touchState.moveIdentifier = null;
+                        resetTouchMove();
+                    }
+                    if (touch.identifier === touchState.lookIdentifier) {
+                        touchState.lookIdentifier = null;
+                    }
+                }
+            }, { passive: false });
+        }
+
+        syncReaderLayoutMode();
+
+        canvas.addEventListener('click', () => {
+            if (isTouchDevice) return;
+            if (!hasBlockingPanel() && introHidden) {
                 controls.lock();
             }
         });
 
         controls.addEventListener('lock', () => {
-            document.getElementById('crosshair').classList.add('visible');
-            document.getElementById('instructions').classList.add('hidden');
-            // Start ambient audio on interaction (requires user gesture)
-            if (audioEnabled && !audioContext) {
-                initAudio().then(() => setAmbientVolume(audioVolume));
+            if (!isTouchDevice) {
+                crosshairEl.classList.add('visible');
+                if (instructionsEl) instructionsEl.classList.add('hidden');
             }
+            startAmbientAudioFromGesture();
         });
 
         controls.addEventListener('unlock', () => {
-            document.getElementById('crosshair').classList.remove('visible');
-            if (introHidden && !readerOpen && !searchOpen && !navOpen && !aboutOpen && !libraryOpen) {
-                document.getElementById('instructions').classList.remove('hidden');
+            if (!isTouchDevice) {
+                crosshairEl.classList.remove('visible');
+                if (instructionsEl && introHidden && !hasBlockingPanel()) {
+                    instructionsEl.classList.remove('hidden');
+                }
             }
         });
 
@@ -4253,7 +4808,7 @@
         window.addEventListener('keydown', (e) => {
             switch(e.code) {
                 case 'KeyW': keys.forward = true; break;
-                case 'KeyS': if (controls.isLocked) keys.backward = true; break;
+                case 'KeyS': if (isNavigationActive()) keys.backward = true; break;
                 case 'KeyA': keys.left = true; break;
                 case 'KeyD': keys.right = true; break;
                 case 'KeyE': if (elevatorInRange) { openElevator(); } break;
@@ -4321,7 +4876,7 @@
             if (!hint) return;
             const room = rooms.get(currentRoomIndex);
             elevatorInRange = false;
-            if (room && room.elevatorLocal && controls.isLocked && !readerOpen && !searchOpen && !navOpen && !aboutOpen && !libraryOpen && !elevatorOpen) {
+            if (room && room.elevatorLocal && isNavigationActive()) {
                 const localPos = camera.position.clone().applyMatrix4(new THREE.Matrix4().copy(room.group.matrixWorld).invert());
                 const dx = localPos.x - room.elevatorLocal.x;
                 const dz = localPos.z - room.elevatorLocal.z;
@@ -4341,9 +4896,12 @@
 
         let hoveredBookId = null;
 
-        document.addEventListener('click', async (event) => {
-            if (!controls.isLocked) return;
-
+        function interactAtCrosshair() {
+            if (!isNavigationActive()) return false;
+            if (elevatorInRange) {
+                openElevator();
+                return true;
+            }
             raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
 
             for (const [idx, room] of rooms) {
@@ -4351,13 +4909,40 @@
                 if (intersects.length > 0) {
                     const instanceId = intersects[0].instanceId;
                     const bookInfo = room.bookMap[instanceId];
-                    if (!bookInfo || !Number.isInteger(bookInfo.bookId) || bookInfo.bookId < 1) return;
+                    if (!bookInfo || !Number.isInteger(bookInfo.bookId) || bookInfo.bookId < 1) return false;
                     openBook(bookInfo.bookId);
                     controls.unlock();
-                    return;
+                    return true;
                 }
             }
+            return false;
+        }
+
+        document.addEventListener('click', () => {
+            if (isTouchDevice || !controls.isLocked) return;
+            interactAtCrosshair();
         });
+
+        if (touchInteractBtnEl) {
+            touchInteractBtnEl.addEventListener('touchstart', (e) => {
+                touchState.lastInteractAt = Date.now();
+                dismissTouchHint();
+                startAmbientAudioFromGesture();
+                interactAtCrosshair();
+                e.preventDefault();
+            }, { passive: false });
+
+            touchInteractBtnEl.addEventListener('click', (e) => {
+                if (Date.now() - touchState.lastInteractAt < 450) {
+                    e.preventDefault();
+                    return;
+                }
+                dismissTouchHint();
+                startAmbientAudioFromGesture();
+                interactAtCrosshair();
+                e.preventDefault();
+            });
+        }
 
         // ============================================
         // SPINE LABEL SYSTEM (screen-space overlay)
@@ -4418,7 +5003,10 @@
         let pageTurnAnimationToken = 0;
         const PAGE_TURN_OUT_MS = 280;
         const PAGE_TURN_IN_MS = 360;
+<<<<<<< HEAD
         const PAGE_NUM_RESERVE_PX = 24;
+=======
+>>>>>>> codex/navigation-pr-clean
         const PAGE_MEASURE_MIN_WIDTH_PX = 300;
         const PAGE_MEASURE_MIN_HEIGHT_PX = 420;
         const textCache = new Map();
@@ -4430,6 +5018,14 @@
 
         let pageCharStarts = [];
         let fontRepaginateTimer = null;
+<<<<<<< HEAD
+=======
+        let mobileReaderUIVisible = true;
+        let mobileReaderHideTimer = null;
+        let mobileReaderRepaginateTimer = null;
+        let compactTapStamp = 0;
+        const MOBILE_READER_HIDE_MS = 2800;
+>>>>>>> codex/navigation-pr-clean
 
         function applyReaderTheme() {
             const reader = document.getElementById('reader');
@@ -4441,6 +5037,81 @@
             btn.title = readerDarkMode ? 'Switch to light pages' : 'Switch to dark pages';
         }
 
+<<<<<<< HEAD
+=======
+        function clearMobileReaderHideTimer() {
+            if (mobileReaderHideTimer) {
+                clearTimeout(mobileReaderHideTimer);
+                mobileReaderHideTimer = null;
+            }
+        }
+
+        function pageNumReservePx() {
+            if (isCompactReaderMode() && !mobileReaderUIVisible) return 10;
+            return 24;
+        }
+
+        function scheduleMobileReaderRepaginate() {
+            if (!readerOpen || !currentBookText) return;
+            if (mobileReaderRepaginateTimer) clearTimeout(mobileReaderRepaginateTimer);
+            mobileReaderRepaginateTimer = setTimeout(() => {
+                mobileReaderRepaginateTimer = null;
+                repaginateCurrentBook();
+            }, 90);
+        }
+
+        function scheduleMobileReaderAutoHide() {
+            clearMobileReaderHideTimer();
+            if (!readerOpen || !isCompactReaderMode() || !mobileReaderUIVisible) return;
+            mobileReaderHideTimer = setTimeout(() => {
+                if (!readerOpen || !isCompactReaderMode()) return;
+                if (document.getElementById('reader-search-bar')?.classList.contains('visible')) return;
+                if (document.getElementById('typography-dropdown')?.classList.contains('visible')) return;
+                if (document.getElementById('chapter-sidebar')?.classList.contains('visible')) return;
+                setMobileReaderUIVisible(false);
+            }, MOBILE_READER_HIDE_MS);
+        }
+
+        function setMobileReaderUIVisible(visible) {
+            if (!readerEl) return;
+            const nextVisible = !!visible;
+            const changed = mobileReaderUIVisible !== nextVisible;
+            if (!isCompactReaderMode()) {
+                mobileReaderUIVisible = true;
+                readerEl.classList.remove('mobile-reader-ui-hidden');
+                clearMobileReaderHideTimer();
+                return;
+            }
+            mobileReaderUIVisible = nextVisible;
+            readerEl.classList.toggle('mobile-reader-ui-hidden', !mobileReaderUIVisible);
+            if (mobileReaderUIVisible) {
+                scheduleMobileReaderAutoHide();
+            } else {
+                clearMobileReaderHideTimer();
+            }
+            if (changed) {
+                scheduleMobileReaderRepaginate();
+            }
+        }
+
+        function handleCompactReaderTap(clientX, spreadRect) {
+            if (!readerOpen || !isCompactReaderMode() || !spreadRect || spreadRect.width <= 0) return;
+            const ratio = (clientX - spreadRect.left) / spreadRect.width;
+            const leftZone = 0.32;
+            const rightZone = 0.68;
+
+            if (ratio <= leftZone) {
+                prevPage();
+                return;
+            }
+            if (ratio >= rightZone) {
+                nextPage();
+                return;
+            }
+            setMobileReaderUIVisible(!mobileReaderUIVisible);
+        }
+
+>>>>>>> codex/navigation-pr-clean
         function clearPageTurnClasses() {
             const leftPage = document.getElementById('book-page-left');
             const rightPage = document.getElementById('book-page-right');
@@ -4528,14 +5199,22 @@
             const padY = (parseFloat(pageStyle.paddingTop) || 0) + (parseFloat(pageStyle.paddingBottom) || 0);
 
             let w = pageRect.width - padX;
+<<<<<<< HEAD
             let h = pageRect.height - padY - PAGE_NUM_RESERVE_PX;
+=======
+            let h = pageRect.height - padY - pageNumReservePx();
+>>>>>>> codex/navigation-pr-clean
 
             // If layout hasn't fully settled yet, derive a sane fallback from the spread box.
             if ((w < PAGE_MEASURE_MIN_WIDTH_PX || h < PAGE_MEASURE_MIN_HEIGHT_PX) && bookSpread) {
                 const spreadRect = bookSpread.getBoundingClientRect();
                 if (spreadRect.width > 0 && spreadRect.height > 0) {
                     w = Math.max(w, ((spreadRect.width - 12) / 2) - padX);
+<<<<<<< HEAD
                     h = Math.max(h, spreadRect.height - padY - PAGE_NUM_RESERVE_PX);
+=======
+                    h = Math.max(h, spreadRect.height - padY - pageNumReservePx());
+>>>>>>> codex/navigation-pr-clean
                 }
             }
 
@@ -4704,9 +5383,11 @@
         };
 
         window.toggleChapterSidebar = function() {
+            if (isCompactReaderMode()) setMobileReaderUIVisible(true);
             const sidebar = document.getElementById('chapter-sidebar');
             sidebar.classList.toggle('visible');
             document.getElementById('toc-btn').classList.toggle('active', sidebar.classList.contains('visible'));
+            if (!sidebar.classList.contains('visible')) scheduleMobileReaderAutoHide();
         };
 
         function applyBookTypography() {
@@ -4780,12 +5461,13 @@
             const nextBtn = document.getElementById('next-page-btn');
             const pageJumpInput = document.getElementById('page-jump-input');
             const bookSpine = document.querySelector('.book-spine');
+            const readerSinglePage = isReaderSinglePageMode();
 
             const total = currentBookPages.length || 1;
 
             // In book mode, always work with spreads (even indices)
             let idx = Math.max(0, Math.min(currentPageIndex, total - 1));
-            if (!singlePageMode) {
+            if (!readerSinglePage) {
                 idx = Math.floor(idx / 2) * 2;
             }
             currentPageIndex = idx;
@@ -4795,9 +5477,15 @@
 
                 // Toggle modal width class based on mode
                 const readerPanel = document.querySelector('#reader .reader-page');
+<<<<<<< HEAD
                 if (readerPanel) readerPanel.classList.toggle('single-page', singlePageMode);
 
                 if (singlePageMode) {
+=======
+                if (readerPanel) readerPanel.classList.toggle('single-page', readerSinglePage);
+
+                if (readerSinglePage) {
+>>>>>>> codex/navigation-pr-clean
                     // Single page mode
                     rightPage.style.display = 'none';
                     bookSpine.style.display = 'none';
@@ -4850,8 +5538,13 @@
 
             const token = pageTurnAnimationToken;
             const forward = direction >= 0;
+<<<<<<< HEAD
             const turningPage = singlePageMode ? leftPage : (forward ? rightPage : leftPage);
             const settlingPage = singlePageMode ? null : (forward ? leftPage : rightPage);
+=======
+            const turningPage = readerSinglePage ? leftPage : (forward ? rightPage : leftPage);
+            const settlingPage = readerSinglePage ? null : (forward ? leftPage : rightPage);
+>>>>>>> codex/navigation-pr-clean
             const dirClass = forward ? 'turn-next' : 'turn-prev';
 
             if (turningPage) turningPage.classList.add('turning-out', dirClass);
@@ -4871,6 +5564,36 @@
                     clearPageTurnClasses();
                 }, PAGE_TURN_IN_MS);
             }, PAGE_TURN_OUT_MS);
+<<<<<<< HEAD
+=======
+        }
+
+        const bookSpreadEl = document.getElementById('book-spread');
+        if (bookSpreadEl) {
+            bookSpreadEl.addEventListener('touchend', (e) => {
+                if (!readerOpen || !isCompactReaderMode()) return;
+                const touch = e.changedTouches[0];
+                if (!touch) return;
+                compactTapStamp = Date.now();
+                handleCompactReaderTap(touch.clientX, bookSpreadEl.getBoundingClientRect());
+                e.preventDefault();
+            }, { passive: false });
+
+            bookSpreadEl.addEventListener('click', (e) => {
+                if (!readerOpen || !isCompactReaderMode()) return;
+                if (Date.now() - compactTapStamp < 420) return;
+                handleCompactReaderTap(e.clientX, bookSpreadEl.getBoundingClientRect());
+            });
+        }
+
+        if (readerEl) {
+            readerEl.addEventListener('click', (e) => {
+                if (!readerOpen || !isCompactReaderMode()) return;
+                if (e.target.closest('.reader-header, .reader-footer, .reader-search-bar, .chapter-sidebar, .typography-dropdown')) {
+                    setMobileReaderUIVisible(true);
+                }
+            });
+>>>>>>> codex/navigation-pr-clean
         }
 
         function highlightSearchInText(text, query) {
@@ -4892,10 +5615,12 @@
                 currentPageIndex = page;
                 renderPage(true, direction);
                 playPageTurn();
+                if (mobileReaderUIVisible) scheduleMobileReaderAutoHide();
             }
         };
 
         window.toggleTwoPage = function() {
+            if (isCompactReaderMode()) return;
             singlePageMode = !singlePageMode;
             settings.singlePageMode = singlePageMode;
             saveToStorage(STORAGE_KEYS.SETTINGS, settings);
@@ -4913,6 +5638,7 @@
             settings.readerDarkMode = readerDarkMode;
             saveToStorage(STORAGE_KEYS.SETTINGS, settings);
             applyReaderTheme();
+<<<<<<< HEAD
         };
 
         // Typography controls
@@ -4921,6 +5647,18 @@
             dropdown.classList.toggle('visible');
         };
 
+=======
+        };
+
+        // Typography controls
+        window.toggleTypographyDropdown = function() {
+            if (isCompactReaderMode()) setMobileReaderUIVisible(true);
+            const dropdown = document.getElementById('typography-dropdown');
+            dropdown.classList.toggle('visible');
+            if (!dropdown.classList.contains('visible')) scheduleMobileReaderAutoHide();
+        };
+
+>>>>>>> codex/navigation-pr-clean
         window.changeFont = async function(font) {
             currentFont = font;
             settings.font = font;
@@ -4940,6 +5678,7 @@
 
         // In-book search
         window.openReaderSearch = function() {
+            if (isCompactReaderMode()) setMobileReaderUIVisible(true);
             const searchBar = document.getElementById('reader-search-bar');
             searchBar.classList.add('visible');
             document.getElementById('reader-search-input').focus();
@@ -4953,6 +5692,7 @@
             readerSearchCurrentIndex = -1;
             document.getElementById('reader-search-info').textContent = '';
             renderPage(); // Remove highlights
+            scheduleMobileReaderAutoHide();
         };
 
         window.readerSearchPrev = function() {
@@ -5024,28 +5764,32 @@
 
         window.nextPage = function() {
             if (!readerOpen) return;
-            const step = singlePageMode ? 1 : 2;
+            const step = isReaderSinglePageMode() ? 1 : 2;
             if (currentPageIndex < (currentBookPages.length - step)) {
                 currentPageIndex += step;
                 renderPage(true, 1);
                 playPageTurn();
+                if (mobileReaderUIVisible) scheduleMobileReaderAutoHide();
             }
         };
 
         window.prevPage = function() {
             if (!readerOpen) return;
-            const step = singlePageMode ? 1 : 2;
+            const step = isReaderSinglePageMode() ? 1 : 2;
             if (currentPageIndex >= step) {
                 currentPageIndex -= step;
                 renderPage(true, -1);
                 playPageTurn();
+                if (mobileReaderUIVisible) scheduleMobileReaderAutoHide();
             }
         };
 
         window.openBook = async function(bookId, resumePage = null) {
             try {
+                setMobileMenuOpen(false);
                 currentBookId = bookId;
                 readerOpen = true;
+                syncReaderLayoutMode();
 
                 const legacyLoc = bookIdToLocation_legacy(bookId);
                 const slotsLoc = bookIdToLocationCanonical(bookId);
@@ -5075,6 +5819,10 @@
             document.getElementById('reader-content').classList.add('loading');
             document.getElementById('reader-gutenberg-link').href = `https://www.gutenberg.org/ebooks/${bookId}`;
             document.getElementById('reader').classList.add('visible');
+<<<<<<< HEAD
+=======
+            setMobileReaderUIVisible(!isCompactReaderMode());
+>>>>>>> codex/navigation-pr-clean
             applyReaderTheme();
             
             // Reset search
@@ -5091,7 +5839,11 @@
             document.getElementById('bookmark-btn').classList.toggle('bookmarked', isBookmarked(bookId));
             
             // Update single-page toggle button state
-            document.getElementById('two-page-btn').classList.toggle('active', singlePageMode);
+            const effectiveSinglePage = isReaderSinglePageMode();
+            const twoPageBtn = document.getElementById('two-page-btn');
+            twoPageBtn.classList.toggle('active', effectiveSinglePage);
+            twoPageBtn.disabled = isCompactReaderMode();
+            twoPageBtn.title = effectiveSinglePage ? 'Two-page view' : 'Single page view';
             
             // Apply saved typography settings
             document.getElementById('font-select').value = currentFont;
@@ -5163,6 +5915,9 @@
             currentBookPages = [];
             currentPageIndex = 0;
             detectedChapters = [];
+            clearMobileReaderHideTimer();
+            setMobileReaderUIVisible(true);
+            refreshTouchUI();
         };
 
         // Close typography dropdown when clicking outside
@@ -5191,6 +5946,7 @@
         let selectedSearchIndex = -1;
 
         window.openSearch = function() {
+            setMobileMenuOpen(false);
             closeAllPanels('search');
             document.getElementById('search-panel').classList.add('visible');
             searchOpen = true;
@@ -5483,6 +6239,7 @@
         });
 
         window.openNav = async function() {
+            setMobileMenuOpen(false);
             closeAllPanels('nav');
             try {
                 await initializeNavPanelOptions();
@@ -5505,6 +6262,7 @@
         // ============================================
 
         window.openElevator = function() {
+            setMobileMenuOpen(false);
             closeAllPanels('elevator');
             ensureElevatorButtons();
             updateElevatorPanelState();
@@ -5650,6 +6408,7 @@
         // ============================================
 
         window.openLibrary = function() {
+            setMobileMenuOpen(false);
             closeAllPanels('library');
             document.getElementById('library-panel').classList.add('visible');
             libraryOpen = true;
@@ -5739,7 +6498,14 @@
         window.goToBookFromLibrary = function(bookId) {
             closeLibrary();
             const location = bookIdToLocation(bookId);
+<<<<<<< HEAD
             if (!location) return;
+=======
+            if (!location) {
+                showToast('Book location unavailable');
+                return;
+            }
+>>>>>>> codex/navigation-pr-clean
             teleportTo(location.room, () => {
                 openBook(bookId);
             }, bookId);
@@ -5748,7 +6514,14 @@
         window.continueReading = function(bookId, page) {
             closeLibrary();
             const location = bookIdToLocation(bookId);
+<<<<<<< HEAD
             if (!location) return;
+=======
+            if (!location) {
+                showToast('Book location unavailable');
+                return;
+            }
+>>>>>>> codex/navigation-pr-clean
             teleportTo(location.room, () => {
                 openBook(bookId, page);
             }, bookId);
@@ -5783,6 +6556,7 @@
         // ============================================
 
         window.openAbout = function() {
+            setMobileMenuOpen(false);
             closeAllPanels('about');
             document.getElementById('about-overlay').classList.add('visible');
             document.getElementById('about-modal').classList.add('visible');
@@ -5826,8 +6600,11 @@
         const intro = document.getElementById('intro');
         intro.addEventListener('click', () => {
             if (intro.classList.contains('hidden')) return;
+            startAmbientAudioFromGesture();
             intro.classList.add('hidden');
             introHidden = true;
+            setMobileMenuOpen(false);
+            refreshTouchUI();
             setTimeout(() => {
                 intro.style.display = 'none';
             }, 1500);
@@ -5848,14 +6625,22 @@
             const elapsedTime = clock.getElapsedTime();
             const now = performance.now();
 
-            if (controls.isLocked) {
+            if (isTouchDevice) refreshTouchUI();
+
+            if (isNavigationActive()) {
                 const direction = new THREE.Vector3();
                 if (keys.forward) direction.z -= 1;
                 if (keys.backward) direction.z += 1;
                 if (keys.left) direction.x -= 1;
                 if (keys.right) direction.x += 1;
+                if (isTouchDevice) {
+                    direction.x += touchState.moveX;
+                    direction.z += touchState.moveY;
+                }
 
                 if (direction.length() > 0) {
+                    const touchMagnitude = isTouchDevice ? Math.min(1, Math.hypot(touchState.moveX, touchState.moveY)) : 0;
+                    const speedScale = touchMagnitude > 0 ? Math.max(0.35, touchMagnitude) : 1;
                     direction.normalize();
 
                     const moveDir = direction.clone();
@@ -5863,7 +6648,7 @@
                     moveDir.y = 0;
                     moveDir.normalize();
 
-                    camera.position.add(moveDir.multiplyScalar(moveSpeed * delta));
+                    camera.position.add(moveDir.multiplyScalar(moveSpeed * speedScale * delta));
 
                     applyCollision();
                     checkRoomTransition();
@@ -5907,7 +6692,7 @@
                             hoveredBookId = bookInfo.bookId;
                             const tooltip = document.getElementById('book-tooltip');
                             tooltip.querySelector('.title').textContent = `Book #${bookInfo.bookId}`;
-                            tooltip.querySelector('.author').textContent = 'Click to read';
+                            tooltip.querySelector('.author').textContent = isTouchDevice ? 'Tap Read / Use' : 'Click to read';
                             tooltip.querySelector('.location-hint').textContent = 
                                 `Wall ${bookInfo.wall + 1} · Shelf ${bookInfo.shelf + 1} · Vol ${bookInfo.vol + 1}`;
                             tooltip.classList.add('visible');
@@ -6114,6 +6899,10 @@
         // ============================================
 
         window.addEventListener('keydown', (e) => {
+            if (e.code === 'Escape' && mobileMenuOpen) {
+                setMobileMenuOpen(false);
+                return;
+            }
             if (readerOpen) {
                 if (e.code === 'Escape') { 
                     if (document.getElementById('reader-search-bar').classList.contains('visible')) {
@@ -6172,6 +6961,25 @@
         // ============================================
 
         window.addEventListener('resize', () => {
+            syncReaderLayoutMode();
+            if (mobileMenuOpen && window.innerWidth > 900) {
+                setMobileMenuOpen(false);
+            }
+            if (readerOpen) {
+                if (isCompactReaderMode()) {
+                    setMobileReaderUIVisible(mobileReaderUIVisible);
+                    if (mobileReaderUIVisible) scheduleMobileReaderAutoHide();
+                } else {
+                    setMobileReaderUIVisible(true);
+                }
+                const twoPageBtn = document.getElementById('two-page-btn');
+                if (twoPageBtn) {
+                    const effectiveSinglePage = isReaderSinglePageMode();
+                    twoPageBtn.classList.toggle('active', effectiveSinglePage);
+                    twoPageBtn.disabled = isCompactReaderMode();
+                    twoPageBtn.title = effectiveSinglePage ? 'Two-page view' : 'Single page view';
+                }
+            }
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);

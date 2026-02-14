@@ -24,6 +24,7 @@ let primaryLocationCache = null;
 const tagsCache = new Map();
 let localMetaById = null;
 
+<<<<<<< HEAD
 const BOOKS_PER_SHELF = 32;
 const SHELVES_PER_WALL = 5;
 const WALLS_PER_ROOM = 4;
@@ -42,6 +43,8 @@ function fallbackLocationForBookId(bookId, roomsTotal) {
   return { room, wall, shelf, volume, floorId: null, subId: null, layout: 'overflow' };
 }
 
+=======
+>>>>>>> codex/navigation-pr-clean
 function response(statusCode, body, headers = JSON_HEADERS) {
   return {
     statusCode,
@@ -272,10 +275,16 @@ export async function handler(event) {
       }
 
       loadLayoutIfNeeded();
+<<<<<<< HEAD
       const roomsTotal = Number(floorsCache?.roomsTotal) || 1;
       const loc = primaryLocationCache[String(bookId)];
       if (!loc || !Number.isInteger(loc.room) || loc.room < 0 || loc.room >= roomsTotal) {
         return json(200, fallbackLocationForBookId(bookId, roomsTotal));
+=======
+      const loc = primaryLocationCache[String(bookId)];
+      if (!loc) {
+        return json(404, { error: 'bookId not found' });
+>>>>>>> codex/navigation-pr-clean
       }
 
       return json(200, loc);
