@@ -160,6 +160,24 @@ let layoutCache = {
   tagsIndex: new Set(),
 };
 
+const BOOKS_PER_SHELF = 32;
+const SHELVES_PER_WALL = 5;
+const WALLS_PER_ROOM = 4;
+const BOOKS_PER_ROOM = BOOKS_PER_SHELF * SHELVES_PER_WALL * WALLS_PER_ROOM;
+
+function fallbackLocationForBookId(bookId, roomsTotal) {
+  const safeRooms = Number.isInteger(roomsTotal) && roomsTotal > 0 ? roomsTotal : 1;
+  const slotCount = safeRooms * BOOKS_PER_ROOM;
+  const slot = ((bookId - 1) % slotCount + slotCount) % slotCount;
+  const room = Math.floor(slot / BOOKS_PER_ROOM);
+  const inRoom = slot % BOOKS_PER_ROOM;
+  const wall = Math.floor(inRoom / (BOOKS_PER_SHELF * SHELVES_PER_WALL));
+  const inWall = inRoom % (BOOKS_PER_SHELF * SHELVES_PER_WALL);
+  const shelf = Math.floor(inWall / BOOKS_PER_SHELF);
+  const volume = inWall % BOOKS_PER_SHELF;
+  return { room, wall, shelf, volume, floorId: null, subId: null, layout: 'overflow' };
+}
+
 function loadLayoutIfNeeded() {
   if (!layoutCache.floors) {
     const floorsPath = path.join(__dirname, 'data', 'layout', 'floors7.v1.json');
@@ -258,9 +276,10 @@ const server = http.createServer(async (req, res) => {
     }
     try {
       loadLayoutIfNeeded();
+      const roomsTotal = Number(layoutCache?.floors?.roomsTotal) || 1;
       const loc = layoutCache.primaryLoc[String(bookId)];
-      if (!loc) {
-        sendJson(res, 404, { error: 'bookId not found' });
+      if (!loc || !Number.isInteger(loc.room) || loc.room < 0 || loc.room >= roomsTotal) {
+        sendJson(res, 200, fallbackLocationForBookId(bookId, roomsTotal));
         return;
       }
       sendJson(res, 200, loc);

@@ -148,7 +148,7 @@ Local metadata snapshot endpoint (avoids Gutendex 429s):
 ## Navigation concepts
 
 - **Room index** in code is **0-indexed**.
-- UI generally displays rooms as **1-indexed** (“Room 1 of 113”).
+- UI generally displays rooms as **1-indexed** (“Room 1 of 128”).
 - Location fields:
   - `wall` 0..3 (UI shows 1..4)
   - `shelf` 0..4 (UI shows 1..5)
@@ -214,7 +214,7 @@ Floor ranges (from `data/layout/floors7.v1.json`) are:
 - Sci‑Fi & Fantasy: Rooms 63–71
 - Children & YA: Rooms 72–86
 - Poetry & Drama: Rooms 87–97
-- Non‑fiction & Thought: Rooms 98–113
+- Non‑fiction & Thought: Rooms 98–128
 
 So if you teleport to **History & War**, the HUD should land in **Room 1–30**.
 If it lands in **Room 31**, you actually landed in **Literature & Fiction** → elevator mapping bug.

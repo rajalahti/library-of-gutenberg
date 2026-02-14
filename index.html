@@ -2102,7 +2102,7 @@
         </div>
         <div class="nav-field">
             <label>Room Number:</label>
-            <input type="number" id="nav-room" min="1" max="111" value="1">
+            <input type="number" id="nav-room" min="1" max="128" value="1">
         </div>
         <div class="nav-field">
             <label>Wall (1-4):</label>
@@ -2254,6 +2254,7 @@
             LAYOUT.floorsById = new Map(LAYOUT.floors.map(f => [f.id, f]));
             if (typeof LAYOUT.roomsTotal === 'number') {
                 TOTAL_ROOMS = LAYOUT.roomsTotal;
+                TOTAL_BOOKS = Math.max(TOTAL_BOOKS, TOTAL_ROOMS * BOOKS_PER_ROOM);
                 const navRoom = document.getElementById('nav-room');
                 if (navRoom) navRoom.max = String(TOTAL_ROOMS);
             }
@@ -2265,6 +2266,12 @@
             if (LAYOUT.tagsLoading.has(roomIndex)) return await LAYOUT.tagsLoading.get(roomIndex);
             const pr = (async () => {
                 const res = await fetch(`/api/layout/tags/room/${String(roomIndex).padStart(3,'0')}`);
+                if (res.status === 404) {
+                    const empty = { room: roomIndex, tags: [] };
+                    LAYOUT.tagsCache.set(roomIndex, empty);
+                    LAYOUT.tagsLoading.delete(roomIndex);
+                    return empty;
+                }
                 if (!res.ok) throw new Error('Failed to load room tags');
                 const data = await res.json();
                 LAYOUT.tagsCache.set(roomIndex, data);
@@ -2373,8 +2380,8 @@
         const SHELVES_PER_WALL = 5;
         const WALLS_PER_ROOM = 4;
         const BOOKS_PER_ROOM = BOOKS_PER_SHELF * SHELVES_PER_WALL * WALLS_PER_ROOM; // 640
-        const TOTAL_BOOKS = 70000;
-        let TOTAL_ROOMS = 113; // overridden by /api/layout/floors (roomsTotal)
+        let TOTAL_ROOMS = 128; // overridden by /api/layout/floors (roomsTotal)
+        let TOTAL_BOOKS = TOTAL_ROOMS * BOOKS_PER_ROOM;
 
         const WALL_NAMES = ['North', 'East', 'South', 'West'];
 
@@ -2982,6 +2989,21 @@
             return (settings.layoutVersion === 2) ? bookIdToLocation_v2(bookId) : bookIdToLocation_v1(bookId);
         }
 
+        function fallbackBookIdToLocation(bookId) {
+            const id = Number(bookId);
+            if (!Number.isInteger(id) || id < 1) return null;
+
+            const slotCount = Math.max(1, TOTAL_ROOMS * BOOKS_PER_ROOM);
+            const slot = ((id - 1) % slotCount + slotCount) % slotCount;
+            const room = Math.floor(slot / BOOKS_PER_ROOM);
+            const inRoom = slot % BOOKS_PER_ROOM;
+            const wall = Math.floor(inRoom / (BOOKS_PER_SHELF * SHELVES_PER_WALL));
+            const inWall = inRoom % (BOOKS_PER_SHELF * SHELVES_PER_WALL);
+            const shelf = Math.floor(inWall / BOOKS_PER_SHELF);
+            const volume = inWall % BOOKS_PER_SHELF;
+            return { room, wall, shelf, volume, bookId: id, layout: 'overflow' };
+        }
+
         function locationToBookId_v1(room, wall, shelf, volume) {
             const index = room * BOOKS_PER_ROOM +
                           wall * BOOKS_PER_SHELF * SHELVES_PER_WALL +
@@ -3011,7 +3033,15 @@
         }
 
         function bookIdToLocation(bookId) {
-            return bookIdToLocationCanonical(bookId) || bookIdToLocation_legacy(bookId);
+            const canonical = bookIdToLocationCanonical(bookId);
+            if (canonical) return canonical;
+
+            const legacy = bookIdToLocation_legacy(bookId);
+            if (legacy && Number.isInteger(legacy.room) && legacy.room >= 0 && legacy.room < TOTAL_ROOMS) {
+                return legacy;
+            }
+
+            return fallbackBookIdToLocation(bookId);
         }
 
         function locationToBookId(room, wall, shelf, volume) {
@@ -3100,6 +3130,7 @@
 
         function highlightBook(bookId) {
             const location = bookIdToLocation(bookId);
+            if (!location) return;
             highlightedBookInfo = {
                 bookId,
                 room: location.room,
@@ -5024,11 +5055,15 @@
                 } catch (e) {
                     // ignore
                 }
-                const location = apiLoc || slotsLoc || legacyLoc;
+                const location = apiLoc || slotsLoc || legacyLoc || fallbackBookIdToLocation(bookId);
 
                 document.getElementById('reader-title').textContent = 'Loading...';
                 document.getElementById('reader-author').textContent = '';
-                document.getElementById('reader-coords').textContent = `Room ${location.room + 1} · Wall ${location.wall + 1} (${WALL_NAMES[location.wall]}) · Shelf ${location.shelf + 1} · Volume ${location.volume + 1}`;
+                if (location) {
+                    document.getElementById('reader-coords').textContent = `Room ${location.room + 1} · Wall ${location.wall + 1} (${WALL_NAMES[location.wall]}) · Shelf ${location.shelf + 1} · Volume ${location.volume + 1}`;
+                } else {
+                    document.getElementById('reader-coords').textContent = 'Location unavailable';
+                }
             
             // Reset book pages to loading state
             document.getElementById('book-content-left').innerHTML = '<div style="text-align:center;color:#8b7355;font-style:italic;padding-top:60px;">Loading book text...</div>';
@@ -5200,6 +5235,9 @@
             const resultsDiv = document.getElementById('search-results');
             resultsDiv.innerHTML = searchResults.map((book, i) => {
                 const location = bookIdToLocation(book.id);
+                const locationText = location
+                    ? `Room ${location.room + 1} · Wall ${location.wall + 1} · Shelf ${location.shelf + 1}`
+                    : 'Location unavailable';
                 const authors = book.authors?.map(a => a.name).join(', ') || 'Unknown Author';
                 const languages = book.languages?.join(', ') || '';
                 const subjects = book.subjects?.slice(0, 2).join('; ') || '';
@@ -5212,22 +5250,33 @@
                         <div class="search-result-title">${escapeHtml(book.title)}</div>
                         <div class="search-result-author">${escapeHtml(authors)}</div>
                         ${languages || subjects ? `<div class="search-result-meta">${languages ? `📖 ${languages}` : ''} ${subjects ? `· ${subjects}` : ''}</div>` : ''}
-                        <div class="search-result-location">Room ${location.room + 1} · Wall ${location.wall + 1} · Shelf ${location.shelf + 1}</div>
+                        <div class="search-result-location">${locationText}</div>
                         ${progressText ? `<div class="search-result-progress">${progressText}</div>` : ''}
                     </div>
                 `;
             }).join('');
         }
 
+        async function resolveBookLocation(bookId) {
+            try {
+                const loc = await getBookPrimaryLocation(bookId);
+                if (loc && Number.isInteger(loc.room) && loc.room >= 0 && loc.room < TOTAL_ROOMS) return loc;
+            } catch (e) {
+                // Fallback below
+            }
+            return bookIdToLocation(bookId);
+        }
+
         window.jumpToGutenbergId = async function() {
             const bookId = parseInt(document.getElementById('search-gutenberg-id').value);
-            if (!bookId || bookId < 1 || bookId > TOTAL_BOOKS) {
-                showToast('Please enter a valid Gutenberg ID (1-70000)');
+            if (!Number.isInteger(bookId) || bookId < 1) {
+                showToast('Please enter a valid Gutenberg ID (> 0)');
                 return;
             }
             closeSearch();
             try {
-                const loc = await getBookPrimaryLocation(bookId);
+                const loc = await resolveBookLocation(bookId);
+                if (!loc) throw new Error('location unavailable');
                 teleportTo(loc.room, () => { openBook(bookId); }, bookId);
             } catch (e) {
                 console.error(e);
@@ -5238,7 +5287,8 @@
         window.goToBook = async function(bookId) {
             closeSearch();
             try {
-                const loc = await getBookPrimaryLocation(bookId);
+                const loc = await resolveBookLocation(bookId);
+                if (!loc) throw new Error('location unavailable');
                 teleportTo(loc.room, () => { openBook(bookId); }, bookId);
             } catch (e) {
                 console.error(e);
@@ -5583,10 +5633,11 @@
 
         window.navigateToGutenbergId = async function() {
             const bookId = parseInt(document.getElementById('nav-gutenberg-id').value);
-            if (!bookId || bookId < 1 || bookId > TOTAL_BOOKS) return;
+            if (!Number.isInteger(bookId) || bookId < 1) return;
             closeNav();
             try {
-                const loc = await getBookPrimaryLocation(bookId);
+                const loc = await resolveBookLocation(bookId);
+                if (!loc) throw new Error('location unavailable');
                 teleportTo(loc.room, () => { openBook(bookId); }, bookId);
             } catch (e) {
                 console.error(e);
@@ -5644,6 +5695,9 @@
             } else {
                 bookmarksList.innerHTML = bookmarks.map(b => {
                     const location = bookIdToLocation(b.bookId);
+                    const locationText = location
+                        ? `Room ${location.room + 1} · Wall ${location.wall + 1} · Shelf ${location.shelf + 1}`
+                        : 'Location unavailable';
                     const progress = getReadingProgress(b.bookId);
                     const progressText = progress ? `Page ${progress.page + 1} of ${progress.total}` : '';
                     return `
@@ -5651,7 +5705,7 @@
                             <button class="bookmark-remove" onclick="event.stopPropagation(); removeBookmarkFromUI(${b.bookId})">&times;</button>
                             <div class="search-result-title">${escapeHtml(b.title)}</div>
                             <div class="search-result-author">${escapeHtml(b.authors)}</div>
-                            <div class="search-result-location">Room ${location.room + 1} · Wall ${location.wall + 1} · Shelf ${location.shelf + 1}</div>
+                            <div class="search-result-location">${locationText}</div>
                             ${progressText ? `<div class="search-result-progress">${progressText}</div>` : ''}
                         </div>
                     `;
@@ -5665,13 +5719,16 @@
             } else {
                 recentsList.innerHTML = recents.map(r => {
                     const location = bookIdToLocation(r.bookId);
+                    const locationText = location
+                        ? `Room ${location.room + 1} · Wall ${location.wall + 1} · Shelf ${location.shelf + 1}`
+                        : 'Location unavailable';
                     const progress = getReadingProgress(r.bookId);
                     const progressText = progress ? `Page ${progress.page + 1} of ${progress.total}` : '';
                     return `
                         <div class="recent-item" onclick="goToBookFromLibrary(${r.bookId})">
                             <div class="search-result-title">${escapeHtml(r.title)}</div>
                             <div class="search-result-author">${escapeHtml(r.authors)}</div>
-                            <div class="search-result-location">Room ${location.room + 1} · Wall ${location.wall + 1} · Shelf ${location.shelf + 1}</div>
+                            <div class="search-result-location">${locationText}</div>
                             ${progressText ? `<div class="search-result-progress">${progressText}</div>` : ''}
                         </div>
                     `;
@@ -5682,6 +5739,7 @@
         window.goToBookFromLibrary = function(bookId) {
             closeLibrary();
             const location = bookIdToLocation(bookId);
+            if (!location) return;
             teleportTo(location.room, () => {
                 openBook(bookId);
             }, bookId);
@@ -5690,6 +5748,7 @@
         window.continueReading = function(bookId, page) {
             closeLibrary();
             const location = bookIdToLocation(bookId);
+            if (!location) return;
             teleportTo(location.room, () => {
                 openBook(bookId, page);
             }, bookId);

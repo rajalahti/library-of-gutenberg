@@ -1,6 +1,6 @@
 {
   "booksPerRoom": 640,
-  "roomsTotal": 113,
+  "roomsTotal": 128,
   "floors": [
     {
       "id": "history_war",
@@ -310,9 +310,9 @@
       "id": "nonfiction_thought",
       "label": "Non‑fiction & Thought",
       "roomStart": 97,
-      "roomCount": 16,
+      "roomCount": 31,
       "bookCount": 10174,
-      "capacity": 10240,
+      "capacity": 19840,
       "fillFrom": [
         "history_war",
         "literature_fiction"
